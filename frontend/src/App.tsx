@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Menu, LogOut, LayoutDashboard, Building2, Files, ShieldPlus, ArchiveX } from 'lucide-react';
+import axios from 'axios';
 
 const initialUnits = [
   { cnpj: '02.558.157/0024-59', filial: 'BA SEDE', uf: 'BA', cidade: 'Salvador', hc: 0, due: '14/07/2028', status: 'Vigente' },
@@ -52,31 +53,51 @@ function App() {
     `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const fetchUnits = async () => {
+    try {
+      const res = await axios.get('/api/unidades');
+      // Format backend rows if needed, or just set it
+      // For now, let's map the DB columns to the UI
+      const dbUnits = res.data.map((u: any) => ({
+        id: u.id,
+        cnpj: u.cnpj,
+        filial: u.filial,
+        uf: u.uf,
+        cidade: u.cidade,
+        hc: 0,
+        due: '—', // This would come from JOINing documentos_sst in a full implementation
+        status: 'Pendente' 
+      }));
+      setUnits(dbUnits.length ? dbUnits : initialUnits);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  React.useEffect(() => {
+    if (user) {
+      fetchUnits();
+    }
+  }, [user]);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const lines = result.split(/\r?\n/).filter(Boolean);
-      const imported = lines.slice(1).map(line => {
-        const c = line.split(';').length > 1 ? line.split(';') : line.split(',');
-        return {
-          cnpj: c[0] || '',
-          filial: c[1] || 'Unidade importada',
-          uf: c[2] || '',
-          cidade: c[3] || '',
-          hc: parseInt(c[4]) || 0,
-          due: c[5] || '—',
-          status: c[5] ? 'Vigente' : 'Pendente'
-        };
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      alert('Enviando planilha para o banco de dados. Isso pode demorar alguns segundos...');
+      await axios.post('/api/unidades/upload-seed', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      if (imported.length) {
-        setUnits(imported);
-      }
-    };
-    reader.readAsText(file, 'UTF-8');
+      alert('Planilha processada com sucesso!');
+      fetchUnits();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao processar planilha no servidor.');
+    }
   };
 
   const handleExport = () => {
