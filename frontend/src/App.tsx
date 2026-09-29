@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, Files, ShieldPlus, ArchiveX } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, Files, ShieldPlus, ArchiveX, Eye, EyeOff, Users } from 'lucide-react';
 import axios from 'axios';
 
 const initialUnits = [
@@ -27,6 +27,7 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginRole, setLoginRole] = useState<Role>('master'); 
+  const [showPassword, setShowPassword] = useState(false);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -125,16 +126,23 @@ function App() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-brand" style={{ justifyContent: 'center' }}>
-            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '80px', objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '55px', objectFit: 'contain' }} />
           </div>
+          <div className="login-header-text">Faça login para acessar o sistema</div>
           <form className="login-form" onSubmit={handleLogin}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Email</label>
-              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu@email.com" />
+              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Senha</label>
-              <input type="password" required placeholder="********" />
+              <div className="input-wrapper">
+                <input type={showPassword ? 'text' : 'password'} required placeholder="••••••••" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <button type="button" className="forgot-password" onClick={() => alert('Recuperação de senha enviada para seu e-mail!')}>Esqueci a senha</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Simular Nível de Acesso</label>
@@ -145,7 +153,7 @@ function App() {
                 <option value="visualizador">Visualizador (Apenas Leitura)</option>
               </select>
             </div>
-            <button type="submit" className="login-btn">Entrar</button>
+            <button type="submit" className="login-btn">Entrar na plataforma</button>
           </form>
         </div>
       </div>
@@ -442,6 +450,11 @@ function App() {
               <button className={activeTab === 'desmobilizadas' ? 'active' : ''} onClick={() => setActiveTab('desmobilizadas')}>
                 <ArchiveX size={18} /> <span>Desmobilizadas</span><em>0</em>
               </button>
+              {canImportExport && (
+                <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>
+                  <Users size={18} /> <span>Administrativo</span>
+                </button>
+              )}
             </div>
             
             <div className="spacer"></div>
@@ -463,6 +476,20 @@ function App() {
           {activeTab === 'documentos' && renderDocumentos()}
           {activeTab === 'sesmt' && renderSesmt()}
           {activeTab === 'desmobilizadas' && renderDesmobilizadas()}
+          {activeTab === 'admin' && (
+            <>
+              <header className="topbar">
+                <div>
+                  <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+                  <h1>Administrativo</h1>
+                  <p>Gestão de usuários, permissões e auditoria de logs.</p>
+                </div>
+              </header>
+              <section className="content">
+                <div className="empty">Painel administrativo em desenvolvimento.</div>
+              </section>
+            </>
+          )}
         </main>
       </div>
     </div>
