@@ -23,7 +23,7 @@ CREATE TABLE documentos_sst (
     unidade_id INTEGER REFERENCES unidades_ativas(id) ON DELETE CASCADE,
     tipo_documento VARCHAR(50) NOT NULL, -- PGR, LTCAT, AEP
     status VARCHAR(50),
-    ano VARCHAR(4),
+    ano VARCHAR(20),
     lista_entrega VARCHAR(100),
     data_revisao DATE,
     data_vencimento DATE,
