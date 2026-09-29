@@ -41,6 +41,10 @@ function App() {
   const [sesmt, setSesmt] = useState<any[]>([]);
   const [desmobilizadas, setDesmobilizadas] = useState<any[]>([]);
 
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminLogs, setAdminLogs] = useState<any[]>([]);
+  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'>('users');
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) return;
@@ -82,6 +86,12 @@ function App() {
   const fetchDesmobilizadas = async () => {
     try { const res = await axios.get('/api/unidades/desmobilizadas'); setDesmobilizadas(res.data); } catch (e) {}
   };
+  const fetchAdminUsers = async () => {
+    try { const res = await axios.get('/api/auth/users'); setAdminUsers(res.data); } catch (e) {}
+  };
+  const fetchAdminLogs = async () => {
+    try { const res = await axios.get('/api/auth/logs'); setAdminLogs(res.data); } catch (e) {}
+  };
 
   React.useEffect(() => {
     if (user) {
@@ -90,6 +100,7 @@ function App() {
       if (activeTab === 'documentos') fetchDocumentos();
       if (activeTab === 'sesmt') fetchSesmt();
       if (activeTab === 'desmobilizadas') fetchDesmobilizadas();
+      if (activeTab === 'admin') { fetchAdminUsers(); fetchAdminLogs(); }
     }
   }, [user, activeTab]);
 
@@ -476,9 +487,59 @@ function App() {
                   <h1>Administrativo</h1>
                   <p>Gestão de usuários, permissões e auditoria de logs.</p>
                 </div>
+                <div className="actions">
+                  <button className={`btn ${adminSubTab === 'users' ? 'primary' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
+                  <button className={`btn ${adminSubTab === 'logs' ? 'primary' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs do Sistema</button>
+                </div>
               </header>
               <section className="content">
-                <div className="empty">Painel administrativo em desenvolvimento.</div>
+                {adminSubTab === 'users' && (
+                  <div className="table-wrap">
+                    <div className="toolbar" style={{ marginTop: 0 }}>
+                      <h2>Usuários Cadastrados</h2>
+                      <button className="btn primary" onClick={() => {
+                        const email = prompt('E-mail do novo usuário:');
+                        if (email) axios.post('/api/auth/users', { nome: email.split('@')[0], email, nivel_acesso: 'visualizador' }).then(fetchAdminUsers);
+                      }}>＋ Novo Usuário</button>
+                    </div>
+                    <table className="table">
+                      <thead><tr><th>Nome / E-mail</th><th>Nível de Acesso</th><th>Criado em</th><th>Ações</th></tr></thead>
+                      <tbody>
+                        {adminUsers.map(u => (
+                          <tr key={u.id}>
+                            <td><b>{u.nome}</b><small>{u.email}</small></td>
+                            <td><span className="status">{u.nivel_acesso.toUpperCase()}</span></td>
+                            <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                            <td>
+                              <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
+                                if(confirm('Resetar senha para "nova@2026"?')) {
+                                  axios.post(`/api/auth/users/${u.id}/reset`).then(() => alert('Senha resetada!'));
+                                }
+                              }}>Resetar Senha</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {adminSubTab === 'logs' && (
+                  <div className="table-wrap">
+                    <table className="table">
+                      <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr></thead>
+                      <tbody>
+                        {adminLogs.length === 0 ? <tr><td colSpan={4} className="empty">Nenhum log registrado.</td></tr> : adminLogs.map((l:any) => (
+                          <tr key={l.id}>
+                            <td>{new Date(l.created_at).toLocaleString()}</td>
+                            <td>{l.usuario_email}</td>
+                            <td><b>{l.acao}</b></td>
+                            <td>{l.detalhes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </section>
             </>
           )}

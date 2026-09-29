@@ -61,4 +61,51 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+// Admin: get all users
+router.get('/users', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query('SELECT id, nome, email, nivel_acesso, created_at FROM usuarios ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
+// Admin: create user
+router.post('/users', async (req: Request, res: Response) => {
+  const { nome, email, nivel_acesso, senha } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(senha || 'nova@2026', 10);
+    const { rows } = await query(
+      'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, nivel_acesso',
+      [nome, email, hashedPassword, nivel_acesso]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar usuário' });
+  }
+});
+
+// Admin: reset password
+router.post('/users/:id/reset', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const hashedPassword = await bcrypt.hash('nova@2026', 10);
+    await query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hashedPassword, id]);
+    res.json({ message: 'Senha resetada com sucesso para nova@2026' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao resetar senha' });
+  }
+});
+
+// Admin: get logs
+router.get('/logs', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query('SELECT * FROM sistema_logs ORDER BY created_at DESC LIMIT 100');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar logs' });
+  }
+});
+
 export default router;

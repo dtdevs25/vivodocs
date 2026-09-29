@@ -116,6 +116,14 @@ CREATE TABLE usuarios (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE sistema_logs (
+    id SERIAL PRIMARY KEY,
+    usuario_email VARCHAR(255),
+    acao VARCHAR(255),
+    detalhes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TRIGGER update_usuarios_modtime
 BEFORE UPDATE ON usuarios
 FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
