@@ -289,6 +289,7 @@ function App() {
             <thead>
               <tr>
                 <th>Unidade</th>
+                <th>Tipo</th>
                 <th>Localização</th>
                 <th>HC</th>
                 <th>SESMT</th>
@@ -301,6 +302,7 @@ function App() {
               {filteredUnits.map((u, i) => (
                 <tr key={i}>
                   <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
+                  <td>{u.tipo_predio || '-'}</td>
                   <td>{u.cidade} · {u.uf}</td>
                   <td>{u.hc}</td>
                   <td>Sem SESMT</td>
