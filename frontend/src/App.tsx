@@ -1,0 +1,392 @@
+import React, { useState, useRef } from 'react';
+import { Menu, LogOut, LayoutDashboard, Building2, Files, ShieldPlus, ArchiveX } from 'lucide-react';
+
+const initialUnits = [
+  { cnpj: '02.558.157/0024-59', filial: 'BA SEDE', uf: 'BA', cidade: 'Salvador', hc: 0, due: '14/07/2028', status: 'Vigente' },
+  { cnpj: '02.558.157/0061-05', filial: 'SP MTZ ECOBERRI', uf: 'SP', cidade: 'São Paulo', hc: 0, due: '29/04/2029', status: 'Vigente' },
+  { cnpj: '02.558.157/0079-22', filial: 'SP CHUCRIZADA', uf: 'SP', cidade: 'São Paulo', hc: 0, due: '16/07/2028', status: 'Vigente' },
+  { cnpj: '02.558.157/0741-07', filial: 'SP OSASCO', uf: 'SP', cidade: 'Osasco', hc: 0, due: '28/06/2028', status: 'Vigente' },
+  { cnpj: '02.558.157/0017-20', filial: 'RS SEDE', uf: 'RS', cidade: 'Porto Alegre', hc: 0, due: '14/07/2029', status: 'Vigente' },
+  { cnpj: '02.558.157/0583-22', filial: 'SP SOROCABA BOA', uf: 'SP', cidade: 'Sorocaba', hc: 0, due: '17/07/2029', status: 'Vigente' },
+  { cnpj: '02.558.157/0766-57', filial: 'SP U ENCRUZILHADA', uf: 'SP', cidade: 'Santos', hc: 0, due: '15/07/2028', status: 'Vigente' },
+  { cnpj: '02.558.157/0166-25', filial: 'PR MARINGÁ ZONA', uf: 'PR', cidade: 'Maringá', hc: 0, due: '17/07/2028', status: 'Vigente' },
+  { cnpj: '02.558.157/0976-54', filial: 'LOJA SHOPPING JOCKEY PLAZA', uf: 'PR', cidade: 'Curitiba', hc: 0, due: '—', status: 'Pendente' },
+  { cnpj: '02.558.157/0559-00', filial: 'PA U DOCA', uf: 'PA', cidade: 'Belém', hc: 0, due: '—', status: 'Pendente' }
+];
+
+type Role = 'master' | 'admin' | 'editor' | 'visualizador';
+
+interface UserData {
+  nome: string;
+  email: string;
+  role: Role;
+}
+
+function App() {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginRole, setLoginRole] = useState<Role>('master'); 
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  const [units, setUnits] = useState(initialUnits);
+  const [searchQuery, setSearchQuery] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail) return;
+    setUser({
+      nome: loginEmail.split('@')[0],
+      email: loginEmail,
+      role: loginRole
+    });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  const filteredUnits = units.filter(u => 
+    `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const lines = result.split(/\r?\n/).filter(Boolean);
+      const imported = lines.slice(1).map(line => {
+        const c = line.split(';').length > 1 ? line.split(';') : line.split(',');
+        return {
+          cnpj: c[0] || '',
+          filial: c[1] || 'Unidade importada',
+          uf: c[2] || '',
+          cidade: c[3] || '',
+          hc: parseInt(c[4]) || 0,
+          due: c[5] || '—',
+          status: c[5] ? 'Vigente' : 'Pendente'
+        };
+      });
+      if (imported.length) {
+        setUnits(imported);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleExport = () => {
+    const header = 'CNPJ;Filial;UF;Cidade;HC;Vencimento PGR;Status\n';
+    const csv = header + units.map(u => [u.cnpj, u.filial, u.uf, u.cidade, u.hc, u.due, u.status].join(';')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'relatorio_gestao_laudos.csv';
+    a.click();
+  };
+
+  if (!user) {
+    return (
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-brand">
+            <div className="mark" style={{ transform: 'scale(1.5)' }}><i></i><i></i><i></i></div>
+            <div style={{ marginLeft: '10px' }}>
+              <strong style={{ display: 'block', color: '#60279b', fontSize: '24px', letterSpacing: '1px' }}>VIVO</strong>
+              <small style={{ color: '#aaa0ae', fontSize: '11px', letterSpacing: '2px' }}>GESTÃO LAUDOS</small>
+            </div>
+          </div>
+          <form className="login-form" onSubmit={handleLogin}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label>Email</label>
+              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu@email.com" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label>Senha</label>
+              <input type="password" required placeholder="********" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label>Simular Nível de Acesso</label>
+              <select value={loginRole} onChange={(e) => setLoginRole(e.target.value as Role)}>
+                <option value="master">Master (Acesso Total)</option>
+                <option value="admin">Admin (Gestão Geral)</option>
+                <option value="editor">Editor (Inserir/Editar)</option>
+                <option value="visualizador">Visualizador (Apenas Leitura)</option>
+              </select>
+            </div>
+            <button type="submit" className="login-btn">Entrar</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const canImportExport = user.role === 'master' || user.role === 'admin';
+  const canEdit = user.role === 'master' || user.role === 'admin' || user.role === 'editor';
+
+  const renderDashboard = () => (
+    <>
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+          <h1>Visão geral</h1>
+          <p>Acompanhe a cobertura documental e os próximos vencimentos.</p>
+        </div>
+      </header>
+
+      <section className="content">
+        <div className="cards">
+          <div className="card">
+            <small>CNPJs monitorados</small>
+            <strong className="purple">{units.length}</strong>
+            <small>Base ativa</small>
+          </div>
+          <div className="card">
+            <small>PGRs vencendo</small>
+            <strong className="amber">0</strong>
+            <small>Alerta em até 60 dias</small>
+          </div>
+          <div className="card">
+            <small>PGRs vencidos</small>
+            <strong style={{ color: 'var(--red)' }}>0</strong>
+            <small>Requer ação imediata</small>
+          </div>
+          <div className="card">
+            <small>HC monitorado</small>
+            <strong className="green">0</strong>
+            <small>Soma das lotações</small>
+          </div>
+        </div>
+
+        <div className="grid">
+          <div className="panel">
+            <h2>Panorama de conformidade</h2>
+            <p>Documentos PGR por status · unidades ativas</p>
+            <div className="chart">
+              <div className="donut"><span id="coverage">43%</span></div>
+              <div className="legend">
+                <div><i></i><span>Vigentes</span><b>47</b></div>
+                <div><i className="amber"></i><span>Vencendo em 60 dias</span><b>0</b></div>
+                <div><i className="red"></i><span>Vencidos</span><b>0</b></div>
+                <div><i className="gray"></i><span>Pendentes</span><b>62</b></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="insights">
+            <div className="panel insight">
+              <div style={{ padding: '12px', background: 'var(--bg)', borderRadius: '50%' }}><Files size={24} color="var(--purple)" /></div>
+              <div>
+                <span>Cobertura de documentos</span>
+                <b>0%</b>
+                <span>PGR, LTCAT e AEP preenchidos</span>
+              </div>
+            </div>
+            <div className="panel insight">
+              <div style={{ padding: '12px', background: 'var(--bg)', borderRadius: '50%' }}><ShieldPlus size={24} color="var(--purple)" /></div>
+              <div>
+                <span>SESMT registrado</span>
+                <b>0 unidades</b>
+                <span>com atendimento registrado</span>
+              </div>
+            </div>
+            <div className="panel insight">
+              <div style={{ padding: '12px', background: 'var(--bg)', borderRadius: '50%' }}><Building2 size={24} color="var(--purple)" /></div>
+              <div>
+                <span>Sem SESMT informado</span>
+                <b>{units.length} unidades</b>
+                <span>confirme a informação cadastral</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+
+  const renderUnidades = () => (
+    <>
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+          <h1>Unidades Monitoradas</h1>
+          <p>Gerencie os locais e bases sob cobertura de SST.</p>
+        </div>
+        <div className="actions">
+          <input 
+            id="search" 
+            className="search" 
+            placeholder="Buscar CNPJ, filial ou cidade" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {canImportExport && <button className="btn" onClick={() => fileInputRef.current?.click()}>↥ Importar CSV</button>}
+          {canImportExport && <button className="btn" onClick={handleExport}>⇩ Relatório</button>}
+          {canEdit && <button className="btn primary">＋ Nova unidade</button>}
+          <input 
+            ref={fileInputRef} 
+            id="file" 
+            className="hidden" 
+            type="file" 
+            accept=".csv,text/csv" 
+            onChange={handleImport}
+          />
+        </div>
+      </header>
+
+      <section className="content">
+        <div className="toolbar" style={{ marginTop: 0 }}>
+          <h2>Unidades em atenção</h2>
+          <span>{filteredUnits.length} registros visíveis</span>
+        </div>
+
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Unidade</th>
+                <th>Localização</th>
+                <th>HC</th>
+                <th>SESMT</th>
+                <th>Vencimento PGR</th>
+                <th>Status</th>
+                {canEdit && <th>Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUnits.map((u, i) => (
+                <tr key={i}>
+                  <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
+                  <td>{u.cidade} · {u.uf}</td>
+                  <td>{u.hc}</td>
+                  <td>Sem SESMT</td>
+                  <td>{u.due}</td>
+                  <td><span className={`status ${u.status === 'Pendente' ? 'pending' : ''}`}>{u.status}</span></td>
+                  {canEdit && <td><button style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: '4px', padding: '4px 8px', fontSize: '10px' }}>Editar</button></td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  );
+
+  const renderDocumentos = () => (
+    <>
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+          <h1>Documentos SST</h1>
+          <p>Acompanhamento detalhado de PGR, LTCAT, AEP e listas de entrega.</p>
+        </div>
+      </header>
+      <section className="content">
+        <div className="empty">Nenhum documento selecionado no momento. Use a aba de Unidades para ver detalhes.</div>
+      </section>
+    </>
+  );
+
+  const renderSesmt = () => (
+    <>
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+          <h1>SESMT Registrado</h1>
+          <p>Mapeamento de recursos e profissionais de saúde e segurança por localidade.</p>
+        </div>
+      </header>
+      <section className="content">
+        <div className="empty">Nenhum registro de SESMT ativo encontrado nesta regional.</div>
+      </section>
+    </>
+  );
+
+  const renderDesmobilizadas = () => (
+    <>
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
+          <h1>Unidades Desmobilizadas</h1>
+          <p>Histórico de prédios desativados e dispensas de laudo.</p>
+        </div>
+      </header>
+      <section className="content">
+        <div className="empty">Nenhuma unidade desmobilizada no histórico recente.</div>
+      </section>
+    </>
+  );
+
+  return (
+    <div className="layout">
+      {/* Global Header */}
+      <header className="global-header">
+        <div className="header-left">
+          <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu size={24} />
+          </button>
+          <div className="header-brand">
+            <div className="mark"><i></i><i></i><i></i></div>
+            <div><strong>VIVO</strong><small>GESTÃO LAUDOS</small></div>
+          </div>
+        </div>
+        
+        <div className="header-right">
+          <button onClick={handleLogout} className="logout-btn" title="Sair do sistema">
+            <LogOut size={20} />
+          </button>
+        </div>
+      </header>
+
+      <div className="body-wrapper">
+        <aside className={`sidebar ${sidebarOpen ? '' : 'closed'}`}>
+          <div className="sidebar-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            
+            <div className="label">MONITORAMENTO</div>
+            <div className="nav">
+              <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
+                <LayoutDashboard size={18} /> <span>Visão geral</span>
+              </button>
+              <button className={activeTab === 'unidades' ? 'active' : ''} onClick={() => setActiveTab('unidades')}>
+                <Building2 size={18} /> <span>Unidades monitoradas</span>
+              </button>
+              <button className={activeTab === 'documentos' ? 'active' : ''} onClick={() => setActiveTab('documentos')}>
+                <Files size={18} /> <span>Documentos</span>
+              </button>
+              <button className={activeTab === 'sesmt' ? 'active' : ''} onClick={() => setActiveTab('sesmt')}>
+                <ShieldPlus size={18} /> <span>SESMT registrado</span>
+              </button>
+              <button className={activeTab === 'desmobilizadas' ? 'active' : ''} onClick={() => setActiveTab('desmobilizadas')}>
+                <ArchiveX size={18} /> <span>Desmobilizadas</span><em>0</em>
+              </button>
+            </div>
+            
+            <div className="spacer"></div>
+            
+            {/* User Profile moved back to bottom */}
+            <div className="user-profile">
+              <div className="user-profile-info">
+                <b style={{ textTransform: 'capitalize', display: 'block', color: '#5b4e64', marginBottom: '4px' }}>{user.nome}</b>
+                <small style={{ color: '#a8a0ad' }}>Nível: {user.role}</small>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+        <main className="main">
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'unidades' && renderUnidades()}
+          {activeTab === 'documentos' && renderDocumentos()}
+          {activeTab === 'sesmt' && renderSesmt()}
+          {activeTab === 'desmobilizadas' && renderDesmobilizadas()}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
