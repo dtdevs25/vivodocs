@@ -45,6 +45,12 @@ function App() {
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'>('users');
 
+  const [modal, setModal] = useState<{isOpen: boolean, type: 'alert'|'confirm'|'userForm', title: string, message: string, onConfirm?: () => void, formData?: any}>({isOpen: false, type: 'alert', title: '', message: ''});
+  const openAlert = (title: string, message: string) => setModal({ isOpen: true, type: 'alert', title, message });
+  const openConfirm = (title: string, message: string, onConfirm: () => void) => setModal({ isOpen: true, type: 'confirm', title, message, onConfirm });
+  const openUserForm = (u?: any) => setModal({ isOpen: true, type: 'userForm', title: u ? 'Editar Usuário' : 'Novo Usuário', message: '', formData: u || { nome: '', email: '', nivel_acesso: 'visualizador' } });
+  const closeModal = () => setModal(m => ({...m, isOpen: false}));
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) return;
@@ -52,7 +58,7 @@ function App() {
       const res = await axios.post('/api/auth/login', { email: loginEmail, senha: loginPassword });
       setUser(res.data.user);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Erro ao fazer login');
+      openAlert('Falha no Login', err.response?.data?.error || 'Erro ao fazer login');
     }
   };
 
@@ -112,15 +118,15 @@ function App() {
     formData.append('file', file);
     
     try {
-      alert('Enviando planilha para o banco de dados. Isso pode demorar alguns segundos...');
+      openAlert('Aguarde', 'Enviando planilha para o banco de dados. Isso pode demorar alguns segundos...');
       await axios.post('/api/unidades/upload-seed', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert('Planilha processada com sucesso!');
+      openAlert('Sucesso', 'Planilha processada com sucesso!');
       fetchUnits();
     } catch (err) {
       console.error(err);
-      alert('Erro ao processar planilha no servidor.');
+      openAlert('Erro', 'Erro ao processar planilha no servidor.');
     }
   };
 
@@ -154,7 +160,7 @@ function App() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <button type="button" className="forgot-password" onClick={() => alert('Recuperação de senha enviada para seu e-mail!')}>Esqueci a senha</button>
+              <button type="button" className="forgot-password" onClick={() => openAlert('Atenção', 'Recuperação de senha enviada para seu e-mail!')}>Esqueci a senha</button>
             </div>
             <button type="submit" className="login-btn">Entrar na plataforma</button>
           </form>
@@ -475,21 +481,20 @@ function App() {
                 <div>
                   <h1>Administrativo</h1>
                 </div>
-                <div className="actions">
-                  <button className={`btn ${adminSubTab === 'users' ? 'primary' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
-                  <button className={`btn ${adminSubTab === 'logs' ? 'primary' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs do Sistema</button>
-                </div>
+                {adminSubTab === 'users' && (
+                  <div className="actions">
+                    <button className="btn primary" onClick={() => openUserForm()}>＋ Novo Usuário</button>
+                  </div>
+                )}
               </header>
               <section className="content">
+                <div className="tabs-header">
+                  <button className={`tab-link ${adminSubTab === 'users' ? 'active' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
+                  <button className={`tab-link ${adminSubTab === 'logs' ? 'active' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs do Sistema</button>
+                </div>
+                
                 {adminSubTab === 'users' && (
                   <div className="table-wrap">
-                    <div className="toolbar" style={{ marginTop: 0 }}>
-                      <h2>Usuários Cadastrados</h2>
-                      <button className="btn primary" onClick={() => {
-                        const email = prompt('E-mail do novo usuário:');
-                        if (email) axios.post('/api/auth/users', { nome: email.split('@')[0], email, nivel_acesso: 'visualizador' }).then(fetchAdminUsers);
-                      }}>＋ Novo Usuário</button>
-                    </div>
                     <table className="table">
                       <thead><tr><th>Nome / E-mail</th><th>Nível de Acesso</th><th>Criado em</th><th>Ações</th></tr></thead>
                       <tbody>
@@ -500,26 +505,20 @@ function App() {
                             <td>{new Date(u.created_at).toLocaleDateString()}</td>
                             <td>
                               <div style={{ display: 'flex', gap: '5px' }}>
-                                <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
-                                  const nome = prompt('Nome:', u.nome);
-                                  if (nome === null) return;
-                                  const email = prompt('Email:', u.email);
-                                  if (email === null) return;
-                                  const nivel = prompt('Nível (master, admin, editor, visualizador):', u.nivel_acesso);
-                                  if (nivel === null) return;
-                                  axios.put(`/api/auth/users/${u.id}`, { nome, email, nivel_acesso: nivel }).then(() => fetchAdminUsers());
-                                }}>Editar</button>
+                                <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => openUserForm(u)}>Editar</button>
 
                                 <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
-                                  if(confirm('Resetar senha para "nova@2026"?')) {
-                                    axios.post(`/api/auth/users/${u.id}/reset`).then(() => alert('Senha resetada!'));
-                                  }
+                                  openConfirm('Atenção', 'Deseja resetar a senha deste usuário para "nova@2026"?', () => {
+                                    axios.post(`/api/auth/users/${u.id}/reset`).then(() => {
+                                      openAlert('Sucesso', 'Senha resetada com sucesso!');
+                                    });
+                                  });
                                 }}>Senha</button>
 
                                 <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--red)', borderColor: '#ffd1d9' }} onClick={() => {
-                                  if(confirm(`Tem certeza que deseja excluir o usuário ${u.nome}?`)) {
+                                  openConfirm('Atenção', `Tem certeza que deseja excluir o usuário ${u.nome}? Esta ação não pode ser desfeita.`, () => {
                                     axios.delete(`/api/auth/users/${u.id}`).then(() => fetchAdminUsers());
-                                  }
+                                  });
                                 }}>Excluir</button>
                               </div>
                             </td>
@@ -551,6 +550,63 @@ function App() {
           )}
         </main>
       </div>
+
+      {modal.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h2>{modal.title}</h2>
+            {modal.type === 'alert' && (
+              <>
+                <p>{modal.message}</p>
+                <div className="modal-actions">
+                  <button className="btn primary" onClick={closeModal}>OK</button>
+                </div>
+              </>
+            )}
+            {modal.type === 'confirm' && (
+              <>
+                <p>{modal.message}</p>
+                <div className="modal-actions">
+                  <button className="btn" onClick={closeModal}>Cancelar</button>
+                  <button className="btn primary" style={modal.message.includes('excluir') ? {backgroundColor: 'var(--red)', borderColor: 'var(--red)'} : {}} onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button>
+                </div>
+              </>
+            )}
+            {modal.type === 'userForm' && (
+              <>
+                <div className="modal-form-group">
+                  <label>Nome</label>
+                  <input value={modal.formData.nome} onChange={e => setModal({...modal, formData: {...modal.formData, nome: e.target.value}})} />
+                </div>
+                <div className="modal-form-group">
+                  <label>E-mail</label>
+                  <input value={modal.formData.email} onChange={e => setModal({...modal, formData: {...modal.formData, email: e.target.value}})} />
+                </div>
+                <div className="modal-form-group">
+                  <label>Nível de Acesso</label>
+                  <select value={modal.formData.nivel_acesso} onChange={e => setModal({...modal, formData: {...modal.formData, nivel_acesso: e.target.value}})}>
+                    <option value="master">Master</option>
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="visualizador">Visualizador</option>
+                  </select>
+                </div>
+                <div className="modal-actions">
+                  <button className="btn" onClick={closeModal}>Cancelar</button>
+                  <button className="btn primary" onClick={() => {
+                    const u = modal.formData;
+                    if(u.id) {
+                      axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); openAlert('Sucesso', 'Usuário atualizado.'); });
+                    } else {
+                      axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); openAlert('Sucesso', 'Usuário criado com senha padrão "nova@2026".'); });
+                    }
+                  }}>Salvar</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
