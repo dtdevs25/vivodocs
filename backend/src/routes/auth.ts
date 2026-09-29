@@ -108,4 +108,27 @@ router.get('/logs', async (req: Request, res: Response) => {
   }
 });
 
+// Admin: edit user
+router.put('/users/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { nome, email, nivel_acesso } = req.body;
+  try {
+    await query('UPDATE usuarios SET nome = $1, email = $2, nivel_acesso = $3 WHERE id = $4', [nome, email, nivel_acesso, id]);
+    res.json({ message: 'Usuário atualizado com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+// Admin: delete user
+router.delete('/users/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    await query('DELETE FROM usuarios WHERE id = $1', [id]);
+    res.json({ message: 'Usuário excluído com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir usuário' });
+  }
+});
+
 export default router;

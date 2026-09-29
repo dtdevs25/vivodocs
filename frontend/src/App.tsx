@@ -499,11 +499,29 @@ function App() {
                             <td><span className="status">{u.nivel_acesso.toUpperCase()}</span></td>
                             <td>{new Date(u.created_at).toLocaleDateString()}</td>
                             <td>
-                              <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
-                                if(confirm('Resetar senha para "nova@2026"?')) {
-                                  axios.post(`/api/auth/users/${u.id}/reset`).then(() => alert('Senha resetada!'));
-                                }
-                              }}>Resetar Senha</button>
+                              <div style={{ display: 'flex', gap: '5px' }}>
+                                <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
+                                  const nome = prompt('Nome:', u.nome);
+                                  if (nome === null) return;
+                                  const email = prompt('Email:', u.email);
+                                  if (email === null) return;
+                                  const nivel = prompt('Nível (master, admin, editor, visualizador):', u.nivel_acesso);
+                                  if (nivel === null) return;
+                                  axios.put(`/api/auth/users/${u.id}`, { nome, email, nivel_acesso: nivel }).then(() => fetchAdminUsers());
+                                }}>Editar</button>
+
+                                <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
+                                  if(confirm('Resetar senha para "nova@2026"?')) {
+                                    axios.post(`/api/auth/users/${u.id}/reset`).then(() => alert('Senha resetada!'));
+                                  }
+                                }}>Senha</button>
+
+                                <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--red)', borderColor: '#ffd1d9' }} onClick={() => {
+                                  if(confirm(`Tem certeza que deseja excluir o usuário ${u.nome}?`)) {
+                                    axios.delete(`/api/auth/users/${u.id}`).then(() => fetchAdminUsers());
+                                  }
+                                }}>Excluir</button>
+                              </div>
                             </td>
                           </tr>
                         ))}
