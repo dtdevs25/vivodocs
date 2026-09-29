@@ -124,12 +124,8 @@ function App() {
     return (
       <div className="login-container">
         <div className="login-card">
-          <div className="login-brand">
-            <div className="mark" style={{ transform: 'scale(1.5)' }}><i></i><i></i><i></i></div>
-            <div style={{ marginLeft: '10px' }}>
-              <strong style={{ display: 'block', color: '#60279b', fontSize: '24px', letterSpacing: '1px' }}>VIVO</strong>
-              <small style={{ color: '#aaa0ae', fontSize: '11px', letterSpacing: '2px' }}>GESTÃO LAUDOS</small>
-            </div>
+          <div className="login-brand" style={{ justifyContent: 'center' }}>
+            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '80px', objectFit: 'contain' }} />
           </div>
           <form className="login-form" onSubmit={handleLogin}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -414,8 +410,7 @@ function App() {
             <Menu size={24} />
           </button>
           <div className="header-brand">
-            <div className="mark"><i></i><i></i><i></i></div>
-            <div><strong>VIVO</strong><small>GESTÃO LAUDOS</small></div>
+            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '35px', objectFit: 'contain', marginLeft: '10px' }} />
           </div>
         </div>
         
