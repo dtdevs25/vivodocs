@@ -410,7 +410,7 @@ function App() {
             <Menu size={24} />
           </button>
           <div className="header-brand">
-            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '35px', objectFit: 'contain', marginLeft: '10px' }} />
+            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '35px', objectFit: 'contain' }} />
           </div>
         </div>
         

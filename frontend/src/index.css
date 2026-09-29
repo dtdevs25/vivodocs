@@ -22,7 +22,7 @@ button{cursor:pointer}
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 }
 .menu-toggle {
   background: transparent;
