@@ -170,9 +170,7 @@ function App() {
     <>
       <header className="topbar">
         <div>
-          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
           <h1>Visão geral</h1>
-          <p>Acompanhe a cobertura documental e os próximos vencimentos.</p>
         </div>
       </header>
 
@@ -250,9 +248,7 @@ function App() {
     <>
       <header className="topbar">
         <div>
-          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
           <h1>Unidades Monitoradas</h1>
-          <p>Gerencie os locais e bases sob cobertura de SST.</p>
         </div>
         <div className="actions">
           <input 
@@ -318,9 +314,7 @@ function App() {
     <>
       <header className="topbar">
         <div>
-          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
           <h1>Documentos SST</h1>
-          <p>Acompanhamento detalhado de PGR, LTCAT, AEP e listas de entrega.</p>
         </div>
       </header>
       <section className="content">
@@ -351,9 +345,7 @@ function App() {
     <>
       <header className="topbar">
         <div>
-          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
           <h1>SESMT Registrado (DGs)</h1>
-          <p>Mapeamento de distribuidores gerais sob gestão.</p>
         </div>
       </header>
       <section className="content">
@@ -383,9 +375,7 @@ function App() {
     <>
       <header className="topbar">
         <div>
-          <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
           <h1>Unidades Desmobilizadas</h1>
-          <p>Histórico de prédios desativados e dispensas de laudo.</p>
         </div>
       </header>
       <section className="content">
@@ -483,9 +473,7 @@ function App() {
             <>
               <header className="topbar">
                 <div>
-                  <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
                   <h1>Administrativo</h1>
-                  <p>Gestão de usuários, permissões e auditoria de logs.</p>
                 </div>
                 <div className="actions">
                   <button className={`btn ${adminSubTab === 'users' ? 'primary' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>

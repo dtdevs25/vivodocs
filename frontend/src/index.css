@@ -127,10 +127,10 @@ button{cursor:pointer}
 .spacer{flex:1}
 
 .main{flex:1;min-width:0;overflow-y: auto;}
-.topbar{background:#fff;border-bottom:1px solid var(--line);padding:26px 40px 25px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.eyebrow{font-size:10px;letter-spacing:1px;color:#aaa0ae;text-transform:uppercase}
-.topbar h1{margin:10px 0 5px;font-size:25px}
-.topbar p{margin:0;color:#9a909e}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:15px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.eyebrow{font-size:10px;letter-spacing:1px;color:#aaa0ae;text-transform:uppercase;display:none;}
+.topbar h1{margin:0;font-size:24px;font-weight:600;color:var(--ink)}
+.topbar p{display:none;}
 .actions{display:flex;align-items:center;gap:10px}
 .search{height:40px;width:235px;background:#fff;border:1px solid #e8e2ed;border-radius:8px;padding:0 12px;outline:none}
 .btn{border:1px solid #dfd6e6;border-radius:8px;padding:11px 14px;background:#fff;color:#633092;font-weight:700}
