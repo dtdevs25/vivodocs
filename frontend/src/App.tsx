@@ -35,6 +35,11 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, pendentes: 0, hc_monitorado: 0 });
+  const [documentos, setDocumentos] = useState<any[]>([]);
+  const [sesmt, setSesmt] = useState<any[]>([]);
+  const [desmobilizadas, setDesmobilizadas] = useState<any[]>([]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail) return;
@@ -56,29 +61,35 @@ function App() {
   const fetchUnits = async () => {
     try {
       const res = await axios.get('/api/unidades');
-      // Format backend rows if needed, or just set it
-      // For now, let's map the DB columns to the UI
       const dbUnits = res.data.map((u: any) => ({
-        id: u.id,
-        cnpj: u.cnpj,
-        filial: u.filial,
-        uf: u.uf,
-        cidade: u.cidade,
-        hc: 0,
-        due: '—', // This would come from JOINing documentos_sst in a full implementation
-        status: 'Pendente' 
+        id: u.id, cnpj: u.cnpj, filial: u.filial, uf: u.uf, cidade: u.cidade, hc: 0, due: '—', status: 'Pendente' 
       }));
       setUnits(dbUnits.length ? dbUnits : initialUnits);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
+  };
+  
+  const fetchDashboard = async () => {
+    try { const res = await axios.get('/api/unidades/dashboard'); setDashboardData(res.data); } catch (e) {}
+  };
+  const fetchDocumentos = async () => {
+    try { const res = await axios.get('/api/unidades/documentos'); setDocumentos(res.data); } catch (e) {}
+  };
+  const fetchSesmt = async () => {
+    try { const res = await axios.get('/api/unidades/sesmt'); setSesmt(res.data); } catch (e) {}
+  };
+  const fetchDesmobilizadas = async () => {
+    try { const res = await axios.get('/api/unidades/desmobilizadas'); setDesmobilizadas(res.data); } catch (e) {}
   };
 
   React.useEffect(() => {
     if (user) {
-      fetchUnits();
+      if (activeTab === 'unidades') fetchUnits();
+      if (activeTab === 'dashboard') { fetchUnits(); fetchDashboard(); }
+      if (activeTab === 'documentos') fetchDocumentos();
+      if (activeTab === 'sesmt') fetchSesmt();
+      if (activeTab === 'desmobilizadas') fetchDesmobilizadas();
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,22 +173,22 @@ function App() {
         <div className="cards">
           <div className="card">
             <small>CNPJs monitorados</small>
-            <strong className="purple">{units.length}</strong>
+            <strong className="purple">{dashboardData.total_ativas}</strong>
             <small>Base ativa</small>
           </div>
           <div className="card">
             <small>PGRs vencendo</small>
-            <strong className="amber">0</strong>
+            <strong className="amber">{dashboardData.pgrs_vencendo}</strong>
             <small>Alerta em até 60 dias</small>
           </div>
           <div className="card">
             <small>PGRs vencidos</small>
-            <strong style={{ color: 'var(--red)' }}>0</strong>
+            <strong style={{ color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
             <small>Requer ação imediata</small>
           </div>
           <div className="card">
             <small>HC monitorado</small>
-            <strong className="green">0</strong>
+            <strong className="green">{dashboardData.hc_monitorado}</strong>
             <small>Soma das lotações</small>
           </div>
         </div>
@@ -306,7 +317,25 @@ function App() {
         </div>
       </header>
       <section className="content">
-        <div className="empty">Nenhum documento selecionado no momento. Use a aba de Unidades para ver detalhes.</div>
+        {documentos.length === 0 ? (
+          <div className="empty">Nenhum documento selecionado no momento. Use a aba de Unidades para ver detalhes.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>CNPJ / Filial</th><th>Tipo</th><th>Ano</th><th>Lista de Entrega</th></tr></thead>
+              <tbody>
+                {documentos.map((d, i) => (
+                  <tr key={i}>
+                    <td><b>{d.filial}</b><small>{d.cnpj}</small></td>
+                    <td>{d.tipo_documento}</td>
+                    <td>{d.ano || '—'}</td>
+                    <td>{d.lista_entrega || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );
@@ -316,12 +345,29 @@ function App() {
       <header className="topbar">
         <div>
           <span className="eyebrow">VIVO · SEGURANÇA DO TRABALHO</span>
-          <h1>SESMT Registrado</h1>
-          <p>Mapeamento de recursos e profissionais de saúde e segurança por localidade.</p>
+          <h1>SESMT Registrado (DGs)</h1>
+          <p>Mapeamento de distribuidores gerais sob gestão.</p>
         </div>
       </header>
       <section className="content">
-        <div className="empty">Nenhum registro de SESMT ativo encontrado nesta regional.</div>
+        {sesmt.length === 0 ? (
+          <div className="empty">Nenhum registro de SESMT ativo encontrado nesta regional.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Nome</th><th>CNPJ</th><th>PGR / Status</th></tr></thead>
+              <tbody>
+                {sesmt.map((s, i) => (
+                  <tr key={i}>
+                    <td><b>{s.nome_empresa}</b></td>
+                    <td>{s.cnpj_dg}</td>
+                    <td>{s.status_pgr || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );
@@ -336,7 +382,25 @@ function App() {
         </div>
       </header>
       <section className="content">
-        <div className="empty">Nenhuma unidade desmobilizada no histórico recente.</div>
+        {desmobilizadas.length === 0 ? (
+          <div className="empty">Nenhuma unidade desmobilizada no histórico recente.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Filial / CNPJ</th><th>Local</th><th>Motivo</th><th>Data</th></tr></thead>
+              <tbody>
+                {desmobilizadas.map((d, i) => (
+                  <tr key={i}>
+                    <td><b>{d.filial}</b><small>{d.cnpj}</small></td>
+                    <td>{d.cidade} - {d.uf}</td>
+                    <td>{d.motivo_desmobilizacao || '—'}</td>
+                    <td>{d.data_desmobilizacao ? new Date(d.data_desmobilizacao).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );

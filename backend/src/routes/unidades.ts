@@ -151,4 +151,65 @@ router.post('/:id/desmobilizar', async (req: Request, res: Response) => {
   }
 });
 
+// Dashboard metrics
+router.get('/dashboard', async (req: Request, res: Response) => {
+  try {
+    const { rows: ativas } = await query('SELECT COUNT(*) as total FROM unidades_ativas');
+    const { rows: docs } = await query('SELECT ano, tipo_documento FROM documentos_sst WHERE tipo_documento = $1', ['PGR']);
+    const { rows: pending } = await query('SELECT COUNT(*) as total FROM documentos_sst WHERE ano = $1 OR ano IS NULL', ['ATENÇÃO']);
+    
+    const vencendo = docs.filter(d => d.ano === '2025').length;
+    const vencidos = docs.filter(d => d.ano === '2024' || d.ano === 'ATENÇÃO').length;
+    
+    res.json({
+      total_ativas: ativas[0].total,
+      pgrs_vencendo: vencendo,
+      pgrs_vencidos: vencidos,
+      pendentes: pending[0].total,
+      hc_monitorado: 0
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar dashboard' });
+  }
+});
+
+// Documentos
+router.get('/documentos', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query(`
+      SELECT d.*, u.cnpj, u.filial, u.uf 
+      FROM documentos_sst d
+      JOIN unidades_ativas u ON d.unidade_id = u.id
+      ORDER BY d.id DESC LIMIT 500
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar documentos' });
+  }
+});
+
+// Desmobilizadas
+router.get('/desmobilizadas', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query('SELECT * FROM unidades_desmobilizadas ORDER BY data_desmobilizacao DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar desmobilizadas' });
+  }
+});
+
+// SESMT / Distribuidores DG
+router.get('/sesmt', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query('SELECT * FROM distribuidores_gerais_dg ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar sesmt' });
+  }
+});
+
 export default router;
