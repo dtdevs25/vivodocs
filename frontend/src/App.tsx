@@ -26,7 +26,7 @@ interface UserData {
 function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
-  const [loginRole, setLoginRole] = useState<Role>('master'); 
+  const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -41,14 +41,15 @@ function App() {
   const [sesmt, setSesmt] = useState<any[]>([]);
   const [desmobilizadas, setDesmobilizadas] = useState<any[]>([]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginEmail) return;
-    setUser({
-      nome: loginEmail.split('@')[0],
-      email: loginEmail,
-      role: loginRole
-    });
+    if (!loginEmail || !loginPassword) return;
+    try {
+      const res = await axios.post('/api/auth/login', { email: loginEmail, senha: loginPassword });
+      setUser(res.data.user);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Erro ao fazer login');
+    }
   };
 
   const handleLogout = () => {
@@ -128,7 +129,7 @@ function App() {
           <div className="login-brand" style={{ justifyContent: 'center' }}>
             <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '55px', objectFit: 'contain' }} />
           </div>
-          <div className="login-header-text">Faça login para acessar o sistema</div>
+          <div className="login-header-text">Segurança do Trabalho</div>
           <form className="login-form" onSubmit={handleLogin}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Email</label>
@@ -137,21 +138,12 @@ function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Senha</label>
               <div className="input-wrapper">
-                <input type={showPassword ? 'text' : 'password'} required placeholder="••••••••" />
+                <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required placeholder="••••••••" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <button type="button" className="forgot-password" onClick={() => alert('Recuperação de senha enviada para seu e-mail!')}>Esqueci a senha</button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label>Simular Nível de Acesso</label>
-              <select value={loginRole} onChange={(e) => setLoginRole(e.target.value as Role)}>
-                <option value="master">Master (Acesso Total)</option>
-                <option value="admin">Admin (Gestão Geral)</option>
-                <option value="editor">Editor (Inserir/Editar)</option>
-                <option value="visualizador">Visualizador (Apenas Leitura)</option>
-              </select>
             </div>
             <button type="submit" className="login-btn">Entrar na plataforma</button>
           </form>

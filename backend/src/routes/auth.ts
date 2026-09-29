@@ -32,9 +32,11 @@ router.post('/login', async (req: Request, res: Response) => {
         );
         user = updateResult.rows[0];
       } else {
-        // verify password if not simulating (assuming normal auth)
-        // const valid = await bcrypt.compare(senha, user.senha);
-        // if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+        const valid = await bcrypt.compare(senha, user.senha);
+        if (!valid) {
+          res.status(401).json({ error: 'Senha incorreta' });
+          return;
+        }
       }
     }
 
