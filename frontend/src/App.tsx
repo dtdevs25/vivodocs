@@ -136,34 +136,96 @@ function App() {
       <>
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
-          <div className="cards">
-            <div className="card">
-              <small>Unid. (Ativas | Desat. | DG)</small>
-              <strong className="purple">
-                {dashboardData.total_ativas} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> {dashboardData.total_desmobilizadas} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> {dashboardData.total_dgs}
-              </strong>
-              <small>SESMT: {dashboardData.total_sesmt} | ISO: {dashboardData.total_iso}</small>
+          <div className="cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+            <div className="card" style={{ background: 'linear-gradient(135deg, #2a2a35, #1f1f27)', border: '1px solid #3d3d4a', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ padding: '8px', background: 'rgba(168, 85, 247, 0.2)', borderRadius: '10px' }}><Building2 size={20} color="#a855f7" /></div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#e2e8f0', fontWeight: '600' }}>Visão Geral (Unidades)</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Ativas</span>
+                  <strong style={{ fontSize: '1.2rem', color: '#a855f7' }}>{dashboardData.total_ativas}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Desativadas / DG</span>
+                  <span style={{ fontWeight: '500', color: '#cbd5e1' }}>{dashboardData.total_desmobilizadas} <span style={{color: '#475569', margin: '0 4px'}}>|</span> <span style={{color: '#3b82f6'}}>{dashboardData.total_dgs}</span></span>
+                </div>
+                <div style={{ height: '1px', background: '#3d3d4a', margin: '2px 0' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>SESMT / ISO</span>
+                  <span style={{ fontWeight: '500', color: '#cbd5e1' }}><span style={{color: '#f59e0b'}}>{dashboardData.total_sesmt}</span> <span style={{color: '#475569', margin: '0 4px'}}>|</span> <span style={{color: '#10b981'}}>{dashboardData.total_iso}</span></span>
+                </div>
+              </div>
             </div>
-            <div className="card">
-              <small>Controle PGR (Vig | Venc)</small>
-              <strong className="green">
-                {dashboardData.pgrs_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.pgrs_vencidos}</span>
-              </strong>
-              <small>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
+
+            {/* PGR Card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #2a2a35, #1f1f27)', border: '1px solid #3d3d4a', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ padding: '8px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px' }}><FileCheck size={20} color="#10b981" /></div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#e2e8f0', fontWeight: '600' }}>Controle PGR</h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vigentes</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#10b981' }}>{dashboardData.pgrs_vigentes}</strong>
+                </div>
+                <div style={{ width: '1px', height: '40px', background: '#3d3d4a' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vencidos</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#ef4444' }}>{dashboardData.pgrs_vencidos}</strong>
+                </div>
+              </div>
+              <div style={{ background: dashboardData.pgrs_vencendo > 0 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(148, 163, 184, 0.05)', padding: '10px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: dashboardData.pgrs_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>A vencer (Alerta)</span>
+                <strong style={{ color: dashboardData.pgrs_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>{dashboardData.pgrs_vencendo}</strong>
+              </div>
             </div>
-            <div className="card">
-              <small>Controle LTCAT (Vig | Venc)</small>
-              <strong className="green">
-                {dashboardData.ltcat_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.ltcat_vencidos}</span>
-              </strong>
-              <small>{dashboardData.ltcat_vencendo} vencendo (Alerta)</small>
+
+            {/* LTCAT Card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #2a2a35, #1f1f27)', border: '1px solid #3d3d4a', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ padding: '8px', background: 'rgba(59, 130, 246, 0.2)', borderRadius: '10px' }}><FileCheck size={20} color="#3b82f6" /></div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#e2e8f0', fontWeight: '600' }}>Controle LTCAT</h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vigentes</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#10b981' }}>{dashboardData.ltcat_vigentes}</strong>
+                </div>
+                <div style={{ width: '1px', height: '40px', background: '#3d3d4a' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vencidos</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#ef4444' }}>{dashboardData.ltcat_vencidos}</strong>
+                </div>
+              </div>
+              <div style={{ background: dashboardData.ltcat_vencendo > 0 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(148, 163, 184, 0.05)', padding: '10px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: dashboardData.ltcat_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>A vencer (Alerta)</span>
+                <strong style={{ color: dashboardData.ltcat_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>{dashboardData.ltcat_vencendo}</strong>
+              </div>
             </div>
-            <div className="card">
-              <small>Controle AET (Vig | Venc)</small>
-              <strong className="green">
-                {dashboardData.aet_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.aet_vencidos}</span>
-              </strong>
-              <small>{dashboardData.aet_vencendo} vencendo (Alerta)</small>
+
+            {/* AET Card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #2a2a35, #1f1f27)', border: '1px solid #3d3d4a', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ padding: '8px', background: 'rgba(234, 179, 8, 0.2)', borderRadius: '10px' }}><FileCheck size={20} color="#eab308" /></div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#e2e8f0', fontWeight: '600' }}>Controle AET</h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vigentes</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#10b981' }}>{dashboardData.aet_vigentes}</strong>
+                </div>
+                <div style={{ width: '1px', height: '40px', background: '#3d3d4a' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vencidos</span>
+                  <strong style={{ fontSize: '1.8rem', color: '#ef4444' }}>{dashboardData.aet_vencidos}</strong>
+                </div>
+              </div>
+              <div style={{ background: dashboardData.aet_vencendo > 0 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(148, 163, 184, 0.05)', padding: '10px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: dashboardData.aet_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>A vencer (Alerta)</span>
+                <strong style={{ color: dashboardData.aet_vencendo > 0 ? '#f59e0b' : '#94a3b8' }}>{dashboardData.aet_vencendo}</strong>
+              </div>
             </div>
           </div>
 
