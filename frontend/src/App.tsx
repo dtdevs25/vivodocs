@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Activity } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Activity, Globe, ShieldCheck, FileSearch, Accessibility } from 'lucide-react';
 import axios from 'axios';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
@@ -137,30 +137,38 @@ function App() {
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
           <div className="cards">
-            <div className="card">
-              <small><Activity size={14} style={{verticalAlign: 'middle', marginRight: '4px'}} /> Cobertura Global</small>
+            <div className="card" style={{ border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }}>
+              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
+                <Globe size={16} color="var(--purple)" style={{ marginRight: '6px' }} /> Cobertura Global
+              </small>
               <strong className="purple">{dashboardData.cobertura}%</strong>
               <small>Das unidades ativas possuem docs</small>
             </div>
 
-            <div className="card">
-              <small><FileCheck size={14} style={{verticalAlign: 'middle', marginRight: '4px'}} /> Controle PGR (Vig | Venc)</small>
+            <div className="card" style={{ border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }}>
+              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
+                <ShieldCheck size={16} color="var(--green)" style={{ marginRight: '6px' }} /> Controle PGR (Vig | Venc)
+              </small>
               <strong className="green">
                 {dashboardData.pgrs_vigentes} <span style={{color: 'var(--line)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.pgrs_vencidos}</span>
               </strong>
               <small>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
             </div>
 
-            <div className="card">
-              <small><FileCheck size={14} style={{verticalAlign: 'middle', marginRight: '4px'}} /> Controle LTCAT (Vig | Venc)</small>
+            <div className="card" style={{ border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }}>
+              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
+                <FileSearch size={16} color="var(--amber)" style={{ marginRight: '6px' }} /> Controle LTCAT (Vig | Venc)
+              </small>
               <strong className="green">
                 {dashboardData.ltcat_vigentes} <span style={{color: 'var(--line)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.ltcat_vencidos}</span>
               </strong>
               <small>{dashboardData.ltcat_vencendo} vencendo (Alerta)</small>
             </div>
 
-            <div className="card">
-              <small><FileCheck size={14} style={{verticalAlign: 'middle', marginRight: '4px'}} /> Controle AET (Vig | Venc)</small>
+            <div className="card" style={{ border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
+              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
+                <Accessibility size={16} color="#3b82f6" style={{ marginRight: '6px' }} /> Controle AET (Vig | Venc)
+              </small>
               <strong className="green">
                 {dashboardData.aet_vigentes} <span style={{color: 'var(--line)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.aet_vencidos}</span>
               </strong>
