@@ -151,7 +151,14 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     // PGRs vencendo = ano 2025 ou amarelado
     // PGRs vencidos = ano 2024, 2023 ou status Venceu
     // Note: some DBs have AEP instead of AET, fetch both
-    const { rows: docs } = await query("SELECT tipo_documento, ano, status FROM documentos_sst WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')");
+    // Fetch ONLY the latest document per unit/type to avoid overcounting historical records
+    const { rows: docs } = await query(`
+      SELECT DISTINCT ON (unidade_id, tipo_documento) 
+        tipo_documento, ano, status 
+      FROM documentos_sst 
+      WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')
+      ORDER BY unidade_id, tipo_documento, created_at DESC, id DESC
+    `);
     
     const counts = {
       PGR: { vigentes: 0, vencendo: 0, vencidos: 0, pendentes: 0 },
