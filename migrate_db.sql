@@ -21,6 +21,7 @@ CREATE TABLE unidades_nova (
     motivo_desmobilizacao TEXT,
     data_desmobilizacao DATE,
     is_dg BOOLEAN DEFAULT FALSE,
+    compoe_sesmt BOOLEAN DEFAULT FALSE,
     observacoes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -30,7 +30,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, pendentes: 0, cobertura: 0 });
+  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
   const [matriz, setMatriz] = useState<any[]>([]);
   const [faturamento, setFaturamento] = useState<any[]>([]);
   const [faturamentoResumo, setFaturamentoResumo] = useState<any>({});
@@ -125,46 +125,85 @@ function App() {
   const canEdit = user.role === 'master' || user.role === 'admin' || user.role === 'editor';
 
   const renderDashboard = () => {
-    const totalPgr = dashboardData.pgrs_vigentes + dashboardData.pgrs_vencendo + dashboardData.pgrs_vencidos + dashboardData.pendentes;
-    const percVigente = totalPgr ? Math.round((dashboardData.pgrs_vigentes / totalPgr) * 100) : 0;
+    const totalVigentes = dashboardData.pgrs_vigentes + dashboardData.ltcat_vigentes + dashboardData.aet_vigentes;
+    const totalVencendo = dashboardData.pgrs_vencendo + dashboardData.ltcat_vencendo + dashboardData.aet_vencendo;
+    const totalVencidos = dashboardData.pgrs_vencidos + dashboardData.ltcat_vencidos + dashboardData.aet_vencidos;
+    const totalPendentes = dashboardData.pendentes;
+    const totalDocs = totalVigentes + totalVencendo + totalVencidos + totalPendentes;
+    const percVigente = totalDocs ? Math.round((totalVigentes / totalDocs) * 100) : 0;
     
     return (
       <>
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
-          <div className="cards">
-            <div className="card">
-              <small>CNPJs Ativos</small>
-              <strong className="purple">{dashboardData.total_ativas}</strong>
-              <small>Monitorados no sistema</small>
+          <div className="cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <small>Unidades Ativas</small>
+                <strong className="purple">{dashboardData.total_ativas}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <small>Desmobilizadas</small>
+                <strong style={{ color: 'gray' }}>{dashboardData.total_desmobilizadas}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <small>Unidades DG</small>
+                <strong style={{ color: 'var(--blue)' }}>{dashboardData.total_dgs}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <small>Compõe SESMT</small>
+                <strong style={{ color: 'var(--amber)' }}>{dashboardData.total_sesmt}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <small>Escopo ISO 45001</small>
+                <strong style={{ color: 'var(--green)' }}>{dashboardData.total_iso}</strong>
+              </div>
             </div>
             <div className="card">
-              <small>PGRs Vigentes</small>
-              <strong className="green">{dashboardData.pgrs_vigentes}</strong>
-              <small>Documentação em dia</small>
+              <small>Controle PGR</small>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
+                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.pgrs_vigentes}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
+                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
+                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.pgrs_vencidos}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
+              </div>
+              <small className="amber">{dashboardData.pgrs_vencendo} vencendo em breve</small>
             </div>
             <div className="card">
-              <small>PGRs Vencendo</small>
-              <strong className="amber">{dashboardData.pgrs_vencendo}</strong>
-              <small>Alerta 2025</small>
+              <small>Controle LTCAT</small>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
+                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.ltcat_vigentes}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
+                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
+                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.ltcat_vencidos}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
+              </div>
+              <small className="amber">{dashboardData.ltcat_vencendo} vencendo em breve</small>
             </div>
             <div className="card">
-              <small>PGRs Vencidos</small>
-              <strong style={{ color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
-              <small>Requer atenção imediata</small>
+              <small>Controle AET</small>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
+                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.aet_vigentes}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
+                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
+                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.aet_vencidos}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
+              </div>
+              <small className="amber">{dashboardData.aet_vencendo} vencendo em breve</small>
             </div>
           </div>
 
           <div className="grid">
             <div className="panel">
-              <h2>Saúde dos Programas de Risco (PGR)</h2>
+              <h2>Saúde dos Programas (PGR, LTCAT, AET)</h2>
               <div className="chart">
                 <div className="donut"><span id="coverage" style={{color: 'var(--green)'}}>{percVigente}%</span></div>
                 <div className="legend">
-                  <div><i className="green"></i><span>Vigentes</span><b>{dashboardData.pgrs_vigentes}</b></div>
-                  <div><i className="amber"></i><span>Vencendo</span><b>{dashboardData.pgrs_vencendo}</b></div>
-                  <div><i className="red"></i><span>Vencidos</span><b>{dashboardData.pgrs_vencidos}</b></div>
-                  <div><i className="gray"></i><span>Pendentes / S/Info</span><b>{dashboardData.pendentes}</b></div>
+                  <div><i className="green"></i><span>Vigentes</span><b>{totalVigentes}</b></div>
+                  <div><i className="amber"></i><span>Vencendo</span><b>{totalVencendo}</b></div>
+                  <div><i className="red"></i><span>Vencidos</span><b>{totalVencidos}</b></div>
+                  <div><i className="gray"></i><span>Pendentes / S/Info</span><b>{totalPendentes}</b></div>
                 </div>
               </div>
             </div>

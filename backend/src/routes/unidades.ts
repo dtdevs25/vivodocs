@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import multer from 'multer';
 import xlsx from 'xlsx';
+import { logAction } from '../utils/logger';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -88,6 +89,7 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
     }
 
     await query('COMMIT');
+    await logAction('sistema@vivo.com', 'UPLOAD_PLANILHA', `Planilha com ${countUnidades} unidades inseridas/atualizadas com sucesso.`);
     res.json({ message: 'Planilha processada com sucesso!', unidadesProcessadas: countUnidades });
   } catch (err) {
     await query('ROLLBACK');
@@ -104,6 +106,7 @@ router.post('/', async (req: Request, res: Response) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
       [cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes]
     );
+    await logAction('sistema@vivo.com', 'CRIAR_UNIDADE', `Unidade criada com CNPJ: ${cnpj}`);
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -119,6 +122,7 @@ router.post('/:id/desmobilizar', async (req: Request, res: Response) => {
       `UPDATE unidades SET status_funcionamento = 'DESMOBILIZADA', motivo_desmobilizacao = $1, data_desmobilizacao = $2 WHERE id = $3`,
       [motivo_desmobilizacao, data_desmobilizacao, id]
     );
+    await logAction('sistema@vivo.com', 'DESMOBILIZAR_UNIDADE', `Unidade ID ${id} desmobilizada.`);
     res.json({ message: 'Unidade desmobilizada com sucesso' });
   } catch (err) {
     console.error(err);
@@ -129,35 +133,62 @@ router.post('/:id/desmobilizar', async (req: Request, res: Response) => {
 // Real Dashboard metrics
 router.get('/dashboard', async (req: Request, res: Response) => {
   try {
-    const { rows: ativas } = await query("SELECT COUNT(*) as total FROM unidades WHERE status_funcionamento = 'ATIVA'");
+    const { rows: metrics } = await query(`
+      SELECT 
+        COUNT(*) FILTER (WHERE status_funcionamento = 'ATIVA') as ativas,
+        COUNT(*) FILTER (WHERE status_funcionamento = 'DESMOBILIZADA') as desmobilizadas,
+        COUNT(*) FILTER (WHERE is_dg = true) as dgs,
+        COUNT(*) FILTER (WHERE compoe_sesmt = true) as sesmt,
+        COUNT(*) FILTER (WHERE escopo_iso_45001 = true) as iso
+      FROM unidades
+    `);
     
     // PGRs vigentes = ano 2026+ ou status verde
     // PGRs vencendo = ano 2025 ou amarelado
     // PGRs vencidos = ano 2024, 2023 ou status Venceu
-    const { rows: pgrs } = await query("SELECT ano, status FROM documentos_sst WHERE tipo_documento = 'PGR'");
+    const { rows: docs } = await query("SELECT tipo_documento, ano, status FROM documentos_sst WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET')");
     
-    let vigentes = 0, vencendo = 0, vencidos = 0, pendentes = 0;
+    const counts = {
+      PGR: { vigentes: 0, vencendo: 0, vencidos: 0, pendentes: 0 },
+      LTCAT: { vigentes: 0, vencendo: 0, vencidos: 0, pendentes: 0 },
+      AET: { vigentes: 0, vencendo: 0, vencidos: 0, pendentes: 0 }
+    };
     
-    pgrs.forEach(d => {
+    docs.forEach(d => {
+      const type = d.tipo_documento as 'PGR' | 'LTCAT' | 'AET';
+      if (!counts[type]) return;
+      
       const year = parseInt(d.ano);
-      if (d.status === 'Venceu') vencidos++;
-      else if (d.status === 'Vigente') vigentes++;
-      else if (year >= 2026) vigentes++;
-      else if (year === 2025) vencendo++;
-      else if (year <= 2024) vencidos++;
-      else pendentes++;
+      if (d.status === 'Venceu') counts[type].vencidos++;
+      else if (d.status === 'Vigente') counts[type].vigentes++;
+      else if (year >= 2026) counts[type].vigentes++;
+      else if (year === 2025) counts[type].vencendo++;
+      else if (year <= 2024) counts[type].vencidos++;
+      else counts[type].pendentes++;
     });
     
     // Coverage: Unidades com PGR, LTCAT, AEP, AET vs Totais
     const { rows: docsTotal } = await query("SELECT COUNT(DISTINCT unidade_id) as total_cobertas FROM documentos_sst");
     
+    const total_ativas = parseInt(metrics[0].ativas) || 0;
+
     res.json({
-      total_ativas: ativas[0].total,
-      pgrs_vigentes: vigentes,
-      pgrs_vencendo: vencendo,
-      pgrs_vencidos: vencidos,
-      pendentes: pendentes,
-      cobertura: Math.round((parseInt(docsTotal[0].total_cobertas) / Math.max(parseInt(ativas[0].total), 1)) * 100),
+      total_ativas: total_ativas,
+      total_desmobilizadas: parseInt(metrics[0].desmobilizadas) || 0,
+      total_dgs: parseInt(metrics[0].dgs) || 0,
+      total_sesmt: parseInt(metrics[0].sesmt) || 0,
+      total_iso: parseInt(metrics[0].iso) || 0,
+      pgrs_vigentes: counts.PGR.vigentes,
+      pgrs_vencendo: counts.PGR.vencendo,
+      pgrs_vencidos: counts.PGR.vencidos,
+      ltcat_vigentes: counts.LTCAT.vigentes,
+      ltcat_vencendo: counts.LTCAT.vencendo,
+      ltcat_vencidos: counts.LTCAT.vencidos,
+      aet_vigentes: counts.AET.vigentes,
+      aet_vencendo: counts.AET.vencendo,
+      aet_vencidos: counts.AET.vencidos,
+      pendentes: counts.PGR.pendentes + counts.LTCAT.pendentes + counts.AET.pendentes,
+      cobertura: Math.round((parseInt(docsTotal[0].total_cobertas) / Math.max(total_ativas, 1)) * 100),
       hc_monitorado: 0 // Mock until HC logic exists
     });
   } catch (err) {
