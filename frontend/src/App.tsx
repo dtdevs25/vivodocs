@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Activity, Globe, ShieldCheck, FileSearch, Accessibility } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, Accessibility } from 'lucide-react';
 import axios from 'axios';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
