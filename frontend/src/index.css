@@ -293,8 +293,13 @@ button{cursor:pointer}
 }
 @media(max-width:650px){
   .sidebar {
-    position: absolute;
+    position: fixed;
+    z-index: 1000;
     height: 100%;
+    left: 0;
+    top: 60px; /* Adjust based on global header height if needed */
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
   }
   .sidebar.closed {
     transform: translateX(-100%);
@@ -302,14 +307,24 @@ button{cursor:pointer}
   .topbar{display:block}
   .actions{margin-top:18px;flex-wrap:wrap}
   .content{padding:18px 12px}
-  .cards{gap:8px}
+  .cards{gap:8px;grid-template-columns:1fr; /* Stack cards vertically on small screens */}
   .card{padding:13px}
   .card strong{font-size:21px}
-  .chart{gap:15px;justify-content:center}
+  .chart{gap:15px;justify-content:center;flex-direction:column;}
   .donut{width:120px;height:120px}
   .donut:after{width:84px;height:84px}
   .legend{font-size:10px}
   .topbar h1{font-size:22px}
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  }
+  .table {
+    min-width: 600px;
+  }
 }
 
 /* Tabs */

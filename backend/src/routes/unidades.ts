@@ -6,10 +6,10 @@ import xlsx from 'xlsx';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Get all units
+// Get ALL units (Ativas, Desmobilizadas, DGs, Techs) for consolidated management
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { rows } = await query('SELECT * FROM unidades_ativas ORDER BY id DESC');
+    const { rows } = await query("SELECT * FROM unidades ORDER BY status_funcionamento ASC, filial ASC");
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -19,6 +19,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 // Upload seed excel
 router.post('/upload-seed', upload.single('file'), async (req: Request, res: Response) => {
+  // ... Keep existing upload-seed logic ...
   if (!req.file) {
     res.status(400).json({ error: 'No file uploaded' });
     return;
@@ -26,8 +27,6 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
 
   try {
     const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    
-    // Ler a aba 'GERAL'
     const sheetGeral = workbook.Sheets['GERAL'];
     if (!sheetGeral) {
       res.status(400).json({ error: 'Aba "GERAL" não encontrada na planilha.' });
@@ -35,10 +34,9 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
     }
 
     const data: any[] = xlsx.utils.sheet_to_json(sheetGeral, { header: 1 });
-    const rows = data.slice(1).filter(r => r[0]); // Pular header e ignorar linhas sem CNPJ
+    const rows = data.slice(1).filter(r => r[0]); 
 
     await query('BEGIN');
-
     let countUnidades = 0;
     
     for (const r of rows) {
@@ -46,7 +44,6 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
       if (!cnpj) continue;
       
       const escopo_iso = String(r[1] || '').trim().toUpperCase() === 'SIM';
-      // PGR / LTCAT / AEP
       const pgrAno = String(r[2] || '');
       const pgrLista = String(r[3] || '');
       const ltcatLista = String(r[5] || '');
@@ -64,10 +61,9 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
       const mes_ano_po = String(r[19] || '');
       const observacoes = String(r[20] || '');
 
-      // Upsert Unidade Ativa
       const resultUnidade = await query(
-        `INSERT INTO unidades_ativas (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `INSERT INTO unidades (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes, status_funcionamento)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'ATIVA')
          ON CONFLICT (cnpj) DO UPDATE SET
          filial = EXCLUDED.filial, regional = EXCLUDED.regional, uf = EXCLUDED.uf, cidade = EXCLUDED.cidade,
          updated_at = NOW()
@@ -78,7 +74,6 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
       const unidadeId = resultUnidade.rows[0].id;
       countUnidades++;
 
-      // Inserir documentos simplificado (PGR, LTCAT, AEP)
       await query(`DELETE FROM documentos_sst WHERE unidade_id = $1`, [unidadeId]);
       
       if (pgrLista) {
@@ -101,12 +96,11 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
   }
 });
 
-// Create a new unit
 router.post('/', async (req: Request, res: Response) => {
   const { cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes } = req.body;
   try {
     const { rows } = await query(
-      `INSERT INTO unidades_ativas (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes)
+      `INSERT INTO unidades (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
       [cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes]
     );
@@ -117,56 +111,54 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-// Demobilize a unit
 router.post('/:id/desmobilizar', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { motivo_desmobilizacao, data_desmobilizacao } = req.body;
-
   try {
-    await query('BEGIN');
-    
-    const { rows } = await query('SELECT * FROM unidades_ativas WHERE id = $1', [id]);
-    if (rows.length === 0) {
-      res.status(404).json({ error: 'Unidade not found' });
-      return;
-    }
-    const unidade = rows[0];
-
-    // Insert into unidades_desmobilizadas
     await query(
-      `INSERT INTO unidades_desmobilizadas (cnpj, filial, regional, uf, cidade, motivo_desmobilizacao, data_desmobilizacao)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [unidade.cnpj, unidade.filial, unidade.regional, unidade.uf, unidade.cidade, motivo_desmobilizacao, data_desmobilizacao]
+      `UPDATE unidades SET status_funcionamento = 'DESMOBILIZADA', motivo_desmobilizacao = $1, data_desmobilizacao = $2 WHERE id = $3`,
+      [motivo_desmobilizacao, data_desmobilizacao, id]
     );
-
-    // Delete from unidades_ativas
-    await query('DELETE FROM unidades_ativas WHERE id = $1', [id]);
-    
-    await query('COMMIT');
     res.json({ message: 'Unidade desmobilizada com sucesso' });
   } catch (err) {
-    await query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Dashboard metrics
+// Real Dashboard metrics
 router.get('/dashboard', async (req: Request, res: Response) => {
   try {
-    const { rows: ativas } = await query('SELECT COUNT(*) as total FROM unidades_ativas');
-    const { rows: docs } = await query('SELECT ano, tipo_documento FROM documentos_sst WHERE tipo_documento = $1', ['PGR']);
-    const { rows: pending } = await query('SELECT COUNT(*) as total FROM documentos_sst WHERE ano = $1 OR ano IS NULL', ['ATENÇÃO']);
+    const { rows: ativas } = await query("SELECT COUNT(*) as total FROM unidades WHERE status_funcionamento = 'ATIVA'");
     
-    const vencendo = docs.filter(d => d.ano === '2025').length;
-    const vencidos = docs.filter(d => d.ano === '2024' || d.ano === 'ATENÇÃO').length;
+    // PGRs vigentes = ano 2026+ ou status verde
+    // PGRs vencendo = ano 2025 ou amarelado
+    // PGRs vencidos = ano 2024, 2023 ou status Venceu
+    const { rows: pgrs } = await query("SELECT ano, status FROM documentos_sst WHERE tipo_documento = 'PGR'");
+    
+    let vigentes = 0, vencendo = 0, vencidos = 0, pendentes = 0;
+    
+    pgrs.forEach(d => {
+      const year = parseInt(d.ano);
+      if (d.status === 'Venceu') vencidos++;
+      else if (d.status === 'Vigente') vigentes++;
+      else if (year >= 2026) vigentes++;
+      else if (year === 2025) vencendo++;
+      else if (year <= 2024) vencidos++;
+      else pendentes++;
+    });
+    
+    // Coverage: Unidades com PGR, LTCAT, AEP, AET vs Totais
+    const { rows: docsTotal } = await query("SELECT COUNT(DISTINCT unidade_id) as total_cobertas FROM documentos_sst");
     
     res.json({
       total_ativas: ativas[0].total,
+      pgrs_vigentes: vigentes,
       pgrs_vencendo: vencendo,
       pgrs_vencidos: vencidos,
-      pendentes: pending[0].total,
-      hc_monitorado: 0
+      pendentes: pendentes,
+      cobertura: Math.round((parseInt(docsTotal[0].total_cobertas) / Math.max(parseInt(ativas[0].total), 1)) * 100),
+      hc_monitorado: 0 // Mock until HC logic exists
     });
   } catch (err) {
     console.error(err);
@@ -174,41 +166,26 @@ router.get('/dashboard', async (req: Request, res: Response) => {
   }
 });
 
-// Documentos
-router.get('/documentos', async (req: Request, res: Response) => {
+// Matriz de Documentos
+router.get('/matriz', async (req: Request, res: Response) => {
   try {
     const { rows } = await query(`
-      SELECT d.*, u.cnpj, u.filial, u.uf 
-      FROM documentos_sst d
-      JOIN unidades_ativas u ON d.unidade_id = u.id
-      ORDER BY d.id DESC LIMIT 500
+      SELECT 
+          u.id, u.cnpj, u.filial, u.uf, u.cidade, u.is_dg, u.status_funcionamento,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as pgr,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as ltcat,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aep,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aet,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as nr01
+      FROM unidades u
+      LEFT JOIN documentos_sst d ON u.id = d.unidade_id
+      GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.is_dg, u.status_funcionamento
+      ORDER BY u.status_funcionamento ASC, u.filial ASC
     `);
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar documentos' });
-  }
-});
-
-// Desmobilizadas
-router.get('/desmobilizadas', async (req: Request, res: Response) => {
-  try {
-    const { rows } = await query('SELECT * FROM unidades_desmobilizadas ORDER BY data_desmobilizacao DESC');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar desmobilizadas' });
-  }
-});
-
-// SESMT / Distribuidores DG
-router.get('/sesmt', async (req: Request, res: Response) => {
-  try {
-    const { rows } = await query('SELECT * FROM distribuidores_gerais_dg ORDER BY id DESC');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar sesmt' });
+    res.status(500).json({ error: 'Erro ao montar matriz' });
   }
 });
 
