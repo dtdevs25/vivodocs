@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
@@ -365,11 +365,29 @@ function App() {
                           {!u.escopo_iso_45001 && !u.compoe_sesmt && <span style={{ color: 'var(--muted)' }}>—</span>}
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            <button className="btn" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => setSelectedUnit(u)}>Ver</button>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            <button
+                              title="Ver Ficha"
+                              style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0e7fb'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--purple)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--purple)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                              onClick={() => setSelectedUnit(u)}
+                            ><Eye size={14} /></button>
                             {(user?.role === 'master' || user?.role === 'admin') && (<>
-                              <button className="btn" style={{ padding: '4px 10px', fontSize: '11px', background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => setEditUnit({ ...u })}>Editar</button>
-                              <button className="btn" style={{ padding: '4px 10px', fontSize: '11px', background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => setDeleteTarget(u)}>Excluir</button>
+                              <button
+                                title="Editar Unidade"
+                                style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0e7fb'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--purple)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--purple)'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                                onClick={() => setEditUnit({ ...u })}
+                              ><Pencil size={14} /></button>
+                              <button
+                                title="Excluir Unidade"
+                                style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--red)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--red)'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                                onClick={() => setDeleteTarget(u)}
+                              ><Trash2 size={14} /></button>
                             </>)}
                           </div>
                         </td>
