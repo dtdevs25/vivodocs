@@ -211,7 +211,8 @@ router.get('/matriz', async (req: Request, res: Response) => {
   try {
     const { rows } = await query(`
       SELECT 
-          u.id, u.cnpj, u.filial, u.uf, u.cidade, u.is_dg, u.status_funcionamento,
+          u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
+          u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt,
           MAX(CASE WHEN d.tipo_documento = 'PGR' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as pgr,
           MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as ltcat,
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aep,
@@ -219,13 +220,55 @@ router.get('/matriz', async (req: Request, res: Response) => {
           MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as nr01
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
-      GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.is_dg, u.status_funcionamento
+      GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
+               u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt
       ORDER BY u.status_funcionamento ASC, u.filial ASC
     `);
     res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao montar matriz' });
+  }
+});
+
+// Update unit
+router.put('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento } = req.body;
+  try {
+    const { rows } = await query(
+      `UPDATE unidades SET
+        filial = $1, cnpj = $2, tipo_predio = $3, cidade = $4, uf = $5,
+        bairro = $6, endereco = $7, regional = $8,
+        escopo_iso_45001 = $9, compoe_sesmt = $10, is_dg = $11, status_funcionamento = $12
+       WHERE id = $13 RETURNING *`,
+      [filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento, id]
+    );
+    await logAction(req.body.userEmail || 'sistema', 'EDITAR_UNIDADE', `Unidade ID ${id} (${filial}) editada.`);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao atualizar unidade' });
+  }
+});
+
+// Delete unit (also deletes related documents)
+router.delete('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const { rows: unitRows } = await query('SELECT filial FROM unidades WHERE id = $1', [id]);
+    if (!unitRows.length) {
+      res.status(404).json({ error: 'Unidade não encontrada' });
+      return;
+    }
+    const filial = unitRows[0].filial;
+    await query('DELETE FROM documentos_sst WHERE unidade_id = $1', [id]);
+    await query('DELETE FROM unidades WHERE id = $1', [id]);
+    await logAction(req.body?.userEmail || 'sistema', 'EXCLUIR_UNIDADE', `Unidade ID ${id} (${filial}) excluída permanentemente.`);
+    res.json({ message: 'Unidade excluída com sucesso' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao excluir unidade' });
   }
 });
 

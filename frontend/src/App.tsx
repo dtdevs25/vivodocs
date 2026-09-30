@@ -41,6 +41,8 @@ function App() {
   const [unitSubTab, setUnitSubTab] = useState<'ativas'|'dgs'|'desmobilizadas'>('ativas');
   const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'>('users');
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
+  const [editUnit, setEditUnit] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [ufFilter, setUfFilter] = useState('');
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
@@ -98,6 +100,33 @@ function App() {
       openAlert('Sucesso', 'Dados atualizados!');
       fetchMatriz(); fetchDashboard();
     } catch (err) { openAlert('Erro', 'Erro ao processar planilha.'); }
+  };
+
+  const handleUpdateUnit = async () => {
+    if (!editUnit) return;
+    try {
+      await axios.put(`/api/unidades/${editUnit.id}`, { ...editUnit, userEmail: user?.email });
+      openAlert('Sucesso', `Unidade "${editUnit.filial}" atualizada com sucesso!`);
+      setEditUnit(null);
+      setSelectedUnit(null);
+      fetchMatriz();
+    } catch (err) {
+      openAlert('Erro', 'Não foi possível atualizar a unidade.');
+    }
+  };
+
+  const handleDeleteUnit = async () => {
+    if (!deleteTarget) return;
+    try {
+      await axios.delete(`/api/unidades/${deleteTarget.id}`, { data: { userEmail: user?.email } });
+      openAlert('Excluído', `Unidade "${deleteTarget.filial}" foi removida permanentemente.`);
+      setDeleteTarget(null);
+      setSelectedUnit(null);
+      fetchMatriz();
+      fetchDashboard();
+    } catch (err) {
+      openAlert('Erro', 'Não foi possível excluir a unidade.');
+    }
   };
 
   if (!user) {
@@ -336,13 +365,13 @@ function App() {
                           {!u.escopo_iso_45001 && !u.compoe_sesmt && <span style={{ color: 'var(--muted)' }}>—</span>}
                         </td>
                         <td>
-                          <button
-                            className="btn"
-                            style={{ padding: '4px 10px', fontSize: '11px' }}
-                            onClick={() => setSelectedUnit(u)}
-                          >
-                            Ver Ficha
-                          </button>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button className="btn" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => setSelectedUnit(u)}>Ver</button>
+                            {(user?.role === 'master' || user?.role === 'admin') && (<>
+                              <button className="btn" style={{ padding: '4px 10px', fontSize: '11px', background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => setEditUnit({ ...u })}>Editar</button>
+                              <button className="btn" style={{ padding: '4px 10px', fontSize: '11px', background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => setDeleteTarget(u)}>Excluir</button>
+                            </>)}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -409,8 +438,92 @@ function App() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(user?.role === 'master' || user?.role === 'admin') && (<>
+                    <button className="btn" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => setEditUnit({ ...selectedUnit })}>✏ Editar</button>
+                    <button className="btn" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => setDeleteTarget(selectedUnit)}>🗑 Excluir</button>
+                  </>)}
+                </div>
                 <button className="btn" onClick={() => setSelectedUnit(null)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Unit Modal */}
+        {editUnit && (
+          <div className="modal-overlay" onClick={() => setEditUnit(null)}>
+            <div className="modal-box" style={{ width: '620px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', borderRadius: '12px 12px 0 0' }}>
+                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>✏ Editar Unidade</h2>
+                <small style={{ color: 'var(--muted)' }}>{editUnit.filial} — {editUnit.cnpj}</small>
+              </div>
+              <div style={{ padding: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+                  {[
+                    { key: 'filial', label: 'Nome / Filial', full: false },
+                    { key: 'cnpj', label: 'CNPJ', full: false },
+                    { key: 'tipo_predio', label: 'Tipo (Loja/Prédio/DG)', full: false },
+                    { key: 'status_funcionamento', label: 'Status', full: false, isSelect: true },
+                    { key: 'cidade', label: 'Cidade', full: false },
+                    { key: 'uf', label: 'UF', full: false },
+                    { key: 'bairro', label: 'Bairro', full: false },
+                    { key: 'regional', label: 'Regional', full: false },
+                    { key: 'endereco', label: 'Endereço', full: true },
+                  ].map(({ key, label, full, isSelect }) => (
+                    <div key={key} className="modal-form-group" style={{ gridColumn: full ? '1 / -1' : undefined }}>
+                      <label>{label}</label>
+                      {isSelect
+                        ? <select value={editUnit[key] || 'ATIVA'} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })}>
+                            <option value="ATIVA">ATIVA</option>
+                            <option value="DESMOBILIZADA">DESMOBILIZADA</option>
+                          </select>
+                        : <input value={editUnit[key] || ''} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })} />
+                      }
+                    </div>
+                  ))}
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', marginBottom: '10px' }}>Flags</div>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                      {[
+                        { key: 'escopo_iso_45001', label: 'Escopo ISO 45001' },
+                        { key: 'compoe_sesmt', label: 'Compõe SESMT' },
+                        { key: 'is_dg', label: 'É Distribuidor (DG)' },
+                      ].map(({ key, label }) => (
+                        <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" checked={!!editUnit[key]} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.checked })} style={{ width: '16px', height: '16px', accentColor: 'var(--purple)' }} />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button className="btn" onClick={() => setEditUnit(null)}>Cancelar</button>
+                  <button className="btn primary" onClick={handleUpdateUnit}>Salvar Alterações</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteTarget && (
+          <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
+            <div className="modal-box" style={{ maxWidth: '420px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ fontSize: '52px', marginBottom: '12px' }}>⚠️</div>
+              <h2 style={{ color: 'var(--red)', margin: '0 0 12px', fontSize: '20px' }}>Excluir Unidade</h2>
+              <p style={{ color: 'var(--muted)', lineHeight: '1.7', marginBottom: '24px' }}>
+                Você está prestes a excluir permanentemente a unidade<br />
+                <strong style={{ color: 'var(--ink)', fontSize: '14px' }}>"{deleteTarget.filial}"</strong><br />
+                <small>{deleteTarget.cnpj}</small><br /><br />
+                <strong style={{ color: 'var(--red)' }}>⚠ Esta ação não poderá ser desfeita.</strong><br />
+                Todos os documentos SST vinculados também serão removidos.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button className="btn" style={{ minWidth: '130px' }} onClick={() => setDeleteTarget(null)}>Cancelar</button>
+                <button className="btn" style={{ minWidth: '130px', background: 'var(--red)', border: '1px solid var(--red)', color: '#fff', fontWeight: 'bold' }} onClick={handleDeleteUnit}>Sim, excluir</button>
               </div>
             </div>
           </div>
