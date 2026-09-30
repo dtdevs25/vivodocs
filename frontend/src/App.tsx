@@ -136,61 +136,34 @@ function App() {
       <>
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
-          <div className="cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <small>Unidades Ativas</small>
-                <strong className="purple">{dashboardData.total_ativas}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <small>Desmobilizadas</small>
-                <strong style={{ color: 'gray' }}>{dashboardData.total_desmobilizadas}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <small>Unidades DG</small>
-                <strong style={{ color: 'var(--blue)' }}>{dashboardData.total_dgs}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <small>Compõe SESMT</small>
-                <strong style={{ color: 'var(--amber)' }}>{dashboardData.total_sesmt}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <small>Escopo ISO 45001</small>
-                <strong style={{ color: 'var(--green)' }}>{dashboardData.total_iso}</strong>
-              </div>
+          <div className="cards">
+            <div className="card">
+              <small>Unid. (Ativas | Desat. | DG)</small>
+              <strong className="purple">
+                {dashboardData.total_ativas} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> {dashboardData.total_desmobilizadas} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> {dashboardData.total_dgs}
+              </strong>
+              <small>SESMT: {dashboardData.total_sesmt} | ISO: {dashboardData.total_iso}</small>
             </div>
             <div className="card">
-              <small>Controle PGR</small>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
-                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.pgrs_vigentes}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
-                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
-                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.pgrs_vencidos}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
-              </div>
-              <small className="amber">{dashboardData.pgrs_vencendo} vencendo em breve</small>
+              <small>Controle PGR (Vig | Venc)</small>
+              <strong className="green">
+                {dashboardData.pgrs_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.pgrs_vencidos}</span>
+              </strong>
+              <small>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
             </div>
             <div className="card">
-              <small>Controle LTCAT</small>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
-                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.ltcat_vigentes}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
-                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
-                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.ltcat_vencidos}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
-              </div>
-              <small className="amber">{dashboardData.ltcat_vencendo} vencendo em breve</small>
+              <small>Controle LTCAT (Vig | Venc)</small>
+              <strong className="green">
+                {dashboardData.ltcat_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.ltcat_vencidos}</span>
+              </strong>
+              <small>{dashboardData.ltcat_vencendo} vencendo (Alerta)</small>
             </div>
             <div className="card">
-              <small>Controle AET</small>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '15px 0' }}>
-                <span className="green" style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.aet_vigentes}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Vig</span>
-                <span style={{ color: 'var(--border)', fontSize: '1.5rem' }}>|</span>
-                <span style={{ color: 'var(--red)', fontSize: '1.4rem', fontWeight: 'bold' }}>{dashboardData.aet_vencidos}</span>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-light)' }}>Venc</span>
-              </div>
-              <small className="amber">{dashboardData.aet_vencendo} vencendo em breve</small>
+              <small>Controle AET (Vig | Venc)</small>
+              <strong className="green">
+                {dashboardData.aet_vigentes} <span style={{color: 'var(--border)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.aet_vencidos}</span>
+              </strong>
+              <small>{dashboardData.aet_vencendo} vencendo (Alerta)</small>
             </div>
           </div>
 
