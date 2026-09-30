@@ -40,6 +40,8 @@ function App() {
   
   const [unitSubTab, setUnitSubTab] = useState<'ativas'|'dgs'|'desmobilizadas'>('ativas');
   const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'>('users');
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
+  const [ufFilter, setUfFilter] = useState('');
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
 
@@ -259,18 +261,41 @@ function App() {
 
   const renderUnidades = () => {
     const filtered = matriz.filter(u => {
-      if (unitSubTab === 'ativas' && u.status_funcionamento !== 'ATIVA') return false;
+      if (unitSubTab === 'ativas' && (u.status_funcionamento !== 'ATIVA' || u.is_dg)) return false;
       if (unitSubTab === 'desmobilizadas' && u.status_funcionamento !== 'DESMOBILIZADA') return false;
       if (unitSubTab === 'dgs' && !u.is_dg) return false;
-      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf}`.toLowerCase().includes(searchQuery.toLowerCase());
+      if (ufFilter && u.uf !== ufFilter) return false;
+      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
+
+    const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
+
+    const tipoBadge = (u: any) => {
+      if (u.is_dg) return { label: 'DG', color: 'var(--amber)', bg: '#fef3e2' };
+      if (u.tipo_predio?.toLowerCase().includes('loja')) return { label: 'Loja', color: 'var(--purple)', bg: '#f3e8ff' };
+      if (u.tipo_predio?.toLowerCase().includes('pr')) return { label: 'Prédio', color: '#3b82f6', bg: '#eff6ff' };
+      return { label: u.tipo_predio || '—', color: 'var(--muted)', bg: '#f3f4f6' };
+    };
 
     return (
       <>
         <header className="topbar">
           <div><h1>Gestão de Unidades</h1></div>
-          <div className="actions">
-            <input className="search" placeholder="Buscar unidade..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <div className="actions" style={{ gap: '8px' }}>
+            <input
+              className="search"
+              placeholder="Buscar por CNPJ ou nome..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <select
+              value={ufFilter}
+              onChange={(e) => setUfFilter(e.target.value)}
+              style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}
+            >
+              <option value="">Todas as UFs</option>
+              {allUfs.map((uf: string) => <option key={uf} value={uf}>{uf}</option>)}
+            </select>
             {canEdit && <button className="btn" onClick={() => fileInputRef.current?.click()}>↥ Importar CSV</button>}
             <input ref={fileInputRef} className="hidden" type="file" accept=".csv" onChange={handleImport} />
           </div>
@@ -281,25 +306,119 @@ function App() {
             <button className={`tab-link ${unitSubTab === 'dgs' ? 'active' : ''}`} onClick={() => setUnitSubTab('dgs')}>Distribuidores (DGs)</button>
             <button className={`tab-link ${unitSubTab === 'desmobilizadas' ? 'active' : ''}`} onClick={() => setUnitSubTab('desmobilizadas')}>Desmobilizadas</button>
           </div>
+          <div style={{ marginBottom: '10px', color: 'var(--muted)', fontSize: '12px' }}>
+            {filtered.length} unidade{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}
+          </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Unidade</th><th>Localização</th><th>Classificação</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>ISO / SESMT</th><th>Ações</th></tr></thead>
               <tbody>
-                {filtered.length === 0 ? <tr><td colSpan={4} className="empty">Nenhuma unidade encontrada.</td></tr> : filtered.map(u => (
-                  <tr key={u.id}>
-                    <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
-                    <td>{u.cidade} · {u.uf}</td>
-                    <td>{u.is_dg ? 'DG' : 'Loja/Prédio'}</td>
-                    <td><button className="btn" style={{padding: '4px 8px', fontSize:'11px'}}>Ver Ficha</button></td>
-                  </tr>
-                ))}
+                {filtered.length === 0
+                  ? <tr><td colSpan={6} className="empty">Nenhuma unidade encontrada.</td></tr>
+                  : filtered.map((u: any) => {
+                    const badge = tipoBadge(u);
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <b>{u.filial}</b>
+                          <small style={{ color: 'var(--muted)' }}>{u.cnpj}</small>
+                        </td>
+                        <td>
+                          <span style={{ background: badge.bg, color: badge.color, borderRadius: '12px', padding: '3px 9px', fontSize: '11px', fontWeight: '700' }}>
+                            {badge.label}
+                          </span>
+                        </td>
+                        <td>{u.cidade || '—'} {u.bairro ? `· ${u.bairro}` : ''}</td>
+                        <td><b>{u.uf || '—'}</b></td>
+                        <td style={{ fontSize: '11px' }}>
+                          {u.escopo_iso_45001 && <span style={{ color: 'var(--green)', fontWeight: 'bold', marginRight: '6px' }}>✓ ISO</span>}
+                          {u.compoe_sesmt && <span style={{ color: 'var(--purple)', fontWeight: 'bold' }}>✓ SESMT</span>}
+                          {!u.escopo_iso_45001 && !u.compoe_sesmt && <span style={{ color: 'var(--muted)' }}>—</span>}
+                        </td>
+                        <td>
+                          <button
+                            className="btn"
+                            style={{ padding: '4px 10px', fontSize: '11px' }}
+                            onClick={() => setSelectedUnit(u)}
+                          >
+                            Ver Ficha
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                }
               </tbody>
             </table>
           </div>
         </section>
+
+        {/* Unit Detail Modal */}
+        {selectedUnit && (
+          <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
+            <div
+              className="modal-box"
+              style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflowY: 'auto' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
+                    {selectedUnit.status_funcionamento === 'DESMOBILIZADA' &&
+                      <span style={{ background: '#fef2f2', color: 'var(--red)', borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>Desmobilizada</span>
+                    }
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
+                  <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
+                </div>
+                <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+              </div>
+
+              {/* Grid de dados */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                {[
+                  { label: 'Cidade', value: selectedUnit.cidade },
+                  { label: 'UF', value: selectedUnit.uf },
+                  { label: 'Bairro', value: selectedUnit.bairro },
+                  { label: 'Endereço', value: selectedUnit.endereco },
+                  { label: 'Regional', value: selectedUnit.regional },
+                  { label: 'Tipo de Prédio', value: selectedUnit.tipo_predio },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{label}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{value || '—'}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Certificações */}
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Certificações e Composição</div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.escopo_iso_45001 ? '#ecfdf5' : '#f3f4f6', color: selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--muted)', border: `1px solid ${selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--line)'}` }}>
+                    {selectedUnit.escopo_iso_45001 ? '✓' : '✗'} ISO 45001
+                  </span>
+                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.compoe_sesmt ? '#f5f0ff' : '#f3f4f6', color: selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--muted)', border: `1px solid ${selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--line)'}` }}>
+                    {selectedUnit.compoe_sesmt ? '✓' : '✗'} Compõe SESMT
+                  </span>
+                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_dg ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_dg ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_dg ? 'var(--amber)' : 'var(--line)'}` }}>
+                    {selectedUnit.is_dg ? '✓' : '✗'} Distribuidor (DG)
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn" onClick={() => setSelectedUnit(null)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   };
+
 
   const renderMatriz = () => {
     const filtered = matriz.filter(u => u.status_funcionamento === 'ATIVA' && `${u.cnpj} ${u.filial}`.toLowerCase().includes(searchQuery.toLowerCase()));
