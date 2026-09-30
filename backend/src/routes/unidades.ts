@@ -133,12 +133,16 @@ router.post('/:id/desmobilizar', async (req: Request, res: Response) => {
 // Real Dashboard metrics
 router.get('/dashboard', async (req: Request, res: Response) => {
   try {
+    // Check if compoe_sesmt column exists to prevent crash
+    const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='compoe_sesmt'");
+    const hasSesmt = colCheck.rows.length > 0;
+    
     const { rows: metrics } = await query(`
       SELECT 
         COUNT(*) FILTER (WHERE status_funcionamento = 'ATIVA') as ativas,
         COUNT(*) FILTER (WHERE status_funcionamento = 'DESMOBILIZADA') as desmobilizadas,
         COUNT(*) FILTER (WHERE is_dg = true) as dgs,
-        COUNT(*) FILTER (WHERE compoe_sesmt = true) as sesmt,
+        ${hasSesmt ? "COUNT(*) FILTER (WHERE compoe_sesmt = true)" : "0"} as sesmt,
         COUNT(*) FILTER (WHERE escopo_iso_45001 = true) as iso
       FROM unidades
     `);
@@ -146,7 +150,8 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     // PGRs vigentes = ano 2026+ ou status verde
     // PGRs vencendo = ano 2025 ou amarelado
     // PGRs vencidos = ano 2024, 2023 ou status Venceu
-    const { rows: docs } = await query("SELECT tipo_documento, ano, status FROM documentos_sst WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET')");
+    // Note: some DBs have AEP instead of AET, fetch both
+    const { rows: docs } = await query("SELECT tipo_documento, ano, status FROM documentos_sst WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')");
     
     const counts = {
       PGR: { vigentes: 0, vencendo: 0, vencidos: 0, pendentes: 0 },
@@ -155,7 +160,8 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     };
     
     docs.forEach(d => {
-      const type = d.tipo_documento as 'PGR' | 'LTCAT' | 'AET';
+      // Map AEP to AET for counting
+      const type = (d.tipo_documento === 'AEP' ? 'AET' : d.tipo_documento) as 'PGR' | 'LTCAT' | 'AET';
       if (!counts[type]) return;
       
       const year = parseInt(d.ano);
@@ -188,7 +194,7 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       aet_vencendo: counts.AET.vencendo,
       aet_vencidos: counts.AET.vencidos,
       pendentes: counts.PGR.pendentes + counts.LTCAT.pendentes + counts.AET.pendentes,
-      cobertura: Math.round((parseInt(docsTotal[0].total_cobertas) / Math.max(total_ativas, 1)) * 100),
+      cobertura: total_ativas > 0 ? Math.round((parseInt(docsTotal[0].total_cobertas) / total_ativas) * 100) : 0,
       hc_monitorado: 0 // Mock until HC logic exists
     });
   } catch (err) {
