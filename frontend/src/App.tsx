@@ -177,26 +177,41 @@ function App() {
           </div>
 
           <div className="grid">
-            <div className="panel">
-              <h2>Saúde dos Programas (PGR, LTCAT, AET)</h2>
-              <div className="chart">
+            <div className="panel" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
+                Saúde dos Programas (PGR, LTCAT, AET)
+              </h2>
+              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
                 <div className="donut" style={{
                   background: `conic-gradient(var(--green) 0 ${totalDocs > 0 ? (totalVigentes / totalDocs) * 100 : 0}%, var(--amber) ${totalDocs > 0 ? (totalVigentes / totalDocs) * 100 : 0}% ${totalDocs > 0 ? ((totalVigentes + totalVencendo) / totalDocs) * 100 : 0}%, var(--red) ${totalDocs > 0 ? ((totalVigentes + totalVencendo) / totalDocs) * 100 : 0}% ${totalDocs > 0 ? ((totalVigentes + totalVencendo + totalVencidos) / totalDocs) * 100 : 0}%, var(--line) ${totalDocs > 0 ? ((totalVigentes + totalVencendo + totalVencidos) / totalDocs) * 100 : 0}%)`
                 }}>
                   <span id="coverage" style={{color: 'var(--green)'}}>{percVigente}%</span>
                 </div>
-                <div className="legend">
-                  <div><i className="green" style={{background: 'var(--green)'}}></i><span>Vigentes</span><b>{totalVigentes}</b></div>
-                  <div><i className="amber" style={{background: 'var(--amber)'}}></i><span>Vencendo</span><b>{totalVencendo}</b></div>
-                  <div><i className="red" style={{background: 'var(--red)'}}></i><span>Vencidos</span><b>{totalVencidos}</b></div>
-                  <div><i className="gray" style={{background: 'var(--line)'}}></i><span>Pendentes / S/Info</span><b>{totalPendentes}</b></div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: '24px', columnGap: '20px', flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{totalVigentes}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Vigentes</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{totalVencendo}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Vencendo</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{totalVencidos}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Vencidos</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--muted)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{totalPendentes}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Pendentes / S.Info</small>
+                  </div>
                 </div>
               </div>
             </div>
             
             <div className="insights">
               <div className="panel" style={{ padding: '24px' }}>
-                <h2 style={{ fontSize: '13px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
+                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
                   VISÃO GERAL DE UNIDADES
                 </h2>
                 

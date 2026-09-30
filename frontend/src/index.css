@@ -149,9 +149,9 @@ button{cursor:pointer}
 .panel h2{font-size:15px;margin:0 0 5px}
 .panel p{margin:0;color:#9a919f;font-size:11px}
 .chart{display:flex;align-items:center;gap:38px;min-height:240px}
-.donut{width:150px;height:150px;border-radius:50%;background:conic-gradient(var(--purple) 0 43%,#dfb034 43% 43%,#d55b74 43% 43%,#e1dce5 43%);display:grid;place-items:center}
+.donut{position:relative;width:150px;height:150px;border-radius:50%;background:conic-gradient(var(--purple) 0 43%,#dfb034 43% 43%,#d55b74 43% 43%,#e1dce5 43%);display:grid;place-items:center}
 .donut:after{content:"";width:105px;height:105px;border-radius:50%;background:#fff}
-.donut span{position:absolute;font-size:24px;font-weight:700}
+.donut span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;font-weight:700}
 .legend{display:grid;gap:15px;color:#958b9d}
 .legend div{display:grid;grid-template-columns:10px 1fr 28px;gap:8px;align-items:center}
 .legend i{width:8px;height:8px;border-radius:50%;background:var(--purple)}
