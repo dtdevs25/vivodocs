@@ -187,20 +187,39 @@ function App() {
             </div>
             
             <div className="insights">
-              <div className="panel">
-                <h2><Building2 size={16} style={{verticalAlign: 'middle', marginRight: '6px'}} /> Visão Geral (Unidades)</h2>
-                <div style={{ marginTop: '15px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <small style={{ color: 'var(--muted)' }}>Ativas</small>
-                    <b style={{ color: 'var(--purple)', fontSize: '14px' }}>{dashboardData.total_ativas}</b>
+              <div className="panel" style={{ padding: '24px' }}>
+                <h2 style={{ fontSize: '13px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
+                  VISÃO GERAL DE UNIDADES
+                </h2>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: '24px' }}>
+                  {/* Row 1 */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Ativas</small>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <small style={{ color: 'var(--muted)' }}>Desativadas / DG</small>
-                    <b>{dashboardData.total_desmobilizadas} <span style={{ color: 'var(--line)', fontWeight: 'normal' }}>|</span> {dashboardData.total_dgs}</b>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_desmobilizadas}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Desativadas</small>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <small style={{ color: 'var(--muted)' }}>SESMT / ISO</small>
-                    <b>{dashboardData.total_sesmt} <span style={{ color: 'var(--line)', fontWeight: 'normal' }}>|</span> {dashboardData.total_iso}</b>
+
+                  {/* Row 2 */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_dgs}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DG</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
+                  </div>
+
+                  {/* Row 3 */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--ink)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_sesmt}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid transparent', paddingLeft: '20px' }}>
+                    {/* Placeholder for alignment */}
                   </div>
                 </div>
               </div>
