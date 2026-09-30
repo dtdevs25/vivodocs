@@ -141,7 +141,7 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       SELECT 
         COUNT(*) FILTER (WHERE status_funcionamento = 'ATIVA') as ativas,
         COUNT(*) FILTER (WHERE status_funcionamento = 'DESMOBILIZADA') as desmobilizadas,
-        (SELECT COUNT(*) FROM documentos_sst d JOIN unidades u ON d.unidade_id = u.id WHERE u.is_dg = true AND d.tipo_documento = 'PGR') as dgs,
+        (SELECT COUNT(DISTINCT d.lista_entrega) FROM documentos_sst d JOIN unidades u ON d.unidade_id = u.id WHERE u.is_dg = true AND d.tipo_documento = 'PGR') as dgs,
         ${hasSesmt ? "COUNT(*) FILTER (WHERE compoe_sesmt = true)" : "0"} as sesmt,
         COUNT(*) FILTER (WHERE escopo_iso_45001 = true) as iso
       FROM unidades

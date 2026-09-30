@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, Accessibility } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog } from 'lucide-react';
 import axios from 'axios';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
@@ -167,7 +167,7 @@ function App() {
 
             <div className="card" style={{ border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
               <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
-                <Accessibility size={16} color="#3b82f6" style={{ marginRight: '6px' }} /> Controle AET (Vig | Venc)
+                <UserCog size={16} color="#3b82f6" style={{ marginRight: '6px' }} /> Controle AET (Vig | Venc)
               </small>
               <strong className="green">
                 {dashboardData.aet_vigentes} <span style={{color: 'var(--line)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.aet_vencidos}</span>
@@ -177,11 +177,13 @@ function App() {
           </div>
 
           <div className="grid">
-            <div className="panel" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
-                Saúde dos Programas (PGR, LTCAT, AET)
-              </h2>
-              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+            <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#f3f4f6', padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
+                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0, fontWeight: 'bold' }}>
+                  Saúde dos Programas (PGR, LTCAT, AET)
+                </h2>
+              </div>
+              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '40px', padding: '24px' }}>
                 <div className="donut" style={{
                   background: `conic-gradient(var(--green) 0 ${totalDocs > 0 ? (totalVigentes / totalDocs) * 100 : 0}%, var(--amber) ${totalDocs > 0 ? (totalVigentes / totalDocs) * 100 : 0}% ${totalDocs > 0 ? ((totalVigentes + totalVencendo) / totalDocs) * 100 : 0}%, var(--red) ${totalDocs > 0 ? ((totalVigentes + totalVencendo) / totalDocs) * 100 : 0}% ${totalDocs > 0 ? ((totalVigentes + totalVencendo + totalVencidos) / totalDocs) * 100 : 0}%, var(--line) ${totalDocs > 0 ? ((totalVigentes + totalVencendo + totalVencidos) / totalDocs) * 100 : 0}%)`
                 }}>
@@ -210,12 +212,14 @@ function App() {
             </div>
             
             <div className="insights">
-              <div className="panel" style={{ padding: '24px' }}>
-                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '24px', fontWeight: 'bold' }}>
-                  VISÃO GERAL DE UNIDADES
-                </h2>
+              <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#f3f4f6', padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
+                  <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0, fontWeight: 'bold' }}>
+                    VISÃO GERAL DE UNIDADES
+                  </h2>
+                </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: '24px', padding: '24px' }}>
                   {/* Row 1 */}
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
