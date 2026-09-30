@@ -141,23 +141,21 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       SELECT 
         COUNT(*) FILTER (WHERE status_funcionamento = 'ATIVA') as ativas,
         COUNT(*) FILTER (WHERE status_funcionamento = 'DESMOBILIZADA') as desmobilizadas,
-        COUNT(*) FILTER (WHERE is_dg = true) as dgs,
+        (SELECT COUNT(*) FROM documentos_sst d JOIN unidades u ON d.unidade_id = u.id WHERE u.is_dg = true AND d.tipo_documento = 'PGR') as dgs,
         ${hasSesmt ? "COUNT(*) FILTER (WHERE compoe_sesmt = true)" : "0"} as sesmt,
         COUNT(*) FILTER (WHERE escopo_iso_45001 = true) as iso
       FROM unidades
     `);
     
-    // PGRs vigentes = ano 2026+ ou status verde
-    // PGRs vencendo = ano 2025 ou amarelado
-    // PGRs vencidos = ano 2024, 2023 ou status Venceu
-    // Note: some DBs have AEP instead of AET, fetch both
     // Fetch ONLY the latest document per unit/type to avoid overcounting historical records
+    // For DGs (which are aggregated in one unit), we keep all their records distinct by their ID
     const { rows: docs } = await query(`
-      SELECT DISTINCT ON (unidade_id, tipo_documento) 
-        tipo_documento, ano, status 
-      FROM documentos_sst 
-      WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')
-      ORDER BY unidade_id, tipo_documento, created_at DESC, id DESC
+      SELECT DISTINCT ON (d.unidade_id, d.tipo_documento, CASE WHEN u.is_dg THEN d.id ELSE 0 END) 
+        d.tipo_documento, d.ano, d.status 
+      FROM documentos_sst d
+      JOIN unidades u ON u.id = d.unidade_id
+      WHERE d.tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')
+      ORDER BY d.unidade_id, d.tipo_documento, CASE WHEN u.is_dg THEN d.id ELSE 0 END, d.created_at DESC, d.id DESC
     `);
     
     const counts = {
