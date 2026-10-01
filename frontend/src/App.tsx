@@ -31,7 +31,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
+  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
   const [matriz, setMatriz] = useState<any[]>([]);
   const [faturamento, setFaturamento] = useState<any[]>([]);
   const [faturamentoResumo, setFaturamentoResumo] = useState<any>({});
@@ -135,7 +135,7 @@ function App() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-brand" style={{ justifyContent: 'center' }}>
-            <img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '55px', objectFit: 'contain' }} />
+            <img src="/logo.png?v=3" alt="Vivo Docs" style={{ maxHeight: '55px', objectFit: 'contain' }} />
           </div>
           <div className="login-header-text">Segurança do Trabalho</div>
           <form className="login-form" onSubmit={handleLogin}>
@@ -263,34 +263,35 @@ function App() {
                   </h2>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: '24px', padding: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: 'var(--line)', gap: '1px' }}>
                   {/* Row 1 */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
                     <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Ativas</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
                     <strong style={{ fontSize: '26px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_desmobilizadas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Desativadas</small>
                   </div>
 
                   {/* Row 2 */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
                     <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_dgs}</strong>
-                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DG</small>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DGs</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)', paddingLeft: '20px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
-                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>TECHs</small>
                   </div>
 
                   {/* Row 3 */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
+                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
+                    <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
                     <strong style={{ fontSize: '26px', color: 'var(--ink)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_sesmt}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid transparent', paddingLeft: '20px' }}>
-                    {/* Placeholder for alignment */}
                   </div>
                 </div>
               </div>
@@ -709,7 +710,7 @@ function App() {
       <header className="global-header">
         <div className="header-left">
           <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu size={24} /></button>
-          <div className="header-brand"><img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '35px' }} /></div>
+          <div className="header-brand"><img src="/logo.png?v=3" alt="Vivo Docs" style={{ maxHeight: '35px' }} /></div>
         </div>
         <div className="header-right">
           <div style={{ position: 'relative' }}>

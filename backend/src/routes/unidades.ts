@@ -142,6 +142,7 @@ router.get('/dashboard', async (req: Request, res: Response) => {
         COUNT(*) FILTER (WHERE status_funcionamento = 'ATIVA' AND is_dg = false) as ativas,
         COUNT(*) FILTER (WHERE status_funcionamento = 'DESMOBILIZADA') as desmobilizadas,
         COUNT(*) FILTER (WHERE is_dg = true) as dgs,
+        COUNT(*) FILTER (WHERE tipo_predio ILIKE '%tech%') as techs,
         ${hasSesmt ? "COUNT(*) FILTER (WHERE compoe_sesmt = true)" : "0"} as sesmt,
         COUNT(*) FILTER (WHERE escopo_iso_45001 = true) as iso
       FROM unidades
@@ -185,6 +186,7 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       total_ativas: total_ativas,
       total_desmobilizadas: parseInt(metrics[0].desmobilizadas) || 0,
       total_dgs: parseInt(metrics[0].dgs) || 0,
+      total_techs: parseInt(metrics[0].techs) || 0,
       total_sesmt: parseInt(metrics[0].sesmt) || 0,
       total_iso: parseInt(metrics[0].iso) || 0,
       pgrs_vigentes: counts.PGR.vigentes,
