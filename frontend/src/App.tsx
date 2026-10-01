@@ -717,7 +717,7 @@ function App() {
                 <LayoutDashboard size={18} /> <span>Painel Geral</span>
               </button>
               <button className={activeTab === 'unidades' ? 'active' : ''} onClick={() => setActiveTab('unidades')}>
-                <Building2 size={18} /> <span>Gestão de Unidades</span>
+                <Building2 size={18} /> <span>Consulta CNPJ</span>
               </button>
               <button className={activeTab === 'matriz' ? 'active' : ''} onClick={() => setActiveTab('matriz')}>
                 <FileCheck size={18} /> <span>Matriz de Conformidade</span>
