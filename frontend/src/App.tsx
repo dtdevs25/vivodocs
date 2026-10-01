@@ -135,7 +135,7 @@ function App() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-brand" style={{ justifyContent: 'center' }}>
-            <img src="/logo.png?v=4" alt="DocSafe" style={{ maxHeight: '55px', objectFit: 'contain' }} />
+            <img src="/logo.png?v=4" alt="DocSafe" style={{ maxHeight: '46px', objectFit: 'contain' }} />
           </div>
           <div className="login-header-text">Segurança do Trabalho</div>
           <form className="login-form" onSubmit={handleLogin}>
