@@ -433,18 +433,19 @@ function App() {
                 </div>
               )}
 
-              <div style={{ padding: '24px' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                      {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
-                    </div>
-                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
-                    <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
+              {/* Gray Header */}
+              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
                   </div>
-                  <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
+                  <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
                 </div>
+                <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+              </div>
+
+              <div style={{ padding: '24px' }}>
 
                 {/* Grid de dados */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
@@ -454,13 +455,31 @@ function App() {
                     { label: 'Bairro', value: selectedUnit.bairro },
                     { label: 'Endereço', value: selectedUnit.endereco },
                     { label: 'Regional', value: selectedUnit.regional },
-                    { label: 'Tipo de Prédio', value: selectedUnit.tipo_predio },
+                    { label: 'Status', value: selectedUnit.status_funcionamento },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{value || '—'}</div>
                     </div>
                   ))}
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Datas dos Documentos</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último PGR</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.pgr_data ? new Date(selectedUnit.pgr_data).toLocaleDateString('pt-BR') : '—'}</div>
+                    </div>
+                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último LTCAT</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.ltcat_data ? new Date(selectedUnit.ltcat_data).toLocaleDateString('pt-BR') : '—'}</div>
+                    </div>
+                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último AEP</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.aep_data ? new Date(selectedUnit.aep_data).toLocaleDateString('pt-BR') : '—'}</div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Certificações */}
@@ -506,9 +525,12 @@ function App() {
                 </div>
               )}
 
-              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)' }}>
-                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>✏ Editar Unidade</h2>
-                <small style={{ color: 'var(--muted)' }}>{editUnit.filial} — {editUnit.cnpj}</small>
+              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>✏ {editUnit.id ? 'Editar Unidade' : 'Cadastrar Nova Unidade'}</h2>
+                  <small style={{ color: 'var(--muted)' }}>{editUnit.filial ? `${editUnit.filial} — ${editUnit.cnpj}` : 'Preencha os dados abaixo'}</small>
+                </div>
+                <button onClick={() => setEditUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
               </div>
               <div style={{ padding: '24px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
@@ -522,7 +544,10 @@ function App() {
                     { key: 'bairro', label: 'Bairro', full: false },
                     { key: 'regional', label: 'Regional', full: false },
                     { key: 'endereco', label: 'Endereço', full: true },
-                  ].map(({ key, label, full, isSelect }) => (
+                    { key: 'pgr_data', label: 'Data do Último PGR', full: false, type: 'date' },
+                    { key: 'ltcat_data', label: 'Data do Último LTCAT', full: false, type: 'date' },
+                    { key: 'aep_data', label: 'Data do Último AEP', full: false, type: 'date' },
+                  ].map(({ key, label, full, isSelect, type }) => (
                     <div key={key} className="modal-form-group" style={{ gridColumn: full ? '1 / -1' : undefined }}>
                       <label>{label}</label>
                       {isSelect
@@ -530,7 +555,7 @@ function App() {
                             <option value="ATIVA">ATIVA</option>
                             <option value="DESMOBILIZADA">DESMOBILIZADA</option>
                           </select>
-                        : <input value={editUnit[key] || ''} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })} />
+                        : <input type={type || 'text'} value={editUnit[key] || ''} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })} />
                       }
                     </div>
                   ))}
@@ -563,10 +588,13 @@ function App() {
         {/* Delete Confirmation Modal */}
         {deleteTarget && (
           <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="modal-box" style={{ maxWidth: '420px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ fontSize: '52px', marginBottom: '12px' }}>⚠️</div>
-              <h2 style={{ color: 'var(--red)', margin: '0 0 12px', fontSize: '20px' }}>Excluir Unidade</h2>
-              <p style={{ color: 'var(--muted)', lineHeight: '1.7', marginBottom: '24px' }}>
+            <div className="modal-box" style={{ maxWidth: '420px', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--red)' }}>⚠️ Excluir Unidade</h2>
+                <button onClick={() => setDeleteTarget(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+              </div>
+              <div style={{ padding: '24px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.7', marginBottom: '24px' }}>
                 Você está prestes a excluir permanentemente a unidade<br />
                 <strong style={{ color: 'var(--ink)', fontSize: '14px' }}>"{deleteTarget.filial}"</strong><br />
                 <small>{deleteTarget.cnpj}</small><br /><br />
@@ -824,27 +852,32 @@ function App() {
 
       {modal.isOpen && (
         <div className="modal-overlay">
-          <div className="modal-box">
-            <h2>{modal.title}</h2>
-            {modal.type === 'alert' && <><p>{modal.message}</p><div className="modal-actions"><button className="btn primary" onClick={closeModal}>OK</button></div></>}
-            {modal.type === 'confirm' && <><p>{modal.message}</p><div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button></div></>}
-            {modal.type === 'userForm' && (
-              <>
-                <div className="modal-form-group"><label>Nome</label><input value={modal.formData.nome} onChange={e => setModal({...modal, formData: {...modal.formData, nome: e.target.value}})} /></div>
-                <div className="modal-form-group"><label>E-mail</label><input value={modal.formData.email} onChange={e => setModal({...modal, formData: {...modal.formData, email: e.target.value}})} /></div>
-                <div className="modal-form-group">
-                  <label>Nível</label>
-                  <select value={modal.formData.nivel_acesso} onChange={e => setModal({...modal, formData: {...modal.formData, nivel_acesso: e.target.value}})}>
-                    <option value="master">Master</option><option value="admin">Admin</option><option value="editor">Editor</option><option value="visualizador">Visualizador</option>
-                  </select>
-                </div>
-                <div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
-                  const u = modal.formData;
-                  if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
-                  else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); closeModal(); });
-                }}>Salvar</button></div>
-              </>
-            )}
+          <div className="modal-box" style={{ padding: 0 }}>
+            <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>{modal.title}</h2>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ padding: '24px' }}>
+              {modal.type === 'alert' && <><p style={{ marginTop: 0 }}>{modal.message}</p><div className="modal-actions"><button className="btn primary" onClick={closeModal}>OK</button></div></>}
+              {modal.type === 'confirm' && <><p style={{ marginTop: 0 }}>{modal.message}</p><div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button></div></>}
+              {modal.type === 'userForm' && (
+                <>
+                  <div className="modal-form-group"><label>Nome</label><input value={modal.formData.nome} onChange={e => setModal({...modal, formData: {...modal.formData, nome: e.target.value}})} /></div>
+                  <div className="modal-form-group"><label>E-mail</label><input value={modal.formData.email} onChange={e => setModal({...modal, formData: {...modal.formData, email: e.target.value}})} /></div>
+                  <div className="modal-form-group">
+                    <label>Nível</label>
+                    <select value={modal.formData.nivel_acesso} onChange={e => setModal({...modal, formData: {...modal.formData, nivel_acesso: e.target.value}})}>
+                      <option value="master">Master</option><option value="admin">Admin</option><option value="editor">Editor</option><option value="visualizador">Visualizador</option>
+                    </select>
+                  </div>
+                  <div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
+                    const u = modal.formData;
+                    if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
+                    else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); closeModal(); });
+                  }}>Salvar</button></div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -221,9 +221,13 @@ router.get('/matriz', async (req: Request, res: Response) => {
           u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt,
           ${hasNr20 ? "u.is_nr20" : "false as is_nr20"},
           MAX(CASE WHEN d.tipo_documento = 'PGR' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as pgr,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as pgr_data,
           MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as ltcat,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as ltcat_data,
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aep,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as aep_data,
           MAX(CASE WHEN d.tipo_documento = 'AET' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aet,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as aet_data,
           MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as nr01
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
@@ -240,7 +244,7 @@ router.get('/matriz', async (req: Request, res: Response) => {
 
 // Create unit
 router.post('/', async (req: Request, res: Response) => {
-  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento } = req.body;
+  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento, pgr_data, ltcat_data, aep_data } = req.body;
   try {
     const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='is_nr20'");
     const hasNr20 = colCheck.rows.length > 0;
@@ -258,6 +262,13 @@ router.post('/', async (req: Request, res: Response) => {
     insertQuery += `) ${values}) RETURNING *`;
     
     const { rows } = await query(insertQuery, params);
+    const unitId = rows[0].id;
+    
+    // Insert documents if dates are provided
+    if (pgr_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'PGR', $2)`, [unitId, pgr_data]);
+    if (ltcat_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'LTCAT', $2)`, [unitId, ltcat_data]);
+    if (aep_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'AEP', $2)`, [unitId, aep_data]);
+
     await logAction(req.body.userEmail || 'sistema', 'CRIAR_UNIDADE', `Unidade ${filial} cadastrada.`);
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -269,7 +280,7 @@ router.post('/', async (req: Request, res: Response) => {
 // Update unit
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento } = req.body;
+  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento, pgr_data, ltcat_data, aep_data } = req.body;
   try {
     // Check if is_nr20 exists
     const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='is_nr20'");
@@ -292,6 +303,12 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
 
     const { rows } = await query(updateQuery, params);
+    
+    // Quick update documents (creates new historical record or updates year if possible)
+    if (pgr_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'PGR', $2) ON CONFLICT DO NOTHING`, [id, pgr_data]);
+    if (ltcat_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'LTCAT', $2) ON CONFLICT DO NOTHING`, [id, ltcat_data]);
+    if (aep_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'AEP', $2) ON CONFLICT DO NOTHING`, [id, aep_data]);
+
     await logAction(req.body.userEmail || 'sistema', 'EDITAR_UNIDADE', `Unidade ID ${id} (${filial}) editada.`);
     res.json(rows[0]);
   } catch (err) {
