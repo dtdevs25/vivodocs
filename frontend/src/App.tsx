@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell } from 'lucide-react';
 import axios from 'axios';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
@@ -26,6 +26,7 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -172,14 +173,14 @@ function App() {
         <section className="content">
           <div className="cards">
             <div className="card" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }}>
-              <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
               <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{dashboardData.cobertura}%</strong>
-              <small style={{ position: 'relative', zIndex: 1 }}>Das unidades ativas possuem docs</small>
+              <small style={{ position: 'relative', zIndex: 1 }}>Unidades Ativas</small>
             </div>
 
             <div className="card" style={{ position: 'relative', border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }}>
-              <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle PGR</small>
               
               <div style={{ display: 'flex', gap: '24px', margin: '10px 0 5px', position: 'relative', zIndex: 1 }}>
@@ -187,17 +188,16 @@ function App() {
                   <strong className="green" style={{ margin: 0 }}>{dashboardData.pgrs_vigentes}</strong>
                   <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vigência</span>
                 </div>
+                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div>
                   <strong style={{ margin: 0, color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
                   <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencidos</span>
                 </div>
               </div>
-              
-              <small style={{ position: 'relative', zIndex: 1 }}>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
             </div>
 
             <div className="card" style={{ position: 'relative', border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }}>
-              <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle LTCAT</small>
               <strong className="amber" style={{ position: 'relative', zIndex: 1 }}>
                 {dashboardData.ltcat_vigentes + dashboardData.ltcat_vencendo + dashboardData.ltcat_vencidos}
@@ -206,7 +206,7 @@ function App() {
             </div>
 
             <div className="card" style={{ position: 'relative', border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
-              <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle AEP/AET</small>
               <strong style={{ color: '#3b82f6', position: 'relative', zIndex: 1 }}>
                 {dashboardData.aet_vigentes + dashboardData.aet_vencendo + dashboardData.aet_vencidos}
@@ -218,10 +218,9 @@ function App() {
           <div className="grid">
             <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ backgroundColor: '#f3f4f6', padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
-                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px', fontWeight: 'bold' }}>
+                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0, fontWeight: 'bold' }}>
                   PANORAMA DE CONFORMIDADE
                 </h2>
-                <small style={{ color: 'var(--muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Documentos PGR por status · unidades ativas</small>
               </div>
               <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '32px 24px', backgroundColor: '#fff' }}>
                 <div className="donut" style={{
@@ -703,6 +702,8 @@ function App() {
     </>
   );
 
+  const expiringUnits = matriz.filter(u => ['red', 'amber'].includes(getStatusColor(u.pgr)) || ['red', 'amber'].includes(getStatusColor(u.ltcat)) || ['red', 'amber'].includes(getStatusColor(u.aet)) || ['red', 'amber'].includes(getStatusColor(u.aep)));
+
   return (
     <div className="layout">
       <header className="global-header">
@@ -710,7 +711,34 @@ function App() {
           <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu size={24} /></button>
           <div className="header-brand"><img src="/logo.png" alt="Vivo Docs" style={{ maxHeight: '35px' }} /></div>
         </div>
-        <div className="header-right"><button onClick={() => setUser(null)} className="logout-btn"><LogOut size={20} /></button></div>
+        <div className="header-right">
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setNotificationsOpen(!notificationsOpen)} className="logout-btn" style={{ position: 'relative' }}>
+              <Bell size={20} />
+              {expiringUnits.length > 0 && (
+                <span style={{ position: 'absolute', top: 0, right: 0, background: 'var(--red)', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', transform: 'translate(20%, -20%)' }}>
+                  {expiringUnits.length}
+                </span>
+              )}
+            </button>
+            {notificationsOpen && (
+              <div style={{ position: 'absolute', top: '100%', right: '0', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px', width: '320px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 999, maxHeight: '400px', overflowY: 'auto' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontWeight: 'bold', backgroundColor: '#fcfcf0' }}>Alertas de Vencimento</div>
+                {expiringUnits.length === 0 ? (
+                  <div style={{ padding: '16px', color: 'var(--muted)', textAlign: 'center', fontSize: '12px' }}>Nenhuma unidade com documentos vencendo.</div>
+                ) : (
+                  expiringUnits.map((u: any) => (
+                    <div key={u.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', cursor: 'pointer' }} onClick={() => { setNotificationsOpen(false); setSelectedUnit(u); }} className="notification-item">
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--ink)' }}>{u.filial}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>Clique para ver os detalhes da unidade e documentos pendentes.</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+          <button onClick={() => setUser(null)} className="logout-btn" title="Sair"><LogOut size={20} /></button>
+        </div>
       </header>
 
       <div className="body-wrapper">
