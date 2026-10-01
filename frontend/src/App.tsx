@@ -171,42 +171,47 @@ function App() {
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
           <div className="cards">
-            <div className="card" style={{ border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }}>
-              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
-                <Globe size={16} color="var(--purple)" style={{ marginRight: '6px' }} /> CNPJs Monitorados
-              </small>
-              <strong className="purple">{dashboardData.cobertura}%</strong>
-              <small>Das unidades ativas possuem docs</small>
+            <div className="card" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }}>
+              <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
+              <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{dashboardData.cobertura}%</strong>
+              <small style={{ position: 'relative', zIndex: 1 }}>Das unidades ativas possuem docs</small>
             </div>
 
-            <div className="card" style={{ border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }}>
-              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
-                <ShieldCheck size={16} color="var(--green)" style={{ marginRight: '6px' }} /> Controle PGR (Vig | Venc)
-              </small>
-              <strong className="green">
-                {dashboardData.pgrs_vigentes} <span style={{color: 'var(--line)', fontWeight: 'normal', margin: '0 4px'}}>|</span> <span style={{color: 'var(--red)'}}>{dashboardData.pgrs_vencidos}</span>
-              </strong>
-              <small>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
+            <div className="card" style={{ position: 'relative', border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }}>
+              <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle PGR</small>
+              
+              <div style={{ display: 'flex', gap: '24px', margin: '10px 0 5px', position: 'relative', zIndex: 1 }}>
+                <div>
+                  <strong className="green" style={{ margin: 0 }}>{dashboardData.pgrs_vigentes}</strong>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vigência</span>
+                </div>
+                <div>
+                  <strong style={{ margin: 0, color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencidos</span>
+                </div>
+              </div>
+              
+              <small style={{ position: 'relative', zIndex: 1 }}>{dashboardData.pgrs_vencendo} vencendo (Alerta)</small>
             </div>
 
-            <div className="card" style={{ border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }}>
-              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
-                <FileSearch size={16} color="var(--amber)" style={{ marginRight: '6px' }} /> Controle LTCAT
-              </small>
-              <strong className="amber" style={{ color: 'var(--amber)' }}>
+            <div className="card" style={{ position: 'relative', border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }}>
+              <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle LTCAT</small>
+              <strong className="amber" style={{ position: 'relative', zIndex: 1 }}>
                 {dashboardData.ltcat_vigentes + dashboardData.ltcat_vencendo + dashboardData.ltcat_vencidos}
               </strong>
-              <small>Documentos emitidos</small>
+              <small style={{ position: 'relative', zIndex: 1 }}>Documentos emitidos</small>
             </div>
 
-            <div className="card" style={{ border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
-              <small style={{ display: 'flex', alignItems: 'center', color: 'var(--ink)', fontWeight: 'bold' }}>
-                <UserCog size={16} color="#3b82f6" style={{ marginRight: '6px' }} /> Controle AEP/AET
-              </small>
-              <strong style={{ color: '#3b82f6' }}>
+            <div className="card" style={{ position: 'relative', border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
+              <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.15 }} />
+              <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle AEP/AET</small>
+              <strong style={{ color: '#3b82f6', position: 'relative', zIndex: 1 }}>
                 {dashboardData.aet_vigentes + dashboardData.aet_vencendo + dashboardData.aet_vencidos}
               </strong>
-              <small>Documentos emitidos</small>
+              <small style={{ position: 'relative', zIndex: 1 }}>Documentos emitidos</small>
             </div>
           </div>
 
