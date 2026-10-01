@@ -309,7 +309,7 @@ function App() {
     return (
       <>
         <header className="topbar">
-          <div><h1>Gestão de Unidades</h1></div>
+          <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px' }}>
             <input
               className="search"
@@ -403,67 +403,72 @@ function App() {
         {/* Unit Detail Modal */}
         {selectedUnit && (
           <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
-            <div
-              className="modal-box"
-              style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflowY: 'auto' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
-                    {selectedUnit.status_funcionamento === 'DESMOBILIZADA' &&
-                      <span style={{ background: '#fef2f2', color: 'var(--red)', borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>Desmobilizada</span>
-                    }
+            <div className="modal-box" style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflowY: 'auto', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+              
+              {selectedUnit.status_funcionamento === 'DESMOBILIZADA' && (
+                <div style={{ backgroundColor: 'var(--red)', color: '#fff', padding: '12px 24px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  ⚠️ Unidade Desmobilizada
+                </div>
+              )}
+
+              <div style={{ padding: '24px' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                      {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
+                    </div>
+                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
+                    <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
                   </div>
-                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
-                  <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
+                  <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
                 </div>
-                <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
-              </div>
 
-              {/* Grid de dados */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                {[
-                  { label: 'Cidade', value: selectedUnit.cidade },
-                  { label: 'UF', value: selectedUnit.uf },
-                  { label: 'Bairro', value: selectedUnit.bairro },
-                  { label: 'Endereço', value: selectedUnit.endereco },
-                  { label: 'Regional', value: selectedUnit.regional },
-                  { label: 'Tipo de Prédio', value: selectedUnit.tipo_predio },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
-                    <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{label}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{value || '—'}</div>
+                {/* Grid de dados */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  {[
+                    { label: 'Cidade', value: selectedUnit.cidade },
+                    { label: 'UF', value: selectedUnit.uf },
+                    { label: 'Bairro', value: selectedUnit.bairro },
+                    { label: 'Endereço', value: selectedUnit.endereco },
+                    { label: 'Regional', value: selectedUnit.regional },
+                    { label: 'Tipo de Prédio', value: selectedUnit.tipo_predio },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{label}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{value || '—'}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Certificações */}
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Certificações e Composição</div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.escopo_iso_45001 ? '#ecfdf5' : '#f3f4f6', color: selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--muted)', border: `1px solid ${selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--line)'}` }}>
+                      {selectedUnit.escopo_iso_45001 ? '✓' : '✗'} ISO 45001
+                    </span>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.compoe_sesmt ? '#f5f0ff' : '#f3f4f6', color: selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--muted)', border: `1px solid ${selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--line)'}` }}>
+                      {selectedUnit.compoe_sesmt ? '✓' : '✗'} Compõe SESMT
+                    </span>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_nr20 ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_nr20 ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_nr20 ? 'var(--amber)' : 'var(--line)'}` }}>
+                      {selectedUnit.is_nr20 ? '✓' : '✗'} NR 20
+                    </span>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_dg ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_dg ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_dg ? 'var(--amber)' : 'var(--line)'}` }}>
+                      {selectedUnit.is_dg ? '✓' : '✗'} Distribuidor (DG)
+                    </span>
                   </div>
-                ))}
-              </div>
-
-              {/* Certificações */}
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Certificações e Composição</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.escopo_iso_45001 ? '#ecfdf5' : '#f3f4f6', color: selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--muted)', border: `1px solid ${selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--line)'}` }}>
-                    {selectedUnit.escopo_iso_45001 ? '✓' : '✗'} ISO 45001
-                  </span>
-                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.compoe_sesmt ? '#f5f0ff' : '#f3f4f6', color: selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--muted)', border: `1px solid ${selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--line)'}` }}>
-                    {selectedUnit.compoe_sesmt ? '✓' : '✗'} Compõe SESMT
-                  </span>
-                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_dg ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_dg ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_dg ? 'var(--amber)' : 'var(--line)'}` }}>
-                    {selectedUnit.is_dg ? '✓' : '✗'} Distribuidor (DG)
-                  </span>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {(user?.role === 'master' || user?.role === 'admin') && (<>
-                    <button className="btn" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => setEditUnit({ ...selectedUnit })}>✏ Editar</button>
-                    <button className="btn" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => setDeleteTarget(selectedUnit)}>🗑 Excluir</button>
-                  </>)}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {(user?.role === 'master' || user?.role === 'admin') && (<>
+                      <button className="btn" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}>✏ Editar</button>
+                      <button className="btn" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}>🗑 Excluir</button>
+                    </>)}
+                  </div>
+                  <button className="btn" onClick={() => setSelectedUnit(null)}>Fechar</button>
                 </div>
-                <button className="btn" onClick={() => setSelectedUnit(null)}>Fechar</button>
               </div>
             </div>
           </div>
@@ -473,7 +478,14 @@ function App() {
         {editUnit && (
           <div className="modal-overlay" onClick={() => setEditUnit(null)}>
             <div className="modal-box" style={{ width: '620px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', padding: 0 }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', borderRadius: '12px 12px 0 0' }}>
+              
+              {editUnit.status_funcionamento === 'DESMOBILIZADA' && (
+                <div style={{ backgroundColor: 'var(--red)', color: '#fff', padding: '12px 24px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  ⚠️ Unidade Desmobilizada
+                </div>
+              )}
+
+              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)' }}>
                 <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>✏ Editar Unidade</h2>
                 <small style={{ color: 'var(--muted)' }}>{editUnit.filial} — {editUnit.cnpj}</small>
               </div>
@@ -507,6 +519,7 @@ function App() {
                       {[
                         { key: 'escopo_iso_45001', label: 'Escopo ISO 45001' },
                         { key: 'compoe_sesmt', label: 'Compõe SESMT' },
+                        { key: 'is_nr20', label: 'NR 20' },
                         { key: 'is_dg', label: 'É Distribuidor (DG)' },
                       ].map(({ key, label }) => (
                         <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>

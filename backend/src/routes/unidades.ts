@@ -209,10 +209,15 @@ router.get('/dashboard', async (req: Request, res: Response) => {
 // Matriz de Documentos
 router.get('/matriz', async (req: Request, res: Response) => {
   try {
+    // Check if is_nr20 exists
+    const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='is_nr20'");
+    const hasNr20 = colCheck.rows.length > 0;
+
     const { rows } = await query(`
       SELECT 
           u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
           u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt,
+          ${hasNr20 ? "u.is_nr20" : "false as is_nr20"},
           MAX(CASE WHEN d.tipo_documento = 'PGR' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as pgr,
           MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as ltcat,
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aep,
@@ -221,7 +226,7 @@ router.get('/matriz', async (req: Request, res: Response) => {
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
       GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
-               u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt
+               u.tipo_predio, u.is_dg, u.status_funcionamento, u.escopo_iso_45001, u.compoe_sesmt${hasNr20 ? ", u.is_nr20" : ""}
       ORDER BY u.status_funcionamento ASC, u.filial ASC
     `);
     res.json(rows);
@@ -234,16 +239,29 @@ router.get('/matriz', async (req: Request, res: Response) => {
 // Update unit
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento } = req.body;
+  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento } = req.body;
   try {
-    const { rows } = await query(
-      `UPDATE unidades SET
+    // Check if is_nr20 exists
+    const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='is_nr20'");
+    const hasNr20 = colCheck.rows.length > 0;
+
+    let updateQuery = `UPDATE unidades SET
         filial = $1, cnpj = $2, tipo_predio = $3, cidade = $4, uf = $5,
         bairro = $6, endereco = $7, regional = $8,
-        escopo_iso_45001 = $9, compoe_sesmt = $10, is_dg = $11, status_funcionamento = $12
-       WHERE id = $13 RETURNING *`,
-      [filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento, id]
-    );
+        escopo_iso_45001 = $9, compoe_sesmt = $10, is_dg = $11, status_funcionamento = $12`;
+    let params: any[] = [filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento];
+
+    if (hasNr20) {
+      updateQuery += `, is_nr20 = $13`;
+      params.push(is_nr20);
+      updateQuery += ` WHERE id = $14 RETURNING *`;
+      params.push(id);
+    } else {
+      updateQuery += ` WHERE id = $13 RETURNING *`;
+      params.push(id);
+    }
+
+    const { rows } = await query(updateQuery, params);
     await logAction(req.body.userEmail || 'sistema', 'EDITAR_UNIDADE', `Unidade ID ${id} (${filial}) editada.`);
     res.json(rows[0]);
   } catch (err) {
