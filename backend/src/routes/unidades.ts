@@ -238,6 +238,34 @@ router.get('/matriz', async (req: Request, res: Response) => {
   }
 });
 
+// Create unit
+router.post('/', async (req: Request, res: Response) => {
+  const { filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, is_nr20, status_funcionamento } = req.body;
+  try {
+    const colCheck = await query("SELECT column_name FROM information_schema.columns WHERE table_name='unidades' AND column_name='is_nr20'");
+    const hasNr20 = colCheck.rows.length > 0;
+
+    let insertQuery = `INSERT INTO unidades (filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento`;
+    let values = `VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12`;
+    let params: any[] = [filial, cnpj, tipo_predio, cidade, uf, bairro, endereco, regional, escopo_iso_45001, compoe_sesmt, is_dg, status_funcionamento || 'ATIVA'];
+
+    if (hasNr20) {
+      insertQuery += `, is_nr20`;
+      values += `, $13`;
+      params.push(is_nr20 || false);
+    }
+    
+    insertQuery += `) ${values}) RETURNING *`;
+    
+    const { rows } = await query(insertQuery, params);
+    await logAction(req.body.userEmail || 'sistema', 'CRIAR_UNIDADE', `Unidade ${filial} cadastrada.`);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao criar unidade' });
+  }
+});
+
 // Update unit
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;

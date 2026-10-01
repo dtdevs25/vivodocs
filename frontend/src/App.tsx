@@ -40,7 +40,7 @@ function App() {
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   
   const [unitSubTab, setUnitSubTab] = useState<'ativas'|'dgs'|'desmobilizadas'>('ativas');
-  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'>('users');
+  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'|'unidades'>('users');
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -106,13 +106,19 @@ function App() {
   const handleUpdateUnit = async () => {
     if (!editUnit) return;
     try {
-      await axios.put(`/api/unidades/${editUnit.id}`, { ...editUnit, userEmail: user?.email });
-      openAlert('Sucesso', `Unidade "${editUnit.filial}" atualizada com sucesso!`);
+      if (editUnit.id) {
+        await axios.put(`/api/unidades/${editUnit.id}`, { ...editUnit, userEmail: user?.email });
+        openAlert('Sucesso', `Unidade "${editUnit.filial}" atualizada com sucesso!`);
+      } else {
+        await axios.post(`/api/unidades`, { ...editUnit, userEmail: user?.email });
+        openAlert('Sucesso', `Unidade "${editUnit.filial}" cadastrada com sucesso!`);
+      }
       setEditUnit(null);
       setSelectedUnit(null);
       fetchMatriz();
+      fetchDashboard();
     } catch (err) {
-      openAlert('Erro', 'Não foi possível atualizar a unidade.');
+      openAlert('Erro', 'Não foi possível salvar a unidade.');
     }
   };
 
@@ -354,10 +360,10 @@ function App() {
           </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>ISO / SESMT</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
               <tbody>
                 {filtered.length === 0
-                  ? <tr><td colSpan={6} className="empty">Nenhuma unidade encontrada.</td></tr>
+                  ? <tr><td colSpan={8} className="empty">Nenhuma unidade encontrada.</td></tr>
                   : filtered.map((u: any) => {
                     const badge = tipoBadge(u);
                     return (
@@ -373,10 +379,12 @@ function App() {
                         </td>
                         <td>{u.cidade || '—'} {u.bairro ? `· ${u.bairro}` : ''}</td>
                         <td><b>{u.uf || '—'}</b></td>
-                        <td style={{ fontSize: '11px' }}>
-                          {u.escopo_iso_45001 && <span style={{ color: 'var(--green)', fontWeight: 'bold', marginRight: '6px' }}>✓ ISO</span>}
-                          {u.compoe_sesmt && <span style={{ color: 'var(--purple)', fontWeight: 'bold' }}>✓ SESMT</span>}
-                          {!u.escopo_iso_45001 && !u.compoe_sesmt && <span style={{ color: 'var(--muted)' }}>—</span>}
+                        <td>{u.regional || '—'}</td>
+                        <td style={{ fontSize: '14px', textAlign: 'center' }}>
+                          {u.escopo_iso_45001 ? <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>✓</span> : <span style={{ color: 'var(--red)', fontWeight: 'bold' }}>✗</span>}
+                        </td>
+                        <td style={{ fontSize: '14px', textAlign: 'center' }}>
+                          {u.compoe_sesmt ? <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>✓</span> : <span style={{ color: 'var(--red)', fontWeight: 'bold' }}>✗</span>}
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -459,29 +467,28 @@ function App() {
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Certificações e Composição</div>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.escopo_iso_45001 ? '#ecfdf5' : '#f3f4f6', color: selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--muted)', border: `1px solid ${selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--line)'}` }}>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.escopo_iso_45001 ? '#ecfdf5' : '#fef2f2', color: selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--red)', border: `1px solid ${selectedUnit.escopo_iso_45001 ? 'var(--green)' : 'var(--red)'}` }}>
                       {selectedUnit.escopo_iso_45001 ? '✓' : '✗'} ISO 45001
                     </span>
-                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.compoe_sesmt ? '#f5f0ff' : '#f3f4f6', color: selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--muted)', border: `1px solid ${selectedUnit.compoe_sesmt ? 'var(--purple)' : 'var(--line)'}` }}>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.compoe_sesmt ? '#ecfdf5' : '#fef2f2', color: selectedUnit.compoe_sesmt ? 'var(--green)' : 'var(--red)', border: `1px solid ${selectedUnit.compoe_sesmt ? 'var(--green)' : 'var(--red)'}` }}>
                       {selectedUnit.compoe_sesmt ? '✓' : '✗'} Compõe SESMT
                     </span>
-                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_nr20 ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_nr20 ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_nr20 ? 'var(--amber)' : 'var(--line)'}` }}>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_nr20 ? '#ecfdf5' : '#fef2f2', color: selectedUnit.is_nr20 ? 'var(--green)' : 'var(--red)', border: `1px solid ${selectedUnit.is_nr20 ? 'var(--green)' : 'var(--red)'}` }}>
                       {selectedUnit.is_nr20 ? '✓' : '✗'} NR 20
                     </span>
-                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_dg ? '#fff7ed' : '#f3f4f6', color: selectedUnit.is_dg ? 'var(--amber)' : 'var(--muted)', border: `1px solid ${selectedUnit.is_dg ? 'var(--amber)' : 'var(--line)'}` }}>
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: selectedUnit.is_dg ? '#ecfdf5' : '#fef2f2', color: selectedUnit.is_dg ? 'var(--green)' : 'var(--red)', border: `1px solid ${selectedUnit.is_dg ? 'var(--green)' : 'var(--red)'}` }}>
                       {selectedUnit.is_dg ? '✓' : '✗'} Distribuidor (DG)
                     </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {(user?.role === 'master' || user?.role === 'admin') && (<>
-                      <button className="btn" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}>✏ Editar</button>
-                      <button className="btn" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}>🗑 Excluir</button>
+                      <button title="Editar" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}><Pencil size={18} /></button>
+                      <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
                     </>)}
                   </div>
-                  <button className="btn" onClick={() => setSelectedUnit(null)}>Fechar</button>
                 </div>
               </div>
             </div>
@@ -660,6 +667,7 @@ function App() {
       <section className="content">
         <div className="tabs-header">
           <button className={`tab-link ${adminSubTab === 'users' ? 'active' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
+          <button className={`tab-link ${adminSubTab === 'unidades' ? 'active' : ''}`} onClick={() => setAdminSubTab('unidades')}>Gestão de Unidades</button>
           <button className={`tab-link ${adminSubTab === 'logs' ? 'active' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs de Acesso</button>
         </div>
         {adminSubTab === 'users' && (
@@ -681,6 +689,36 @@ function App() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {adminSubTab === 'unidades' && (
+          <div>
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', color: 'var(--ink)', margin: '0 0 4px' }}>Unidades Cadastradas</h2>
+                <small style={{ color: 'var(--muted)' }}>Gerencie o cadastro de todas as unidades da base de dados.</small>
+              </div>
+              <button className="btn primary" onClick={() => setEditUnit({ filial: '', cnpj: '', tipo_predio: 'Loja', cidade: '', uf: '', bairro: '', regional: '', endereco: '', escopo_iso_45001: false, compoe_sesmt: false, is_dg: false, is_nr20: false, status_funcionamento: 'ATIVA' })}>＋ Cadastrar Nova Unidade</button>
+            </div>
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>Unidade</th><th>Status</th><th>CNPJ</th><th>Regional</th><th>Ações</th></tr></thead>
+                <tbody>
+                  {matriz.map(u => (
+                    <tr key={u.id}>
+                      <td><b>{u.filial}</b></td>
+                      <td><span className="status" style={{ background: u.status_funcionamento === 'ATIVA' ? '#ecfdf5' : '#fef2f2', color: u.status_funcionamento === 'ATIVA' ? 'var(--green)' : 'var(--red)' }}>{u.status_funcionamento}</span></td>
+                      <td>{u.cnpj}</td>
+                      <td>{u.regional || '—'}</td>
+                      <td>
+                        <button className="btn" style={{fontSize:'11px', marginRight: '5px'}} onClick={() => setEditUnit({...u})}>Editar</button>
+                        <button className="btn" style={{fontSize:'11px', color:'var(--red)'}} onClick={() => setDeleteTarget(u)}>Excluir</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
         {adminSubTab === 'logs' && (
