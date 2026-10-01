@@ -212,21 +212,21 @@ function App() {
 
           <div className="grid">
             <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ backgroundColor: '#fcfcf0', padding: '24px 24px 16px', borderBottom: '1px solid #f3f4f6' }}>
-                <h2 style={{ fontSize: '18px', color: '#1e1b4b', margin: '0 0 6px', fontWeight: '800' }}>
-                  Panorama de conformidade
+              <div style={{ backgroundColor: '#f3f4f6', padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
+                <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px', fontWeight: 'bold' }}>
+                  PANORAMA DE CONFORMIDADE
                 </h2>
-                <small style={{ color: 'var(--muted)', fontSize: '14px' }}>Documentos PGR por status · unidades ativas</small>
+                <small style={{ color: 'var(--muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Documentos PGR por status · unidades ativas</small>
               </div>
-              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '32px 24px', backgroundColor: '#fcfcf0' }}>
+              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '32px 24px', backgroundColor: '#fff' }}>
                 <div className="donut" style={{
                   width: '180px', height: '180px', borderRadius: '50%',
                   background: `conic-gradient(var(--purple) 0 ${(pgrVigentes / totalAtivas) * 100}%, var(--amber) ${(pgrVigentes / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}%, var(--red) ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%, #e5e7eb ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <div style={{ width: '130px', height: '130px', backgroundColor: '#fcfcf0', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{color: '#1e1b4b', fontSize: '32px', fontWeight: '900', lineHeight: 1}}>{coberturaPgr}%</span>
-                    <span style={{color: 'var(--muted)', fontSize: '12px', marginTop: '4px'}}>cobertura</span>
+                  <div style={{ width: '130px', height: '130px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                    <span style={{color: '#1e1b4b', fontSize: '32px', fontWeight: '900', lineHeight: 1, position: 'relative', top: 0, left: 0, transform: 'none'}}>{coberturaPgr}%</span>
+                    <span style={{color: 'var(--muted)', fontSize: '12px', marginTop: '4px', position: 'relative', top: 0, left: 0, transform: 'none'}}>cobertura</span>
                   </div>
                 </div>
                 
