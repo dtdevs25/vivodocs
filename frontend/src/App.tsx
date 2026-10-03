@@ -611,6 +611,9 @@ function App() {
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
+            {['master', 'admin', 'editor'].includes(user?.role) && (
+              <button className="btn primary" onClick={() => setEditUnit({ status_funcionamento: 'ATIVA' })}>＋ Nova Unidade</button>
+            )}
             <input
               className="search"
               placeholder="Buscar por CNPJ, nome, cidade, tipo..."
@@ -790,11 +793,13 @@ function App() {
 
               </div>
 
-              {/* Footer fixo com ações (apenas admin/master) */}
-              {(user?.role === 'master' || user?.role === 'admin') && (
+              {/* Footer fixo com ações */}
+              {['master', 'admin', 'editor'].includes(user?.role) && (
                 <div className="modal-footer start">
                   <button title="Editar" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}><Pencil size={18} /></button>
-                  <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
+                  {['master', 'admin'].includes(user?.role) && (
+                    <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
+                  )}
                 </div>
               )}
             </div>
@@ -841,10 +846,12 @@ function App() {
                     <div key={key} className="modal-form-group" style={{ gridColumn: full ? '1 / -1' : undefined }}>
                       <label>{label}</label>
                       {isSelect
-                        ? <select value={editUnit[key] || 'ATIVA'} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })}>
-                            <option value="ATIVA">ATIVA</option>
-                            <option value="DESMOBILIZADA">DESMOBILIZADA</option>
-                          </select>
+                        ? (user?.role === 'editor' 
+                            ? <input type="text" value={editUnit[key] || 'ATIVA'} disabled style={{ background: '#f5f5f5', color: '#999', cursor: 'not-allowed' }} />
+                            : <select value={editUnit[key] || 'ATIVA'} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })}>
+                                <option value="ATIVA">ATIVA</option>
+                                <option value="DESMOBILIZADA">DESMOBILIZADA</option>
+                              </select>)
                         : <input type={type || 'text'} value={editUnit[key] || ''} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })} />
                       }
                     </div>
