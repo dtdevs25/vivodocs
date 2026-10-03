@@ -109,7 +109,7 @@ function App() {
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   
   const [unitSubTab, setUnitSubTab] = useState<'todas' | TipoKey | 'desmobilizadas'>('todas');
-  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'|'unidades'>('users');
+  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'|'notificacoes'>('users');
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -119,6 +119,7 @@ function App() {
   const [isoFilter, setIsoFilter] = useState(false);
   const [sesmtFilter, setSesmtFilter] = useState(false);
   const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
+  const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '' });
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
@@ -177,7 +178,7 @@ function App() {
 
   const openAlert = (title: string, message: string) => setModal({ isOpen: true, type: 'alert', title, message });
   const openConfirm = (title: string, message: string, onConfirm: () => void) => setModal({ isOpen: true, type: 'confirm', title, message, onConfirm });
-  const openUserForm = (u?: any) => setModal({ isOpen: true, type: 'userForm', title: u ? 'Editar Usuário' : 'Novo Usuário', message: '', formData: u || { nome: '', email: '', nivel_acesso: 'visualizador' } });
+  const openUserForm = (u?: any) => setModal({ isOpen: true, type: 'userForm', title: u ? 'Editar Usuário' : 'Novo Usuário', message: '', formData: u || { nome: '', email: '', nivel_acesso: 'visualizador', recebe_notificacao: true } });
   const closeModal = () => setModal({isOpen: false});
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -258,7 +259,11 @@ function App() {
       if (activeTab === 'dashboard') { fetchDashboard(); fetchMatriz(); }
       if (activeTab === 'unidades' || activeTab === 'matriz') fetchMatriz();
       if (activeTab === 'financeiro') fetchFaturamento();
-      if (activeTab === 'admin') { fetchAdminUsers(); fetchAdminLogs(); }
+      if (activeTab === 'admin') { 
+        fetchAdminUsers(); 
+        fetchAdminLogs(); 
+        axios.get('/api/auth/notificacoes-config').then(res => setNotifConfig(res.data)).catch(() => {});
+      }
     }
   }, [user, activeTab]);
   const handleUpdateUnit = async () => {
@@ -1302,6 +1307,7 @@ function App() {
       <section className="content">
         <div className="tabs-header">
           <button className={`tab-link ${adminSubTab === 'users' ? 'active' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
+          <button className={`tab-link ${adminSubTab === 'notificacoes' ? 'active' : ''}`} onClick={() => setAdminSubTab('notificacoes')}>Notificações (Alertas)</button>
           <button className={`tab-link ${adminSubTab === 'logs' ? 'active' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs de Acesso</button>
         </div>
         {adminSubTab === 'users' && (
@@ -1376,6 +1382,37 @@ function App() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {adminSubTab === 'notificacoes' && (
+          <div className="card" style={{ maxWidth: '600px' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: 'var(--ink)' }}>Parâmetros de Alertas de Vencimento</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div className="modal-form-group">
+                <label>Alerta 1 (Dias)</label>
+                <input type="number" value={notifConfig.dias_alerta_1} onChange={e => setNotifConfig({...notifConfig, dias_alerta_1: parseInt(e.target.value) || 0})} />
+              </div>
+              <div className="modal-form-group">
+                <label>Alerta 2 (Dias)</label>
+                <input type="number" value={notifConfig.dias_alerta_2} onChange={e => setNotifConfig({...notifConfig, dias_alerta_2: parseInt(e.target.value) || 0})} />
+              </div>
+              <div className="modal-form-group">
+                <label>Alerta 3 (Dias)</label>
+                <input type="number" value={notifConfig.dias_alerta_3} onChange={e => setNotifConfig({...notifConfig, dias_alerta_3: parseInt(e.target.value) || 0})} />
+              </div>
+            </div>
+
+            <div className="modal-form-group">
+              <label>E-mails adicionais (separados por vírgula)</label>
+              <input placeholder="Ex: diretor@empresa.com, seguranca@empresa.com" value={notifConfig.email_customizado || ''} onChange={e => setNotifConfig({...notifConfig, email_customizado: e.target.value})} />
+              <small style={{ color: 'var(--muted)', display: 'block', marginTop: '6px' }}>Os usuários Master/Admin recebem automaticamente se a opção "Receber Notificações" estiver marcada no cadastro deles.</small>
+            </div>
+
+            <button className="btn primary" onClick={() => {
+              axios.put('/api/auth/notificacoes-config', notifConfig).then(() => openAlert('Sucesso', 'Configurações de notificação salvas com sucesso!'));
+            }}>Salvar Configurações</button>
           </div>
         )}
       </section>
@@ -1484,6 +1521,14 @@ function App() {
                       <option value="master">Master</option><option value="admin">Admin</option><option value="editor">Editor</option><option value="visualizador">Visualizador</option>
                     </select>
                   </div>
+                  {(modal.formData.nivel_acesso === 'admin' || modal.formData.nivel_acesso === 'master') && (
+                    <div className="modal-form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={!!modal.formData.recebe_notificacao} onChange={e => setModal({...modal, formData: {...modal.formData, recebe_notificacao: e.target.checked}})} style={{ accentColor: 'var(--purple)', width: '16px', height: '16px' }} />
+                        Receber alertas de vencimento por e-mail
+                      </label>
+                    </div>
+                  )}
                 </>
               )}
             </div>

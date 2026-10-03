@@ -68,7 +68,7 @@ router.post('/login', async (req: Request, res: Response) => {
 // Admin: get all users
 router.get('/users', async (req: Request, res: Response) => {
   try {
-    const { rows } = await query('SELECT id, nome, email, nivel_acesso, created_at FROM usuarios ORDER BY id DESC');
+    const { rows } = await query('SELECT id, nome, email, nivel_acesso, created_at, recebe_notificacao FROM usuarios ORDER BY id DESC');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuários' });
@@ -77,12 +77,12 @@ router.get('/users', async (req: Request, res: Response) => {
 
 // Admin: create user
 router.post('/users', async (req: Request, res: Response) => {
-  const { nome, email, nivel_acesso, senha, frontendUrl } = req.body;
+  const { nome, email, nivel_acesso, senha, frontendUrl, recebe_notificacao } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(senha || 'nova@2026', 10);
     const { rows } = await query(
-      'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, nivel_acesso',
-      [nome, email, hashedPassword, nivel_acesso]
+      'INSERT INTO usuarios (nome, email, senha, nivel_acesso, recebe_notificacao) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, nivel_acesso, recebe_notificacao',
+      [nome, email, hashedPassword, nivel_acesso, recebe_notificacao !== undefined ? recebe_notificacao : true]
     );
     await logAction('sistema@vivo.com', 'CRIAR_USUARIO', `Usuário ${email} cadastrado.`);
     
@@ -161,9 +161,9 @@ router.get('/logs', async (req: Request, res: Response) => {
 // Admin: edit user
 router.put('/users/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { nome, email, nivel_acesso } = req.body;
+  const { nome, email, nivel_acesso, recebe_notificacao } = req.body;
   try {
-    await query('UPDATE usuarios SET nome = $1, email = $2, nivel_acesso = $3 WHERE id = $4', [nome, email, nivel_acesso, id]);
+    await query('UPDATE usuarios SET nome = $1, email = $2, nivel_acesso = $3, recebe_notificacao = $4 WHERE id = $5', [nome, email, nivel_acesso, recebe_notificacao !== undefined ? recebe_notificacao : true, id]);
     await logAction('sistema@vivo.com', 'EDITAR_USUARIO', `Usuário ${email} (ID ${id}) editado.`);
     res.json({ message: 'Usuário atualizado com sucesso' });
   } catch (err) {
@@ -180,6 +180,31 @@ router.delete('/users/:id', async (req: Request, res: Response) => {
     res.json({ message: 'Usuário excluído com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao excluir usuário' });
+  }
+});
+
+// Admin: get notification config
+router.get('/notificacoes-config', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await query('SELECT * FROM notificacoes_config WHERE id = 1');
+    res.json(rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configuração' });
+  }
+});
+
+// Admin: update notification config
+router.put('/notificacoes-config', async (req: Request, res: Response) => {
+  const { dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado } = req.body;
+  try {
+    await query(
+      'UPDATE notificacoes_config SET dias_alerta_1 = $1, dias_alerta_2 = $2, dias_alerta_3 = $3, email_customizado = $4, updated_at = NOW() WHERE id = 1',
+      [dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado]
+    );
+    await logAction('sistema@vivo.com', 'EDITAR_CONFIG_NOTIF', 'Configurações de notificação atualizadas.');
+    res.json({ message: 'Configuração atualizada com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar configuração' });
   }
 });
 

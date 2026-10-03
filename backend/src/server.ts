@@ -5,8 +5,32 @@ import path from 'path';
 
 dotenv.config();
 
+import { query } from './db';
+
 const app = express();
 const port = process.env.PORT || 3000;
+
+const initDb = async () => {
+  try {
+    await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recebe_notificacao BOOLEAN DEFAULT true`);
+    await query(`
+      CREATE TABLE IF NOT EXISTS notificacoes_config (
+          id SERIAL PRIMARY KEY,
+          dias_alerta_1 INTEGER DEFAULT 60,
+          dias_alerta_2 INTEGER DEFAULT 30,
+          dias_alerta_3 INTEGER DEFAULT 15,
+          email_customizado TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(`INSERT INTO notificacoes_config (id) VALUES (1) ON CONFLICT DO NOTHING`);
+    console.log('DB migrations complete.');
+  } catch (err) {
+    console.error('Migration error:', err);
+  }
+};
+initDb();
 
 app.use(cors());
 app.use(express.json());
