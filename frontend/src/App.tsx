@@ -363,11 +363,11 @@ function App() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                <div style={{ textAlign: 'right' }}>
+                  <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '12px' }}>Esqueci minha senha</button>
+                </div>
               </div>
-              <button type="submit" className="login-btn">Entrar na plataforma</button>
-              <div style={{ textAlign: 'center', marginTop: '10px' }}>
-                <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '13px' }}>Esqueci minha senha</button>
-              </div>
+              <button type="submit" className="login-btn">Entrar</button>
             </form>
           )}
         </div>
