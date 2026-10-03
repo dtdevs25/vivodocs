@@ -117,6 +117,8 @@ function App() {
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
+  const [sesmtFilter, setSesmtFilter] = useState(false);
+  const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
@@ -453,27 +455,34 @@ function App() {
   const renderDashboard = () => {
     // Pie chart metrics based ONLY on PGR against total active units
     const totalAtivas = dashboardData.total_ativas || 1; // prevent division by zero
-    const pgrVigentes = dashboardData.pgrs_vigentes;
-    const pgrVencendo = dashboardData.pgrs_vencendo;
-    const pgrVencidos = dashboardData.pgrs_vencidos;
-    const pgrPendentes = Math.max(0, totalAtivas - (pgrVigentes + pgrVencendo + pgrVencidos));
+    const pgrVigentes = hiddenLegend['vigentes'] ? 0 : dashboardData.pgrs_vigentes;
+    const pgrVencendo = hiddenLegend['vencendo'] ? 0 : dashboardData.pgrs_vencendo;
+    const pgrVencidos = hiddenLegend['vencidos'] ? 0 : dashboardData.pgrs_vencidos;
+    const pgrPendentes = hiddenLegend['pendentes'] ? 0 : Math.max(0, totalAtivas - (dashboardData.pgrs_vigentes + dashboardData.pgrs_vencendo + dashboardData.pgrs_vencidos));
     
+    const sumPgr = Math.max(1, pgrVigentes + pgrVencendo + pgrVencidos + pgrPendentes);
+    const p1 = (pgrVigentes / sumPgr) * 100;
+    const p2 = p1 + (pgrVencendo / sumPgr) * 100;
+    const p3 = p2 + (pgrVencidos / sumPgr) * 100;
+
     // Cobertura PGR = (Vigentes + Vencendo) / Total Ativas
     const coberturaPgr = Math.round(((pgrVigentes + pgrVencendo) / totalAtivas) * 100);
+
+    const toggleLegend = (key: string) => setHiddenLegend(prev => ({ ...prev, [key]: !prev[key] }));
 
     return (
       <>
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
           <div className="cards">
-            <div className="card" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }}>
+            <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
               <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{dashboardData.cobertura}%</strong>
               <small style={{ position: 'relative', zIndex: 1 }}>Unidades Ativas</small>
             </div>
 
-            <div className="card" style={{ position: 'relative', border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }}>
+            <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle PGR</small>
               
@@ -490,7 +499,7 @@ function App() {
               </div>
             </div>
 
-            <div className="card" style={{ position: 'relative', border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }}>
+            <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--amber)', borderLeft: '4px solid var(--amber)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle LTCAT</small>
               <strong className="amber" style={{ position: 'relative', zIndex: 1 }}>
@@ -499,7 +508,7 @@ function App() {
               <small style={{ position: 'relative', zIndex: 1 }}>Documentos emitidos</small>
             </div>
 
-            <div className="card" style={{ position: 'relative', border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }}>
+            <div className="card interactive" style={{ position: 'relative', border: '1px solid #3b82f6', borderLeft: '4px solid #3b82f6', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle AEP/AET</small>
               <strong style={{ color: '#3b82f6', position: 'relative', zIndex: 1 }}>
@@ -519,7 +528,7 @@ function App() {
               <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '24px 24px', backgroundColor: '#fff' }}>
                 <div className="donut" style={{
                   width: '180px', height: '180px', borderRadius: '50%',
-                  background: `conic-gradient(var(--green) 0 ${(pgrVigentes / totalAtivas) * 100}%, var(--amber) ${(pgrVigentes / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}%, var(--red) ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%, #e5e7eb ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%)`,
+                  background: `conic-gradient(var(--green) 0 ${p1}%, var(--amber) ${p1}% ${p2}%, var(--red) ${p2}% ${p3}%, #e5e7eb ${p3}% 100%)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   <div style={{ width: '130px', height: '130px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
@@ -529,21 +538,21 @@ function App() {
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: hiddenLegend['vigentes'] ? 0.5 : 1 }} onClick={() => toggleLegend('vigentes')}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--green)' }}></div>
-                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500' }}>Vigentes ({pgrVigentes})</span>
+                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['vigentes'] ? 'line-through' : 'none' }}>Vigentes ({dashboardData.pgrs_vigentes})</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: hiddenLegend['vencendo'] ? 0.5 : 1 }} onClick={() => toggleLegend('vencendo')}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--amber)' }}></div>
-                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500' }}>Vencendo em 60 dias ({pgrVencendo})</span>
+                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['vencendo'] ? 'line-through' : 'none' }}>Vencendo em 60 dias ({dashboardData.pgrs_vencendo})</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: hiddenLegend['vencidos'] ? 0.5 : 1 }} onClick={() => toggleLegend('vencidos')}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--red)' }}></div>
-                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500' }}>Vencidos ({pgrVencidos})</span>
+                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['vencidos'] ? 'line-through' : 'none' }}>Vencidos ({dashboardData.pgrs_vencidos})</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: hiddenLegend['pendentes'] ? 0.5 : 1 }} onClick={() => toggleLegend('pendentes')}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
-                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500' }}>Pendentes ({pgrPendentes})</span>
+                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['pendentes'] ? 'line-through' : 'none' }}>Pendentes ({Math.max(0, totalAtivas - (dashboardData.pgrs_vigentes + dashboardData.pgrs_vencendo + dashboardData.pgrs_vencidos))})</span>
                   </div>
                 </div>
               </div>
@@ -559,31 +568,31 @@ function App() {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: 'var(--line)', gap: '1px' }}>
                   {/* Row 1 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setMatrizTipo('todas'); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_ativas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Ativas</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setUnitSubTab('desmobilizadas'); setActiveTab('unidades'); }}>
                     <strong style={{ fontSize: '24px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_desmobilizadas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Desativadas</small>
                   </div>
 
                   {/* Row 2 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setMatrizTipo('dgs'); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_dgs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DGs</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setMatrizTipo('techs'); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_techs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>TECHs</small>
                   </div>
 
                   {/* Row 3 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setIsoFilter(true); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: '#f97316', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_iso}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                  <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setSesmtFilter(true); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: '#000', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_sesmt}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
                   </div>
@@ -1018,6 +1027,7 @@ function App() {
       if (matrizTipo === 'techs' && k !== 'tech') return false;
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
+      if (sesmtFilter && !u.compoe_sesmt) return false;
       return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
@@ -1060,6 +1070,10 @@ function App() {
             <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
+            </label>
+            <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
+              <input type="checkbox" checked={sesmtFilter} onChange={e => setSesmtFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
+              SESMT
             </label>
             <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
               <option value="">Todas Regionais</option>

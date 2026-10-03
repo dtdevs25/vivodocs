@@ -138,7 +138,9 @@ button{cursor:pointer}
 .content{padding:20px 40px 30px}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .card,.panel{background:#fff;border:1px solid var(--line);border-radius:10px}
-.card{padding:14px 18px}
+.card{padding:14px 18px;transition:all 0.2s ease;}
+.card.interactive{cursor:pointer;}
+.card.interactive:hover{transform:translateY(-3px);box-shadow:0 8px 15px rgba(0,0,0,0.05);border-color:var(--purple) !important;}
 .card small{display:block;color:#9a919f}
 .card strong{display:block;font-size:25px;margin:10px 0 5px}
 .purple{color:var(--purple)}
