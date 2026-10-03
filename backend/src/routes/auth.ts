@@ -99,8 +99,15 @@ router.post('/users', async (req: Request, res: Response) => {
 router.post('/users/:id/reset', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
+    const { rows } = await query('SELECT nome, email FROM usuarios WHERE id = $1', [id]);
+    if (rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const user = rows[0];
     const hashedPassword = await bcrypt.hash('nova@2026', 10);
     await query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hashedPassword, id]);
+    await sendWelcomeEmail(user.email, user.nome, 'nova@2026');
     res.json({ message: 'Senha resetada com sucesso para nova@2026' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao resetar senha' });

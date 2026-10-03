@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell, FileSpreadsheet } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell, FileSpreadsheet, Mail } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
 
@@ -1057,14 +1057,26 @@ function App() {
         {adminSubTab === 'users' && (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Nome / E-mail</th><th>Nível</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Nível</th><th>Ações</th></tr></thead>
               <tbody>
                 {adminUsers.map(u => (
                   <tr key={u.id}>
-                    <td><b>{u.nome}</b><small>{u.email}</small></td>
+                    <td><b>{u.nome}</b></td>
+                    <td>{u.email}</td>
                     <td><span className="status">{u.nivel_acesso.toUpperCase()}</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <button
+                          title="Reenviar Senha"
+                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--amber)', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fffbeb'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--amber)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                          onClick={() => openConfirm('Atenção', `Reenviar e-mail de senha para ${u.nome}?`, () => {
+                            axios.post(`/api/auth/users/${u.id}/reset`).then(() => {
+                              openAlert('Sucesso', 'E-mail de redefinição enviado com sucesso!');
+                            });
+                          })}
+                        ><Mail size={14} /></button>
                         <button
                           title="Editar Usuário"
                           style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
@@ -1219,7 +1231,7 @@ function App() {
               {modal.type === 'userForm' && <><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
                 const u = modal.formData;
                 if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
-                else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); closeModal(); });
+                else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); openAlert('Sucesso', 'Usuário criado! Um e-mail foi enviado para ele com a senha temporária.'); });
               }}>Salvar</button></>}
             </div>
           </div>
