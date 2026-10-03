@@ -499,11 +499,11 @@ function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: 'var(--line)', gap: '1px' }}>
                   {/* Row 1 */}
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
+                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Ativas</small>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_desmobilizadas}</strong>
+                    <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_desmobilizadas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Desativadas</small>
                   </div>
 
@@ -513,17 +513,17 @@ function App() {
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DGs</small>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: '#0d9488', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
+                    <strong style={{ fontSize: '26px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>TECHs</small>
                   </div>
 
                   {/* Row 3 */}
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
+                    <strong style={{ fontSize: '26px', color: '#f97316', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--ink)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_sesmt}</strong>
+                    <strong style={{ fontSize: '26px', color: '#000', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_sesmt}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
                   </div>
                 </div>
