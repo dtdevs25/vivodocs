@@ -453,15 +453,11 @@ function App() {
         if (u.status_funcionamento !== 'ATIVA') return false;
         if (unitSubTab !== 'todas' && getTipoKey(u) !== unitSubTab) return false;
       }
-      if (ufFilter && u.uf !== ufFilter) return false;
-      if (cidadeFilter && u.cidade !== cidadeFilter) return false;
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
-    const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
-    const allCidades = [...new Set(matriz.map((u: any) => u.cidade).filter(Boolean))].sort();
     const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
 
     return (
@@ -479,23 +475,13 @@ function App() {
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
             </label>
-            <select value={ufFilter} onChange={(e) => setUfFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
-              <option value="">Todas as UFs</option>
-              {allUfs.map((uf: any) => <option key={uf} value={uf}>{uf}</option>)}
-            </select>
-            <select value={cidadeFilter} onChange={(e) => setCidadeFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
-              <option value="">Todas Cidades</option>
-              {allCidades.map((c: any) => <option key={c} value={c}>{c}</option>)}
-            </select>
             <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
               <option value="">Todas Regionais</option>
               {allRegionais.map((r: any) => <option key={r} value={r}>{r}</option>)}
             </select>
-            <button className="btn" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => handleExportExcel(filtered, 'Consulta_CNPJ')}>
-               <FileSpreadsheet size={16} /> Exportar Excel
+            <button className="btn" title="Baixar Planilha" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px', height: '40px' }} onClick={() => handleExportExcel(filtered, 'Consulta_CNPJ')}>
+               <FileSpreadsheet size={18} />
             </button>
-            {canEdit && <button className="btn" onClick={() => fileInputRef.current?.click()}>↥ Importar CSV</button>}
-            <input ref={fileInputRef} className="hidden" type="file" accept=".csv" onChange={handleImport} />
           </div>
         </header>
         <section className="content">
@@ -787,15 +773,11 @@ function App() {
       if (matrizTipo === 'predios' && k !== 'predio') return false;
       if (matrizTipo === 'dgs' && k !== 'dg') return false;
       if (matrizTipo === 'techs' && k !== 'tech') return false;
-      if (ufFilter && u.uf !== ufFilter) return false;
-      if (cidadeFilter && u.cidade !== cidadeFilter) return false;
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
-    const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
-    const allCidades = [...new Set(matriz.map((u: any) => u.cidade).filter(Boolean))].sort();
     const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
 
     const pill = (bg: string, color: string, text: string, clickable: boolean, title?: string, onClick?: () => void) => (
@@ -836,20 +818,12 @@ function App() {
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
             </label>
-            <select value={ufFilter} onChange={(e) => setUfFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
-              <option value="">Todas as UFs</option>
-              {allUfs.map((uf: any) => <option key={uf} value={uf}>{uf}</option>)}
-            </select>
-            <select value={cidadeFilter} onChange={(e) => setCidadeFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
-              <option value="">Todas Cidades</option>
-              {allCidades.map((c: any) => <option key={c} value={c}>{c}</option>)}
-            </select>
             <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
               <option value="">Todas Regionais</option>
               {allRegionais.map((r: any) => <option key={r} value={r}>{r}</option>)}
             </select>
-            <button className="btn" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => handleExportExcel(filtered, 'Matriz_Conformidade')}>
-               <FileSpreadsheet size={16} /> Exportar Excel
+            <button className="btn" title="Baixar Planilha" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px', height: '40px' }} onClick={() => handleExportExcel(filtered, 'Matriz_Conformidade')}>
+               <FileSpreadsheet size={18} />
             </button>
           </div>
         </header>
