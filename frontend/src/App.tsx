@@ -1127,7 +1127,7 @@ function App() {
                           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fffbeb'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--amber)'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
                           onClick={() => openConfirm('Atenção', `Reenviar e-mail de senha para ${u.nome}?`, () => {
-                            axios.post(`/api/auth/users/${u.id}/reset`).then(() => {
+                            axios.post(`/api/auth/users/${u.id}/reset`, { frontendUrl: window.location.origin }).then(() => {
                               openAlert('Sucesso', 'E-mail de redefinição enviado com sucesso!');
                             });
                           })}
@@ -1284,7 +1284,7 @@ function App() {
               {modal.type === 'alert' && <button className="btn primary" onClick={closeModal}>OK</button>}
               {modal.type === 'confirm' && <><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button></>}
               {modal.type === 'userForm' && <><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
-                const u = modal.formData;
+                const u = { ...modal.formData, frontendUrl: window.location.origin };
                 if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
                 else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); openAlert('Sucesso', 'Usuário criado! Um e-mail foi enviado para ele com a senha temporária.'); });
               }}>Salvar</button></>}

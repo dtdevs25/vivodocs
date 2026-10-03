@@ -77,7 +77,7 @@ router.get('/users', async (req: Request, res: Response) => {
 
 // Admin: create user
 router.post('/users', async (req: Request, res: Response) => {
-  const { nome, email, nivel_acesso, senha } = req.body;
+  const { nome, email, nivel_acesso, senha, frontendUrl } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(senha || 'nova@2026', 10);
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.post('/users', async (req: Request, res: Response) => {
     
     // Send email with token
     const token = jwt.sign({ id: rows[0].id, email }, JWT_SECRET, { expiresIn: '12h' });
-    await sendWelcomeEmail(email, nome, token);
+    await sendWelcomeEmail(email, nome, token, frontendUrl || 'http://localhost:5173');
     
     res.json(rows[0]);
   } catch (err) {
@@ -99,6 +99,7 @@ router.post('/users', async (req: Request, res: Response) => {
 // Admin: reset password
 router.post('/users/:id/reset', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { frontendUrl } = req.body;
   try {
     const { rows } = await query('SELECT nome, email FROM usuarios WHERE id = $1', [id]);
     if (rows.length === 0) {
@@ -107,7 +108,7 @@ router.post('/users/:id/reset', async (req: Request, res: Response) => {
     }
     const user = rows[0];
     const token = jwt.sign({ id, email: user.email }, JWT_SECRET, { expiresIn: '12h' });
-    await sendWelcomeEmail(user.email, user.nome, token);
+    await sendWelcomeEmail(user.email, user.nome, token, frontendUrl || 'http://localhost:5173');
     res.json({ message: 'E-mail para criação de senha enviado com sucesso.' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao resetar senha' });

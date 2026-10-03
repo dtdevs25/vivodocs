@@ -13,8 +13,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-export const sendWelcomeEmail = async (to: string, nome: string, token: string) => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+export const sendWelcomeEmail = async (to: string, nome: string, token: string, frontendUrl: string) => {
   const resetLink = `${frontendUrl}?token=${token}`;
   try {
     const info = await transporter.sendMail({
