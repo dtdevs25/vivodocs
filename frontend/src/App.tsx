@@ -55,6 +55,24 @@ function getDocValidity(doc: string, raw: string, vencimentoRaw?: string) {
 
 function isTech(u: any) { return !!u?.tipo_predio && String(u.tipo_predio).toLowerCase().includes('tech'); }
 
+type TipoKey = 'loja' | 'predio' | 'dg' | 'tech' | 'outro';
+function getTipoKey(u: any): TipoKey {
+  if (u.is_dg) return 'dg';
+  if (isTech(u)) return 'tech';
+  const t = String(u.tipo_predio || '').toLowerCase();
+  if (t.includes('loja')) return 'loja';
+  if (t.includes('pr')) return 'predio';
+  return 'outro';
+}
+
+const TIPO_TABS: { key: 'todas' | TipoKey; label: string }[] = [
+  { key: 'todas', label: 'Todas' },
+  { key: 'loja', label: 'Lojas' },
+  { key: 'predio', label: 'Prédios' },
+  { key: 'dg', label: 'DGs' },
+  { key: 'tech', label: 'TECHs' },
+];
+
 function tipoBadge(u: any) {
   if (u.is_dg) return { label: 'DG', color: 'var(--amber)', bg: '#fef3e2' };
   if (isTech(u)) return { label: 'TECH', color: '#0d9488', bg: '#ccfbf1' };
@@ -83,13 +101,13 @@ function App() {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   
-  const [unitSubTab, setUnitSubTab] = useState<'ativas'|'dgs'|'desmobilizadas'>('ativas');
+  const [unitSubTab, setUnitSubTab] = useState<'todas' | TipoKey | 'desmobilizadas'>('todas');
   const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'|'unidades'>('users');
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string; venc?: string } | null>(null);
-  const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'dgs' | 'techs'>('todas');
+  const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
   const [ufFilter, setUfFilter] = useState('');
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
@@ -383,10 +401,17 @@ function App() {
   };
 
   const renderUnidades = () => {
+    const ativasAll = matriz.filter(u => u.status_funcionamento === 'ATIVA');
+    const tabCount = (k: string) => k === 'desmobilizadas'
+      ? matriz.filter(u => u.status_funcionamento === 'DESMOBILIZADA').length
+      : k === 'todas' ? ativasAll.length : ativasAll.filter(u => getTipoKey(u) === k).length;
     const filtered = matriz.filter(u => {
-      if (unitSubTab === 'ativas' && (u.status_funcionamento !== 'ATIVA' || u.is_dg)) return false;
-      if (unitSubTab === 'desmobilizadas' && u.status_funcionamento !== 'DESMOBILIZADA') return false;
-      if (unitSubTab === 'dgs' && !u.is_dg) return false;
+      if (unitSubTab === 'desmobilizadas') {
+        if (u.status_funcionamento !== 'DESMOBILIZADA') return false;
+      } else {
+        if (u.status_funcionamento !== 'ATIVA') return false;
+        if (unitSubTab !== 'todas' && getTipoKey(u) !== unitSubTab) return false;
+      }
       if (ufFilter && u.uf !== ufFilter) return false;
       return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
@@ -418,9 +443,10 @@ function App() {
         </header>
         <section className="content">
           <div className="tabs-header">
-            <button className={`tab-link ${unitSubTab === 'ativas' ? 'active' : ''}`} onClick={() => setUnitSubTab('ativas')}>Ativas</button>
-            <button className={`tab-link ${unitSubTab === 'dgs' ? 'active' : ''}`} onClick={() => setUnitSubTab('dgs')}>Distribuidores (DGs)</button>
-            <button className={`tab-link ${unitSubTab === 'desmobilizadas' ? 'active' : ''}`} onClick={() => setUnitSubTab('desmobilizadas')}>Desmobilizadas</button>
+            {TIPO_TABS.map(t => (
+              <button key={t.key} className={`tab-link ${unitSubTab === t.key ? 'active' : ''}`} onClick={() => setUnitSubTab(t.key)}>{t.label} ({tabCount(t.key)})</button>
+            ))}
+            <button className={`tab-link ${unitSubTab === 'desmobilizadas' ? 'active' : ''}`} onClick={() => setUnitSubTab('desmobilizadas')}>Desmobilizadas ({tabCount('desmobilizadas')})</button>
           </div>
           <div style={{ marginBottom: '10px', color: 'var(--muted)', fontSize: '12px' }}>
             {filtered.length} unidade{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}
@@ -694,17 +720,19 @@ function App() {
 
   const renderMatriz = () => {
     const ativas = matriz.filter(u => u.status_funcionamento === 'ATIVA');
-    const isLoja = (u: any) => !u.is_dg && !isTech(u);
     const counts = {
       todas: ativas.length,
-      lojas: ativas.filter(isLoja).length,
-      dgs: ativas.filter(u => u.is_dg).length,
-      techs: ativas.filter(u => !u.is_dg && isTech(u)).length,
+      lojas: ativas.filter(u => getTipoKey(u) === 'loja').length,
+      predios: ativas.filter(u => getTipoKey(u) === 'predio').length,
+      dgs: ativas.filter(u => getTipoKey(u) === 'dg').length,
+      techs: ativas.filter(u => getTipoKey(u) === 'tech').length,
     };
     const filtered = ativas.filter(u => {
-      if (matrizTipo === 'lojas' && !isLoja(u)) return false;
-      if (matrizTipo === 'dgs' && !u.is_dg) return false;
-      if (matrizTipo === 'techs' && (u.is_dg || !isTech(u))) return false;
+      const k = getTipoKey(u);
+      if (matrizTipo === 'lojas' && k !== 'loja') return false;
+      if (matrizTipo === 'predios' && k !== 'predio') return false;
+      if (matrizTipo === 'dgs' && k !== 'dg') return false;
+      if (matrizTipo === 'techs' && k !== 'tech') return false;
       return `${u.cnpj} ${u.filial}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
@@ -747,7 +775,8 @@ function App() {
         <section className="content">
           <div className="tabs-header">
             <button className={`tab-link ${matrizTipo === 'todas' ? 'active' : ''}`} onClick={() => setMatrizTipo('todas')}>Todas ({counts.todas})</button>
-            <button className={`tab-link ${matrizTipo === 'lojas' ? 'active' : ''}`} onClick={() => setMatrizTipo('lojas')}>Lojas / Prédios ({counts.lojas})</button>
+            <button className={`tab-link ${matrizTipo === 'lojas' ? 'active' : ''}`} onClick={() => setMatrizTipo('lojas')}>Lojas ({counts.lojas})</button>
+            <button className={`tab-link ${matrizTipo === 'predios' ? 'active' : ''}`} onClick={() => setMatrizTipo('predios')}>Prédios ({counts.predios})</button>
             <button className={`tab-link ${matrizTipo === 'dgs' ? 'active' : ''}`} onClick={() => setMatrizTipo('dgs')}>DGs ({counts.dgs})</button>
             <button className={`tab-link ${matrizTipo === 'techs' ? 'active' : ''}`} onClick={() => setMatrizTipo('techs')}>TECHs ({counts.techs})</button>
           </div>
