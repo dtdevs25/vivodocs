@@ -113,7 +113,7 @@ function App() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw?: string; venc?: string; lista?: string; statusTxt?: string } | null>(null);
+  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw?: string; venc?: string; lista?: string; statusTxt?: string; docId?: number; fileName?: string } | null>(null);
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
@@ -1041,17 +1041,17 @@ function App() {
       >{text}</span>
     );
 
-    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string, lista?: string) => {
+    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string) => {
       const v = getDocValidity(doc, raw, venc);
       if (v) {
         return v.valido
-          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt }))
-          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt }));
+          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName }))
+          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName }));
       }
       const s = (statusTxt || '').toLowerCase();
-      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
-      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
-      return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
+      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
+      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
+      return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
     };
 
     const check = (ok: boolean) => ok
@@ -1118,11 +1118,11 @@ function App() {
                     <tr key={u.id}>
                       <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
-                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista)}</td>
-                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista)}</td>
-                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep, u.aep_lista)}</td>
-                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet, u.aet_lista)}</td>
-                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista)}</td>
+                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome)}</td>
+                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome)}</td>
+                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep, u.aep_lista, u.aep_doc_id, u.aep_arquivo_nome)}</td>
+                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet, u.aet_lista, u.aet_doc_id, u.aet_arquivo_nome)}</td>
+                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome)}</td>
                       <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.compoe_sesmt)}</td>
                       <td style={td}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>
