@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2 } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
 
@@ -118,6 +119,7 @@ function App() {
   const [isoFilter, setIsoFilter] = useState(false);
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
+  const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
   const [novoFat, setNovoFat] = useState({
     lista_lote: '', justificativa: '',
     qtd_pgr: 0, valor_unit_pgr: 0,
@@ -1038,7 +1040,10 @@ function App() {
     <>
       <header className="topbar">
         <div><h1>Faturamento e Custos</h1></div>
-        <div className="actions">
+        <div className="actions" style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn" style={{ background: '#f3e8ff', color: 'var(--purple)', borderColor: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setFaturamentoChartOpen(true)}>
+            <BarChart2 size={16} /> Evolução Mensal
+          </button>
           <button className="btn primary" onClick={() => setFaturamentoModalOpen(true)}>＋ Novo Lançamento</button>
         </div>
       </header>
@@ -1150,6 +1155,31 @@ function App() {
                 <button className="btn" onClick={() => setFaturamentoModalOpen(false)}>Cancelar</button>
                 <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {faturamentoChartOpen && (
+        <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setFaturamentoChartOpen(false)}>
+          <div className="modal-box" style={{ width: '800px', maxWidth: '90vw' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title"><h2>Evolução Mensal do Faturamento</h2></div>
+              <button className="modal-close" onClick={() => setFaturamentoChartOpen(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ height: '400px', paddingTop: '20px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={faturamento.map(f => ({ name: f.lista_lote.split('-')[0].trim(), valor: parseFloat(f.valor_total || '0') })).reverse()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={(val) => `R$ ${(val/1000)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Total']} cursor={{ fill: '#f3f4f6' }} />
+                  <Bar dataKey="valor" fill="var(--purple)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: 'center' }}>
+               <small style={{ color: 'var(--muted)' }}>Dados baseados nos lançamentos registrados.</small>
             </div>
           </div>
         </div>
