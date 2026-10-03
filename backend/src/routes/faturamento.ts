@@ -1,6 +1,7 @@
 import express from 'express';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import { logAction } from '../utils/logger';
 
 dotenv.config();
 
@@ -84,6 +85,8 @@ router.post('/', async (req, res) => {
         `, [lancamentoId, unidadeId]);
       }
     }
+    
+    await logAction('sistema@vivo.com', 'NOVO_LANCAMENTO', `Lançamento ${data.lista_lote} salvo com sucesso.`);
     
     await client.query('COMMIT');
     res.json({ success: true, id: lancamentoId });

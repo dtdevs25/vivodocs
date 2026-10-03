@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { logAction } from '../utils/logger';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -45,6 +46,8 @@ router.post('/login', async (req: Request, res: Response) => {
       JWT_SECRET,
       { expiresIn: '1d' }
     );
+    
+    await logAction(user.email, 'LOGIN', 'Usuário acessou o sistema.');
 
     res.json({
       token,
@@ -80,6 +83,7 @@ router.post('/users', async (req: Request, res: Response) => {
       'INSERT INTO usuarios (nome, email, senha, nivel_acesso) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, nivel_acesso',
       [nome, email, hashedPassword, nivel_acesso]
     );
+    await logAction('sistema@vivo.com', 'CRIAR_USUARIO', `Usuário ${email} cadastrado.`);
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao criar usuário' });
@@ -114,6 +118,7 @@ router.put('/users/:id', async (req: Request, res: Response) => {
   const { nome, email, nivel_acesso } = req.body;
   try {
     await query('UPDATE usuarios SET nome = $1, email = $2, nivel_acesso = $3 WHERE id = $4', [nome, email, nivel_acesso, id]);
+    await logAction('sistema@vivo.com', 'EDITAR_USUARIO', `Usuário ${email} (ID ${id}) editado.`);
     res.json({ message: 'Usuário atualizado com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
@@ -125,6 +130,7 @@ router.delete('/users/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await query('DELETE FROM usuarios WHERE id = $1', [id]);
+    await logAction('sistema@vivo.com', 'EXCLUIR_USUARIO', `Usuário ID ${id} excluído.`);
     res.json({ message: 'Usuário excluído com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao excluir usuário' });

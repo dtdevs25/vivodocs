@@ -1052,7 +1052,6 @@ function App() {
       <section className="content">
         <div className="tabs-header">
           <button className={`tab-link ${adminSubTab === 'users' ? 'active' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
-          <button className={`tab-link ${adminSubTab === 'unidades' ? 'active' : ''}`} onClick={() => setAdminSubTab('unidades')}>Gestão de Unidades</button>
           <button className={`tab-link ${adminSubTab === 'logs' ? 'active' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs de Acesso</button>
         </div>
         {adminSubTab === 'users' && (
@@ -1065,10 +1064,24 @@ function App() {
                     <td><b>{u.nome}</b><small>{u.email}</small></td>
                     <td><span className="status">{u.nivel_acesso.toUpperCase()}</span></td>
                     <td>
-                      <button className="btn" style={{fontSize:'11px', marginRight: '5px'}} onClick={() => openUserForm(u)}>Editar</button>
-                      <button className="btn" style={{fontSize:'11px', color:'var(--red)'}} onClick={() => openConfirm('Atenção', `Excluir ${u.nome}?`, () => {
-                        axios.delete(`/api/auth/users/${u.id}`).then(fetchAdminUsers);
-                      })}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <button
+                          title="Editar Usuário"
+                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0e7fb'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--purple)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--purple)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                          onClick={() => openUserForm(u)}
+                        ><Pencil size={14} /></button>
+                        <button
+                          title="Excluir Usuário"
+                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--red)', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--red)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                          onClick={() => openConfirm('Atenção', `Excluir ${u.nome}?`, () => {
+                            axios.delete(`/api/auth/users/${u.id}`).then(fetchAdminUsers);
+                          })}
+                        ><Trash2 size={14} /></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1076,36 +1089,7 @@ function App() {
             </table>
           </div>
         )}
-        {adminSubTab === 'unidades' && (
-          <div>
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ fontSize: '18px', color: 'var(--ink)', margin: '0 0 4px' }}>Unidades Cadastradas</h2>
-                <small style={{ color: 'var(--muted)' }}>Gerencie o cadastro de todas as unidades da base de dados.</small>
-              </div>
-              <button className="btn primary" onClick={() => setEditUnit({ filial: '', cnpj: '', tipo_predio: 'Loja', cidade: '', uf: '', bairro: '', regional: '', endereco: '', escopo_iso_45001: false, compoe_sesmt: false, is_dg: false, is_nr20: false, status_funcionamento: 'ATIVA' })}>＋ Cadastrar Nova Unidade</button>
-            </div>
-            <div className="table-wrap">
-              <table className="table">
-                <thead><tr><th>Unidade</th><th>Status</th><th>CNPJ</th><th>Regional</th><th>Ações</th></tr></thead>
-                <tbody>
-                  {matriz.map(u => (
-                    <tr key={u.id}>
-                      <td><b>{u.filial}</b></td>
-                      <td><span className="status" style={{ background: u.status_funcionamento === 'ATIVA' ? '#ecfdf5' : '#fef2f2', color: u.status_funcionamento === 'ATIVA' ? 'var(--green)' : 'var(--red)' }}>{u.status_funcionamento}</span></td>
-                      <td>{u.cnpj}</td>
-                      <td>{u.regional || '—'}</td>
-                      <td>
-                        <button className="btn" style={{fontSize:'11px', marginRight: '5px'}} onClick={() => setEditUnit({...u})}>Editar</button>
-                        <button className="btn" style={{fontSize:'11px', color:'var(--red)'}} onClick={() => setDeleteTarget(u)}>Excluir</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+
         {adminSubTab === 'logs' && (
           <div className="table-wrap">
             <table className="table">
