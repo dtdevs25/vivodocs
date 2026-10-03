@@ -455,10 +455,10 @@ function App() {
                   PANORAMA DE CONFORMIDADE
                 </h2>
               </div>
-              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '32px 24px', backgroundColor: '#fff' }}>
+              <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '24px 24px', backgroundColor: '#fff' }}>
                 <div className="donut" style={{
                   width: '180px', height: '180px', borderRadius: '50%',
-                  background: `conic-gradient(var(--purple) 0 ${(pgrVigentes / totalAtivas) * 100}%, var(--amber) ${(pgrVigentes / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}%, var(--red) ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%, #e5e7eb ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%)`,
+                  background: `conic-gradient(var(--green) 0 ${(pgrVigentes / totalAtivas) * 100}%, var(--amber) ${(pgrVigentes / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}%, var(--red) ${((pgrVigentes + pgrVencendo) / totalAtivas) * 100}% ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%, #e5e7eb ${((pgrVigentes + pgrVencendo + pgrVencidos) / totalAtivas) * 100}%)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   <div style={{ width: '130px', height: '130px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
@@ -469,7 +469,7 @@ function App() {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--purple)' }}></div>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--green)' }}></div>
                     <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500' }}>Vigentes ({pgrVigentes})</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -498,32 +498,32 @@ function App() {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: 'var(--line)', gap: '1px' }}>
                   {/* Row 1 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_ativas}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: 'var(--green)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_ativas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Ativas</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_desmobilizadas}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: 'var(--red)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_desmobilizadas}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>Desativadas</small>
                   </div>
 
                   {/* Row 2 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_dgs}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_dgs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DGs</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: 'var(--purple)', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_techs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>TECHs</small>
                   </div>
 
                   {/* Row 3 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: '#f97316', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_iso}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: '#f97316', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_iso}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: '#000', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_sesmt}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px' }}>
+                    <strong style={{ fontSize: '24px', color: '#000', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_sesmt}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
                   </div>
                 </div>
