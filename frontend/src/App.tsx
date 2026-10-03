@@ -121,6 +121,7 @@ function App() {
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
   const [novoFat, setNovoFat] = useState({
+    id: null as number | null,
     lista_lote: '', justificativa: '',
     qtd_pgr: 0, valor_unit_pgr: 0,
     qtd_ltcat: 0, valor_unit_ltcat: 0,
@@ -131,6 +132,7 @@ function App() {
     desconto: 0,
     unidades: [] as number[]
   });
+  const [deleteFatTarget, setDeleteFatTarget] = useState<any>(null);
 
   const handleExportExcel = (filteredData: any[], fileName: string) => {
     const ws_data = [
@@ -290,6 +292,18 @@ function App() {
     }
   };
 
+  const handleDeleteFaturamento = async () => {
+    if (!deleteFatTarget) return;
+    try {
+      await axios.delete(`/api/faturamento/${deleteFatTarget.id}`);
+      openAlert('Excluído', 'Lançamento excluído com sucesso.');
+      setDeleteFatTarget(null);
+      fetchFaturamento();
+    } catch (err) {
+      openAlert('Erro', 'Não foi possível excluir o lançamento.');
+    }
+  };
+
   const handleSalvarFaturamento = async () => {
     try {
       const calcTotal = (
@@ -301,10 +315,15 @@ function App() {
         novoFat.qtd_diversos * novoFat.valor_unit_diversos
       );
       const payload = { ...novoFat, valor_total: calcTotal - novoFat.desconto };
-      await axios.post('/api/faturamento', payload);
-      openAlert('Sucesso', 'Lançamento salvo!');
+      if (novoFat.id) {
+        await axios.put(`/api/faturamento/${novoFat.id}`, payload);
+        openAlert('Sucesso', 'Lançamento editado!');
+      } else {
+        await axios.post('/api/faturamento', payload);
+        openAlert('Sucesso', 'Lançamento salvo!');
+      }
       setFaturamentoModalOpen(false);
-      setNovoFat({ lista_lote: '', justificativa: '', qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
+      setNovoFat({ id: null, lista_lote: '', justificativa: '', qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
       fetchFaturamento();
     } catch (err) {
       openAlert('Erro', 'Erro ao salvar lançamento');
@@ -1129,7 +1148,7 @@ function App() {
         </div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Lote / Período</th><th>PGR / LTCAT / AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th></tr></thead>
+            <thead><tr><th>Lote / Período</th><th>PGR / LTCAT / AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th><th>Ações</th></tr></thead>
             <tbody>
               {faturamento.map(f => {
                 const total = parseFloat(f.valor_total || '0');
@@ -1143,6 +1162,12 @@ function App() {
                     <td style={{ color: 'var(--red)' }}>R$ {desc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td><b>R$ {total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b></td>
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: [] }); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -1154,7 +1179,7 @@ function App() {
         <div className="modal-overlay" style={{ zIndex: 10001 }}>
           <div className="modal-box" style={{ width: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
-              <div className="modal-title"><h2>Novo Lançamento (Medição)</h2></div>
+              <div className="modal-title"><h2>{novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2></div>
               <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

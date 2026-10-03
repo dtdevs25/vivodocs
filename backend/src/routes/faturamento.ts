@@ -91,4 +91,63 @@ router.post('/', async (req, res) => {
   }
 });
 
+// UPDATE lancamento
+router.put('/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const data = req.body;
+    
+    await client.query(`
+      UPDATE faturamento_lancamentos SET
+        lista_lote = $1, justificativa = $2,
+        qtd_pgr = $3, valor_unit_pgr = $4,
+        qtd_ltcat = $5, valor_unit_ltcat = $6,
+        qtd_aep = $7, valor_unit_aep = $8,
+        qtd_aet = $9, valor_unit_aet = $10,
+        qtd_insalubridade = $11, valor_unit_insalubridade = $12,
+        qtd_diversos = $13, valor_unit_diversos = $14,
+        desconto = $15, valor_total = $16,
+        updated_at = NOW()
+      WHERE id = $17
+    `, [
+      data.lista_lote, data.justificativa,
+      data.qtd_pgr || 0, data.valor_unit_pgr || 0,
+      data.qtd_ltcat || 0, data.valor_unit_ltcat || 0,
+      data.qtd_aep || 0, data.valor_unit_aep || 0,
+      data.qtd_aet || 0, data.valor_unit_aet || 0,
+      data.qtd_insalubridade || 0, data.valor_unit_insalubridade || 0,
+      data.qtd_diversos || 0, data.valor_unit_diversos || 0,
+      data.desconto || 0, data.valor_total || 0,
+      req.params.id
+    ]);
+    
+    // Simplification: Not updating related units in many-to-many here because the frontend doesn't edit them yet.
+    
+    await logAction('sistema@vivo.com', 'EDIT_LANCAMENTO', `Lançamento ${data.lista_lote} (ID: ${req.params.id}) editado.`);
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating lancamento:', error);
+    res.status(500).json({ error: 'Erro ao editar lançamento' });
+  } finally {
+    client.release();
+  }
+});
+
+// DELETE lancamento
+router.delete('/:id', async (req, res) => {
+  try {
+    // Delete cascading handled by DB or explicit here
+    await query('DELETE FROM faturamento_lancamento_unidades WHERE lancamento_id = $1', [req.params.id]);
+    await query('DELETE FROM faturamento_lancamentos WHERE id = $1', [req.params.id]);
+    await logAction('sistema@vivo.com', 'DELETE_LANCAMENTO', `Lançamento ID: ${req.params.id} excluído.`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting lancamento:', error);
+    res.status(500).json({ error: 'Erro ao excluir lançamento' });
+  }
+});
+
 export default router;
