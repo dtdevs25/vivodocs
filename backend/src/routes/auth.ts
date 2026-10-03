@@ -3,6 +3,7 @@ import { query } from '../db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logAction } from '../utils/logger';
+import { sendWelcomeEmail } from '../utils/mailer';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -84,6 +85,10 @@ router.post('/users', async (req: Request, res: Response) => {
       [nome, email, hashedPassword, nivel_acesso]
     );
     await logAction('sistema@vivo.com', 'CRIAR_USUARIO', `Usuário ${email} cadastrado.`);
+    
+    // Send email
+    await sendWelcomeEmail(email, nome, senha || 'nova@2026');
+    
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao criar usuário' });
