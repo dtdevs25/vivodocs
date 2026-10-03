@@ -13,7 +13,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-export const sendWelcomeEmail = async (to: string, nome: string, senhaPadrao: string) => {
+export const sendWelcomeEmail = async (to: string, nome: string, token: string) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetLink = `${frontendUrl}?token=${token}`;
   try {
     const info = await transporter.sendMail({
       from: `"Vivo DocSafe" <${process.env.SMTP_USER || 'vivodocsafe@ehspro.com.br'}>`,
@@ -23,12 +25,12 @@ export const sendWelcomeEmail = async (to: string, nome: string, senhaPadrao: st
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
           <h2 style="color: #6324c6;">Bem-vindo ao Vivo DocSafe, ${nome}!</h2>
           <p>Sua conta foi criada com sucesso pelo administrador do sistema.</p>
-          <p>Para acessar, utilize suas credenciais abaixo:</p>
-          <div style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p style="margin: 0;"><strong>Login (E-mail):</strong> ${to}</p>
-            <p style="margin: 10px 0 0 0;"><strong>Senha Temporária:</strong> ${senhaPadrao}</p>
+          <p>Para acessar, por favor, defina sua senha clicando no botão abaixo:</p>
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${resetLink}" style="background-color: #6324c6; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Criar minha senha</a>
           </div>
-          <p>Recomendamos que você altere sua senha após o primeiro login.</p>
+          <p>Se o botão não funcionar, copie e cole o link abaixo no seu navegador:</p>
+          <p style="word-break: break-all; color: #666; font-size: 12px;">${resetLink}</p>
           <br/>
           <p>Atenciosamente,<br/><strong>Equipe Vivo DocSafe</strong></p>
         </div>

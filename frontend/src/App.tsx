@@ -90,6 +90,9 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -198,6 +201,10 @@ function App() {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) setResetToken(token);
+    
     if (user) {
       if (activeTab === 'dashboard') { fetchDashboard(); fetchMatriz(); }
       if (activeTab === 'unidades' || activeTab === 'matriz') fetchMatriz();
@@ -260,8 +267,55 @@ function App() {
   };
 
   if (!user) {
+    if (resetToken) {
+      const handleSetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+          await axios.post('/api/auth/reset-password-with-token', { token: resetToken, newPassword });
+          openAlert('Sucesso', 'Senha criada com sucesso! Você já pode fazer login.');
+          window.history.replaceState(null, '', window.location.pathname);
+          setResetToken('');
+        } catch (err: any) {
+          openAlert('Erro', err.response?.data?.error || 'Erro ao criar senha.');
+        }
+      };
+      return (
+        <div className="layout">
+          <div className="login-container" style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="login-card">
+              <div className="login-brand" style={{ justifyContent: 'center' }}>
+                <img src="/logo.png?v=4" alt="DocSafe" style={{ maxHeight: '46px', objectFit: 'contain' }} />
+              </div>
+              <div className="login-header-text">Criar Senha de Acesso</div>
+              <form className="login-form" onSubmit={handleSetPassword}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label>Nova Senha</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
+                </div>
+                <button type="submit" className="login-btn">Salvar Senha e Entrar</button>
+              </form>
+            </div>
+          </div>
+          {modal.isOpen && (
+            <div className="modal-overlay" style={{ zIndex: 10001 }}>
+              <div className="modal-box" style={{ width: '400px' }}>
+                <div className="modal-header">
+                  <div className="modal-title"><h2>{modal.title}</h2></div>
+                  <button className="modal-close" onClick={closeModal}>×</button>
+                </div>
+                <div className="modal-body"><p>{modal.message}</p></div>
+                <div className="modal-footer">
+                  <button className="btn primary" onClick={closeModal}>OK</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
     return (
-      <div className="login-container">
+      <div className="layout">
+        <div className="login-container" style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="login-card">
           <div className="login-brand" style={{ justifyContent: 'center' }}>
             <img src="/logo.png?v=4" alt="DocSafe" style={{ maxHeight: '46px', objectFit: 'contain' }} />
@@ -278,6 +332,7 @@ function App() {
             </div>
             <button type="submit" className="login-btn">Entrar na plataforma</button>
           </form>
+        </div>
         </div>
       </div>
     );

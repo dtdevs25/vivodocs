@@ -86,8 +86,9 @@ router.post('/users', async (req: Request, res: Response) => {
     );
     await logAction('sistema@vivo.com', 'CRIAR_USUARIO', `Usuário ${email} cadastrado.`);
     
-    // Send email
-    await sendWelcomeEmail(email, nome, senha || 'nova@2026');
+    // Send email with token
+    const token = jwt.sign({ id: rows[0].id, email }, JWT_SECRET, { expiresIn: '12h' });
+    await sendWelcomeEmail(email, nome, token);
     
     res.json(rows[0]);
   } catch (err) {
@@ -105,12 +106,25 @@ router.post('/users/:id/reset', async (req: Request, res: Response) => {
       return;
     }
     const user = rows[0];
-    const hashedPassword = await bcrypt.hash('nova@2026', 10);
-    await query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hashedPassword, id]);
-    await sendWelcomeEmail(user.email, user.nome, 'nova@2026');
-    res.json({ message: 'Senha resetada com sucesso para nova@2026' });
+    const token = jwt.sign({ id, email: user.email }, JWT_SECRET, { expiresIn: '12h' });
+    await sendWelcomeEmail(user.email, user.nome, token);
+    res.json({ message: 'E-mail para criação de senha enviado com sucesso.' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao resetar senha' });
+  }
+});
+
+// Create/Reset password with token
+router.post('/reset-password-with-token', async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string, email: string };
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hashedPassword, decoded.id]);
+    await logAction('sistema@vivo.com', 'SENHA_CRIADA', `Usuário ${decoded.email} definiu a própria senha.`);
+    res.json({ message: 'Senha atualizada com sucesso' });
+  } catch (err) {
+    res.status(400).json({ error: 'Link inválido ou expirado. Solicite ao administrador um novo reenvio.' });
   }
 });
 
