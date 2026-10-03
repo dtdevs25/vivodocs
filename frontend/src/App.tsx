@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell, FileSpreadsheet, Mail } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
 
@@ -86,6 +86,9 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -313,6 +316,18 @@ function App() {
         </div>
       );
     }
+    const handleForgotPassword = async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        await axios.post('/api/auth/forgot-password', { email: forgotEmail, frontendUrl: window.location.origin });
+        openAlert('Sucesso', 'Se este e-mail estiver cadastrado, um link de redefinição foi enviado.');
+        setIsForgotPassword(false);
+        setForgotEmail('');
+      } catch (err: any) {
+        openAlert('Erro', err.response?.data?.error || 'Erro ao solicitar redefinição.');
+      }
+    };
+
     return (
       <div className="layout">
         <div className="login-container" style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -321,19 +336,56 @@ function App() {
             <img src="/logo.png?v=4" alt="DocSafe" style={{ maxHeight: '46px', objectFit: 'contain' }} />
           </div>
           <div className="login-header-text">Segurança do Trabalho</div>
-          <form className="login-form" onSubmit={handleLogin}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label>Email</label>
-              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label>Senha</label>
-              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required placeholder="••••••••" />
-            </div>
-            <button type="submit" className="login-btn">Entrar na plataforma</button>
-          </form>
+          
+          {isForgotPassword ? (
+            <form className="login-form" onSubmit={handleForgotPassword}>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '10px', textAlign: 'center' }}>Informe seu e-mail para receber um link de redefinição de senha.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label>Email</label>
+                <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
+              </div>
+              <button type="submit" className="login-btn">Enviar link</button>
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsForgotPassword(false)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '13px' }}>Voltar para o login</button>
+              </div>
+            </form>
+          ) : (
+            <form className="login-form" onSubmit={handleLogin}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label>Email</label>
+                <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label>Senha</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required placeholder="••••••••" style={{ width: '100%', paddingRight: '40px' }} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" className="login-btn">Entrar na plataforma</button>
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '13px' }}>Esqueci minha senha</button>
+              </div>
+            </form>
+          )}
         </div>
         </div>
+        {modal.isOpen && (
+          <div className="modal-overlay" style={{ zIndex: 10001 }}>
+            <div className="modal-box" style={{ width: '400px' }}>
+              <div className="modal-header">
+                <div className="modal-title"><h2>{modal.title}</h2></div>
+                <button className="modal-close" onClick={closeModal}>×</button>
+              </div>
+              <div className="modal-body"><p>{modal.message}</p></div>
+              <div className="modal-footer">
+                <button className="btn primary" onClick={closeModal}>OK</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

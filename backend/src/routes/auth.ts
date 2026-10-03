@@ -129,6 +129,25 @@ router.post('/reset-password-with-token', async (req: Request, res: Response) =>
   }
 });
 
+// Forgot password
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  const { email, frontendUrl } = req.body;
+  try {
+    const { rows } = await query('SELECT id, nome, email FROM usuarios WHERE email = $1', [email]);
+    if (rows.length === 0) {
+      res.status(404).json({ error: 'Usuário não está cadastrado.' });
+      return;
+    }
+    const user = rows[0];
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '12h' });
+    await sendWelcomeEmail(user.email, user.nome, token, frontendUrl || 'http://localhost:5173');
+    await logAction(user.email, 'ESQUECI_SENHA', `Solicitou redefinição de senha.`);
+    res.json({ message: 'E-mail de redefinição enviado com sucesso.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao solicitar redefinição.' });
+  }
+});
+
 // Admin: get logs
 router.get('/logs', async (req: Request, res: Response) => {
   try {
