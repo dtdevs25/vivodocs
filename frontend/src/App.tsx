@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell, FileSpreadsheet } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
@@ -92,7 +92,6 @@ function App() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
   const [matriz, setMatriz] = useState<any[]>([]);
@@ -109,8 +108,6 @@ function App() {
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string; venc?: string } | null>(null);
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
-  const [ufFilter, setUfFilter] = useState('');
-  const [cidadeFilter, setCidadeFilter] = useState('');
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
 
@@ -195,19 +192,6 @@ function App() {
       if (activeTab === 'admin') { fetchAdminUsers(); fetchAdminLogs(); }
     }
   }, [user, activeTab]);
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData(); formData.append('file', file);
-    try {
-      openAlert('Aguarde', 'Processando planilha...');
-      await axios.post('/api/unidades/upload-seed', formData);
-      openAlert('Sucesso', 'Dados atualizados!');
-      fetchMatriz(); fetchDashboard();
-    } catch (err) { openAlert('Erro', 'Erro ao processar planilha.'); }
-  };
-
   const handleUpdateUnit = async () => {
     if (!editUnit) return;
     try {
@@ -264,9 +248,6 @@ function App() {
       </div>
     );
   }
-
-  const canEdit = user.role === 'master' || user.role === 'admin' || user.role === 'editor';
-
   const renderDashboard = () => {
     // Pie chart metrics based ONLY on PGR against total active units
     const totalAtivas = dashboardData.total_ativas || 1; // prevent division by zero
