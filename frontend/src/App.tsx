@@ -19,6 +19,26 @@ function getStatusColor(val: string) {
   return 'gray';
 }
 
+// Validade (em anos) de cada documento a partir da data de emissão
+const DOC_VALIDADE_ANOS: Record<string, number> = { PGR: 2, LTCAT: 2, AEP: 2 };
+
+function parseLocalDate(raw: string): Date | null {
+  if (!raw) return null;
+  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function getDocValidity(doc: string, raw: string) {
+  const emissao = parseLocalDate(raw);
+  if (!emissao) return null;
+  const vencimento = new Date(emissao);
+  vencimento.setFullYear(vencimento.getFullYear() + (DOC_VALIDADE_ANOS[doc] || 2));
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const dias = Math.round((vencimento.getTime() - hoje.getTime()) / 86400000);
+  return { emissao, vencimento, dias, valido: dias >= 0 };
+}
+
 function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
@@ -44,6 +64,7 @@ function App() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string } | null>(null);
   const [ufFilter, setUfFilter] = useState('');
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
@@ -425,27 +446,27 @@ function App() {
         {/* Unit Detail Modal */}
         {selectedUnit && (
           <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
-            <div className="modal-box" style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflowY: 'auto', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-box" style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflow: 'hidden', padding: 0, borderRadius: '16px', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
               
               {selectedUnit.status_funcionamento === 'DESMOBILIZADA' && (
-                <div style={{ backgroundColor: 'var(--red)', color: '#fff', padding: '12px 24px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                <div style={{ flexShrink: 0, backgroundColor: 'var(--red)', color: '#fff', padding: '8px 20px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                   ⚠️ Unidade Desmobilizada
                 </div>
               )}
 
-              {/* Gray Header */}
-              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>{b.label}</span>; })()}
-                  </div>
-                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--ink)' }}>{selectedUnit.filial || '—'}</h2>
-                  <small style={{ color: 'var(--muted)' }}>CNPJ: {selectedUnit.cnpj}</small>
+              {/* Gray Header (compacto) */}
+              <div style={{ flexShrink: 0, backgroundColor: '#f3f4f6', padding: '12px 20px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div style={{ minWidth: 0 }}>
+                  <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedUnit.filial || '—'}</h2>
+                  <small style={{ color: 'var(--muted)', fontSize: '11px' }}>CNPJ: {selectedUnit.cnpj}</small>
                 </div>
-                <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                  {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: '700' }}>{b.label}</span>; })()}
+                  <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                </div>
               </div>
 
-              <div style={{ padding: '24px' }}>
+              <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
 
                 {/* Grid de dados */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
@@ -467,18 +488,29 @@ function App() {
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginBottom: '20px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Datas dos Documentos</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último PGR</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.pgr_data ? new Date(selectedUnit.pgr_data).toLocaleDateString('pt-BR') : '—'}</div>
-                    </div>
-                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último LTCAT</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.ltcat_data ? new Date(selectedUnit.ltcat_data).toLocaleDateString('pt-BR') : '—'}</div>
-                    </div>
-                    <div style={{ background: '#f9f8fb', borderRadius: '8px', padding: '12px 14px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Data Último AEP</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{selectedUnit.aep_data ? new Date(selectedUnit.aep_data).toLocaleDateString('pt-BR') : '—'}</div>
-                    </div>
+                    {[
+                      { doc: 'PGR', raw: selectedUnit.pgr_data },
+                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data },
+                      { doc: 'AEP', raw: selectedUnit.aep_data },
+                    ].map(({ doc, raw }) => {
+                      const v = getDocValidity(doc, raw);
+                      const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
+                      const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
+                      return (
+                        <div
+                          key={doc}
+                          title={v ? 'Clique para ver o vencimento' : undefined}
+                          onClick={() => v && setExpiryInfo({ doc, raw })}
+                          style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+                          onMouseEnter={e => { if (v) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; } }}
+                          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                        >
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {doc}</div>
+                          <div style={{ fontSize: '13px', color, fontWeight: '700' }}>{v ? v.emissao.toLocaleDateString('pt-BR') : '—'}</div>
+                          {v && <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div>}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -501,18 +533,46 @@ function App() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {(user?.role === 'master' || user?.role === 'admin') && (<>
-                      <button title="Editar" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}><Pencil size={18} /></button>
-                      <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '6px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
-                    </>)}
+              </div>
+
+              {/* Footer fixo com ações (apenas admin/master) */}
+              {(user?.role === 'master' || user?.role === 'admin') && (
+                <div style={{ flexShrink: 0, borderTop: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px', background: '#fff' }}>
+                  <button title="Editar" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}><Pencil size={18} /></button>
+                  <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Expiration Mini Modal */}
+        {expiryInfo && (() => {
+          const v = getDocValidity(expiryInfo.doc, expiryInfo.raw);
+          if (!v) return null;
+          const color = v.valido ? 'var(--green)' : 'var(--red)';
+          const abs = Math.abs(v.dias);
+          return (
+            <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setExpiryInfo(null)}>
+              <div className="modal-box" style={{ width: '340px', maxWidth: '92%', padding: 0, borderRadius: '16px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ backgroundColor: '#f3f4f6', padding: '10px 16px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--ink)' }}>Vencimento do {expiryInfo.doc}</h2>
+                  <button onClick={() => setExpiryInfo(null)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                </div>
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{v.valido ? 'Vence em' : 'Venceu em'}</div>
+                  <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{v.vencimento.toLocaleDateString('pt-BR')}</div>
+                  <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: v.valido ? '#ecfdf5' : '#fef2f2', color, border: `1px solid ${color}` }}>
+                    {v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`}
+                  </span>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
+                    Emitido em {v.emissao.toLocaleDateString('pt-BR')} · validade de {DOC_VALIDADE_ANOS[expiryInfo.doc]} anos
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Edit Unit Modal */}
         {editUnit && (
