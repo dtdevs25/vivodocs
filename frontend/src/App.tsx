@@ -205,6 +205,39 @@ function App() {
     try { const res = await axios.get('/api/auth/logs'); setAdminLogs(res.data); } catch (e) {}
   };
 
+  const handleUpload = async (unidadeId: number, tipoDocumento: string, file?: File) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('unidade_id', unidadeId.toString());
+    formData.append('tipo_documento', tipoDocumento);
+    formData.append('file', file);
+    if (user?.email) formData.append('user_email', user.email);
+
+    try {
+      await axios.post('/api/documentos/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      openAlert('Sucesso', 'Arquivo anexado com sucesso!');
+      fetchMatriz(); // Refresh data to get new file links
+      
+      // Update selected unit in modal if it's open
+      if (selectedUnit && selectedUnit.id === unidadeId) {
+        setSelectedUnit(null); // Close modal so user can reopen to see new file, or update state
+      }
+    } catch (e) {
+      openAlert('Erro', 'Falha ao anexar arquivo.');
+    }
+  };
+
+  const handleDownload = async (docId: number) => {
+    try {
+      const res = await axios.get(`/api/documentos/${docId}/download`);
+      window.open(res.data.downloadUrl, '_blank');
+    } catch (e) {
+      openAlert('Erro', 'Falha ao gerar link de download.');
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
@@ -749,10 +782,10 @@ function App() {
                   <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Datas dos Documentos</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                     {[
-                      { doc: 'PGR', raw: selectedUnit.pgr_data, venc: selectedUnit.pgr_vencimento },
-                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento },
-                      { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento },
-                    ].map(({ doc, raw, venc }) => {
+                      { doc: 'PGR', raw: selectedUnit.pgr_data, venc: selectedUnit.pgr_vencimento, docId: selectedUnit.pgr_doc_id, fileName: selectedUnit.pgr_arquivo_nome },
+                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento, docId: selectedUnit.ltcat_doc_id, fileName: selectedUnit.ltcat_arquivo_nome },
+                      { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento, docId: selectedUnit.aep_doc_id, fileName: selectedUnit.aep_arquivo_nome },
+                    ].map(({ doc, raw, venc, docId, fileName }) => {
                       const v = getDocValidity(doc, raw, venc);
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
@@ -761,13 +794,30 @@ function App() {
                           key={doc}
                           title={v ? 'Clique para ver o vencimento' : undefined}
                           onClick={() => v && setExpiryInfo({ doc, raw, venc })}
-                          style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+                          style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s', display: 'flex', flexDirection: 'column', gap: '4px' }}
                           onMouseEnter={e => { if (v) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; } }}
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
-                          <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {doc}</div>
-                          <div style={{ fontSize: '13px', color, fontWeight: '700' }}>{v ? v.emissao.toLocaleDateString('pt-BR') : '—'}</div>
-                          {v && <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div>}
+                          <div>
+                            <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {doc}</div>
+                            <div style={{ fontSize: '13px', color, fontWeight: '700' }}>{v ? v.emissao.toLocaleDateString('pt-BR') : '—'}</div>
+                            {v && <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div>}
+                          </div>
+
+                          <div onClick={e => e.stopPropagation()} style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {fileName && (
+                              <button
+                                onClick={() => handleDownload(docId)}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--blue)', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                              >
+                                ⬇ Baixar Arquivo
+                              </button>
+                            )}
+                            <label style={{ fontSize: '10px', color: 'var(--ink)', fontWeight: 'bold', cursor: 'pointer', background: 'rgba(0,0,0,0.05)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>
+                              Anexar
+                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(selectedUnit.id, doc, e.target.files?.[0])} />
+                            </label>
+                          </div>
                         </div>
                       );
                     })}

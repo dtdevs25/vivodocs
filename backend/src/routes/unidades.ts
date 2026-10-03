@@ -239,7 +239,17 @@ router.get('/matriz', async (req: Request, res: Response) => {
           MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN d.lista_entrega END) as ltcat_lista,
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN d.lista_entrega END) as aep_lista,
           MAX(CASE WHEN d.tipo_documento = 'AET' THEN d.lista_entrega END) as aet_lista,
-          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN d.lista_entrega END) as nr01_lista
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN d.lista_entrega END) as nr01_lista,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN d.id END) as pgr_doc_id,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN d.id END) as ltcat_doc_id,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN d.id END) as aep_doc_id,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN d.id END) as aet_doc_id,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN d.id END) as nr01_doc_id,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN d.arquivo_nome END) as pgr_arquivo_nome,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN d.arquivo_nome END) as ltcat_arquivo_nome,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN d.arquivo_nome END) as aep_arquivo_nome,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN d.arquivo_nome END) as aet_arquivo_nome,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN d.arquivo_nome END) as nr01_arquivo_nome
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
       GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
