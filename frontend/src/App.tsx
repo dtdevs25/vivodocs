@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, Pencil, Trash2, Bell, FileSpreadsheet } from 'lucide-react';
 import axios from 'axios';
+import * as XLSX from 'xlsx-js-style';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
 
@@ -109,6 +110,46 @@ function App() {
   const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string; venc?: string } | null>(null);
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
   const [ufFilter, setUfFilter] = useState('');
+  const [cidadeFilter, setCidadeFilter] = useState('');
+  const [regionalFilter, setRegionalFilter] = useState('');
+  const [isoFilter, setIsoFilter] = useState(false);
+
+  const handleExportExcel = (filteredData: any[], fileName: string) => {
+    const ws_data = [
+      ['CNPJ', 'Filial', 'Tipo', 'Cidade', 'UF', 'Regional', 'ISO 45001', 'Compõe SESMT', 'PGR Data', 'PGR Validade', 'LTCAT Data', 'AEP Data', 'AET Data']
+    ];
+    
+    filteredData.forEach(u => {
+      ws_data.push([
+        u.cnpj,
+        u.filial,
+        getTipoKey(u).toUpperCase(),
+        u.cidade || '',
+        u.uf || '',
+        u.regional || '',
+        u.escopo_iso_45001 ? 'Sim' : 'Não',
+        u.compoe_sesmt ? 'Sim' : 'Não',
+        u.pgr_ano || u.pgr_data || '',
+        u.pgr_vencimento ? new Date(u.pgr_vencimento).toLocaleDateString('pt-BR') : '',
+        u.ltcat_ano || u.ltcat_data || '',
+        u.aep_ano || u.aep_data || '',
+        u.aet_ano || u.aet_data || '',
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const headerStyle = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "6B21A8" } }, alignment: { horizontal: "center", vertical: "center" } };
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:M1');
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (!ws[addr]) continue;
+      ws[addr].s = headerStyle;
+    }
+    ws['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 10 }, { wch: 20 }, { wch: 5 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Dados");
+    XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
 
@@ -413,30 +454,46 @@ function App() {
         if (unitSubTab !== 'todas' && getTipoKey(u) !== unitSubTab) return false;
       }
       if (ufFilter && u.uf !== ufFilter) return false;
-      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro}`.toLowerCase().includes(searchQuery.toLowerCase());
+      if (cidadeFilter && u.cidade !== cidadeFilter) return false;
+      if (regionalFilter && u.regional !== regionalFilter) return false;
+      if (isoFilter && !u.escopo_iso_45001) return false;
+      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
+    const allCidades = [...new Set(matriz.map((u: any) => u.cidade).filter(Boolean))].sort();
+    const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
 
     return (
       <>
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
-          <div className="actions" style={{ gap: '8px' }}>
+          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
             <input
               className="search"
-              placeholder="Buscar por CNPJ ou nome..."
+              placeholder="Buscar por CNPJ, nome, cidade, tipo..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select
-              value={ufFilter}
-              onChange={(e) => setUfFilter(e.target.value)}
-              style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}
-            >
+            <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
+              <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
+              Escopo ISO
+            </label>
+            <select value={ufFilter} onChange={(e) => setUfFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
               <option value="">Todas as UFs</option>
-              {allUfs.map((uf: string) => <option key={uf} value={uf}>{uf}</option>)}
+              {allUfs.map((uf: any) => <option key={uf} value={uf}>{uf}</option>)}
             </select>
+            <select value={cidadeFilter} onChange={(e) => setCidadeFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todas Cidades</option>
+              {allCidades.map((c: any) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todas Regionais</option>
+              {allRegionais.map((r: any) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <button className="btn" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => handleExportExcel(filtered, 'Consulta_CNPJ')}>
+               <FileSpreadsheet size={16} /> Exportar Excel
+            </button>
             {canEdit && <button className="btn" onClick={() => fileInputRef.current?.click()}>↥ Importar CSV</button>}
             <input ref={fileInputRef} className="hidden" type="file" accept=".csv" onChange={handleImport} />
           </div>
@@ -730,8 +787,16 @@ function App() {
       if (matrizTipo === 'predios' && k !== 'predio') return false;
       if (matrizTipo === 'dgs' && k !== 'dg') return false;
       if (matrizTipo === 'techs' && k !== 'tech') return false;
-      return `${u.cnpj} ${u.filial}`.toLowerCase().includes(searchQuery.toLowerCase());
+      if (ufFilter && u.uf !== ufFilter) return false;
+      if (cidadeFilter && u.cidade !== cidadeFilter) return false;
+      if (regionalFilter && u.regional !== regionalFilter) return false;
+      if (isoFilter && !u.escopo_iso_45001) return false;
+      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
+
+    const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
+    const allCidades = [...new Set(matriz.map((u: any) => u.cidade).filter(Boolean))].sort();
+    const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
 
     const pill = (bg: string, color: string, text: string, clickable: boolean, title?: string, onClick?: () => void) => (
       <span
@@ -765,8 +830,27 @@ function App() {
       <>
         <header className="topbar">
           <div><h1>Matriz de Conformidade (Documentos)</h1></div>
-          <div className="actions">
-            <input className="search" placeholder="Buscar unidade..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
+            <input className="search" placeholder="Buscar CNPJ, nome, cidade, tipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
+              <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
+              Escopo ISO
+            </label>
+            <select value={ufFilter} onChange={(e) => setUfFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todas as UFs</option>
+              {allUfs.map((uf: any) => <option key={uf} value={uf}>{uf}</option>)}
+            </select>
+            <select value={cidadeFilter} onChange={(e) => setCidadeFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todas Cidades</option>
+              {allCidades.map((c: any) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todas Regionais</option>
+              {allRegionais.map((r: any) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <button className="btn" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => handleExportExcel(filtered, 'Matriz_Conformidade')}>
+               <FileSpreadsheet size={16} /> Exportar Excel
+            </button>
           </div>
         </header>
         <section className="content">
