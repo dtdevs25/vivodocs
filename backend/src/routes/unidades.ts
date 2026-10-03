@@ -228,7 +228,13 @@ router.get('/matriz', async (req: Request, res: Response) => {
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as aep_data,
           MAX(CASE WHEN d.tipo_documento = 'AET' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as aet,
           MAX(CASE WHEN d.tipo_documento = 'AET' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as aet_data,
-          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as nr01
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(d.ano, d.status, d.lista_entrega, 'OK') END) as nr01,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN COALESCE(to_char(d.data_vencimento, 'YYYY-MM-DD'), d.ano) END) as nr01_data,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as pgr_vencimento,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as ltcat_vencimento,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as aep_vencimento,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as aet_vencimento,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as nr01_vencimento
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
       GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,

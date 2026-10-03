@@ -20,23 +20,47 @@ function getStatusColor(val: string) {
 }
 
 // Validade (em anos) de cada documento a partir da data de emissão
-const DOC_VALIDADE_ANOS: Record<string, number> = { PGR: 2, LTCAT: 2, AEP: 2 };
+const DOC_VALIDADE_ANOS: Record<string, number> = { PGR: 2, LTCAT: 2, AEP: 2, AET: 2, NR01: 2 };
 
 function parseLocalDate(raw: string): Date | null {
   if (!raw) return null;
-  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
-  return isNaN(d.getTime()) ? null : d;
+  const s = String(raw).trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (br) return new Date(+br[3], +br[2] - 1, +br[1]);
+  if (/^\d{4}$/.test(s)) return new Date(+s, 0, 1);
+  return null;
 }
 
-function getDocValidity(doc: string, raw: string) {
-  const emissao = parseLocalDate(raw);
-  if (!emissao) return null;
-  const vencimento = new Date(emissao);
-  vencimento.setFullYear(vencimento.getFullYear() + (DOC_VALIDADE_ANOS[doc] || 2));
+function getDocValidity(doc: string, raw: string, vencimentoRaw?: string) {
+  const anos = DOC_VALIDADE_ANOS[doc] || 2;
+  const vencReal = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
+  let emissao: Date;
+  let vencimento: Date;
+  if (vencReal) {
+    vencimento = vencReal;
+    emissao = new Date(vencReal); emissao.setFullYear(emissao.getFullYear() - anos);
+  } else {
+    const e = parseLocalDate(raw);
+    if (!e) return null;
+    emissao = e;
+    vencimento = new Date(emissao);
+    vencimento.setFullYear(vencimento.getFullYear() + anos);
+  }
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const dias = Math.round((vencimento.getTime() - hoje.getTime()) / 86400000);
   return { emissao, vencimento, dias, valido: dias >= 0 };
+}
+
+function isTech(u: any) { return !!u?.tipo_predio && String(u.tipo_predio).toLowerCase().includes('tech'); }
+
+function tipoBadge(u: any) {
+  if (u.is_dg) return { label: 'DG', color: 'var(--amber)', bg: '#fef3e2' };
+  if (isTech(u)) return { label: 'TECH', color: '#0d9488', bg: '#ccfbf1' };
+  if (u.tipo_predio?.toLowerCase().includes('loja')) return { label: 'Loja', color: 'var(--purple)', bg: '#f3e8ff' };
+  if (u.tipo_predio?.toLowerCase().includes('pr')) return { label: 'Prédio', color: '#3b82f6', bg: '#eff6ff' };
+  return { label: u.tipo_predio || '—', color: 'var(--muted)', bg: '#f3f4f6' };
 }
 
 function App() {
@@ -64,7 +88,8 @@ function App() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string } | null>(null);
+  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string; venc?: string } | null>(null);
+  const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'dgs' | 'techs'>('todas');
   const [ufFilter, setUfFilter] = useState('');
 
   const [modal, setModal] = useState<any>({isOpen: false, type: 'alert', title: '', message: ''});
@@ -329,6 +354,34 @@ function App() {
     );
   };
 
+  const renderExpiryModal = () => {
+    if (!expiryInfo) return null;
+    const v = getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc);
+    if (!v) return null;
+    const color = v.valido ? 'var(--green)' : 'var(--red)';
+    const abs = Math.abs(v.dias);
+    return (
+      <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setExpiryInfo(null)}>
+        <div className="modal-box" style={{ width: '340px', maxWidth: '92%', padding: 0, borderRadius: '16px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ backgroundColor: '#f3f4f6', padding: '10px 16px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--ink)' }}>Vencimento do {expiryInfo.doc}</h2>
+            <button onClick={() => setExpiryInfo(null)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+          </div>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{v.valido ? 'Vence em' : 'Venceu em'}</div>
+            <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{v.vencimento.toLocaleDateString('pt-BR')}</div>
+            <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: v.valido ? '#ecfdf5' : '#fef2f2', color, border: `1px solid ${color}` }}>
+              {v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`}
+            </span>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
+              {expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${DOC_VALIDADE_ANOS[expiryInfo.doc]} anos`}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderUnidades = () => {
     const filtered = matriz.filter(u => {
       if (unitSubTab === 'ativas' && (u.status_funcionamento !== 'ATIVA' || u.is_dg)) return false;
@@ -339,13 +392,6 @@ function App() {
     });
 
     const allUfs = [...new Set(matriz.map((u: any) => u.uf).filter(Boolean))].sort();
-
-    const tipoBadge = (u: any) => {
-      if (u.is_dg) return { label: 'DG', color: 'var(--amber)', bg: '#fef3e2' };
-      if (u.tipo_predio?.toLowerCase().includes('loja')) return { label: 'Loja', color: 'var(--purple)', bg: '#f3e8ff' };
-      if (u.tipo_predio?.toLowerCase().includes('pr')) return { label: 'Prédio', color: '#3b82f6', bg: '#eff6ff' };
-      return { label: u.tipo_predio || '—', color: 'var(--muted)', bg: '#f3f4f6' };
-    };
 
     return (
       <>
@@ -489,18 +535,18 @@ function App() {
                   <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Datas dos Documentos</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                     {[
-                      { doc: 'PGR', raw: selectedUnit.pgr_data },
-                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data },
-                      { doc: 'AEP', raw: selectedUnit.aep_data },
-                    ].map(({ doc, raw }) => {
-                      const v = getDocValidity(doc, raw);
+                      { doc: 'PGR', raw: selectedUnit.pgr_data, venc: selectedUnit.pgr_vencimento },
+                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento },
+                      { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento },
+                    ].map(({ doc, raw, venc }) => {
+                      const v = getDocValidity(doc, raw, venc);
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
                       return (
                         <div
                           key={doc}
                           title={v ? 'Clique para ver o vencimento' : undefined}
-                          onClick={() => v && setExpiryInfo({ doc, raw })}
+                          onClick={() => v && setExpiryInfo({ doc, raw, venc })}
                           style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
                           onMouseEnter={e => { if (v) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; } }}
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -546,33 +592,7 @@ function App() {
           </div>
         )}
 
-        {/* Expiration Mini Modal */}
-        {expiryInfo && (() => {
-          const v = getDocValidity(expiryInfo.doc, expiryInfo.raw);
-          if (!v) return null;
-          const color = v.valido ? 'var(--green)' : 'var(--red)';
-          const abs = Math.abs(v.dias);
-          return (
-            <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setExpiryInfo(null)}>
-              <div className="modal-box" style={{ width: '340px', maxWidth: '92%', padding: 0, borderRadius: '16px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
-                <div style={{ backgroundColor: '#f3f4f6', padding: '10px 16px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--ink)' }}>Vencimento do {expiryInfo.doc}</h2>
-                  <button onClick={() => setExpiryInfo(null)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
-                </div>
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{v.valido ? 'Vence em' : 'Venceu em'}</div>
-                  <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{v.vencimento.toLocaleDateString('pt-BR')}</div>
-                  <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: v.valido ? '#ecfdf5' : '#fef2f2', color, border: `1px solid ${color}` }}>
-                    {v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`}
-                  </span>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
-                    Emitido em {v.emissao.toLocaleDateString('pt-BR')} · validade de {DOC_VALIDADE_ANOS[expiryInfo.doc]} anos
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {renderExpiryModal()}
 
         {/* Edit Unit Modal */}
         {editUnit && (
@@ -675,7 +695,49 @@ function App() {
 
 
   const renderMatriz = () => {
-    const filtered = matriz.filter(u => u.status_funcionamento === 'ATIVA' && `${u.cnpj} ${u.filial}`.toLowerCase().includes(searchQuery.toLowerCase()));
+    const ativas = matriz.filter(u => u.status_funcionamento === 'ATIVA');
+    const isLoja = (u: any) => !u.is_dg && !isTech(u);
+    const counts = {
+      todas: ativas.length,
+      lojas: ativas.filter(isLoja).length,
+      dgs: ativas.filter(u => u.is_dg).length,
+      techs: ativas.filter(u => !u.is_dg && isTech(u)).length,
+    };
+    const filtered = ativas.filter(u => {
+      if (matrizTipo === 'lojas' && !isLoja(u)) return false;
+      if (matrizTipo === 'dgs' && !u.is_dg) return false;
+      if (matrizTipo === 'techs' && (u.is_dg || !isTech(u))) return false;
+      return `${u.cnpj} ${u.filial}`.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    const pill = (bg: string, color: string, text: string, clickable: boolean, title?: string, onClick?: () => void) => (
+      <span
+        title={title}
+        onClick={onClick}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: bg, color, border: `1px solid ${color}`, cursor: clickable ? 'pointer' : 'default', whiteSpace: 'nowrap' }}
+      >{text}</span>
+    );
+
+    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string) => {
+      const v = getDocValidity(doc, raw, venc);
+      if (v) {
+        return v.valido
+          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc }))
+          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc }));
+      }
+      const s = (statusTxt || '').toLowerCase();
+      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', false, 'Sem data informada');
+      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', false, 'Sem data informada');
+      return pill('#f3f4f6', 'var(--muted)', 'S/D', false, 'Sem data cadastrada');
+    };
+
+    const check = (ok: boolean) => ok
+      ? <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: '15px' }}>✓</span>
+      : <span style={{ color: 'var(--red)', fontWeight: 800, fontSize: '15px' }}>✗</span>;
+
+    const th: React.CSSProperties = { textAlign: 'center' };
+    const td: React.CSSProperties = { textAlign: 'center' };
+
     return (
       <>
         <header className="topbar">
@@ -685,24 +747,54 @@ function App() {
           </div>
         </header>
         <section className="content">
+          <div className="tabs-header">
+            <button className={`tab-link ${matrizTipo === 'todas' ? 'active' : ''}`} onClick={() => setMatrizTipo('todas')}>Todas ({counts.todas})</button>
+            <button className={`tab-link ${matrizTipo === 'lojas' ? 'active' : ''}`} onClick={() => setMatrizTipo('lojas')}>Lojas / Prédios ({counts.lojas})</button>
+            <button className={`tab-link ${matrizTipo === 'dgs' ? 'active' : ''}`} onClick={() => setMatrizTipo('dgs')}>DGs ({counts.dgs})</button>
+            <button className={`tab-link ${matrizTipo === 'techs' ? 'active' : ''}`} onClick={() => setMatrizTipo('techs')}>TECHs ({counts.techs})</button>
+          </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>CNPJ / Filial</th><th>PGR</th><th>LTCAT</th><th>AEP</th><th>AET</th><th>NR01</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>CNPJ / Filial</th>
+                  <th style={th}>Tipo</th>
+                  <th style={th}>PGR</th>
+                  <th style={th}>LTCAT</th>
+                  <th style={th}>AEP</th>
+                  <th style={th}>AET</th>
+                  <th style={th}>NR01</th>
+                  <th style={{ ...th, borderLeft: '2px solid var(--line)' }}>SESMT</th>
+                  <th style={th}>ISO 45001</th>
+                  <th style={th}>NR 20</th>
+                </tr>
+              </thead>
               <tbody>
-                {filtered.map(u => (
-                  <tr key={u.id}>
-                    <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
-                    <td>{u.pgr ? <span className={`status ${getStatusColor(u.pgr)}`}>{u.pgr}</span> : '—'}</td>
-                    <td>{u.ltcat ? <span className={`status ${getStatusColor(u.ltcat)}`}>{u.ltcat}</span> : '—'}</td>
-                    <td>{u.aep ? <span className={`status ${getStatusColor(u.aep)}`}>{u.aep}</span> : '—'}</td>
-                    <td>{u.aet ? <span className={`status ${getStatusColor(u.aet)}`}>{u.aet}</span> : '—'}</td>
-                    <td>{u.nr01 ? <span className={`status ${getStatusColor(u.nr01)}`}>{u.nr01}</span> : '—'}</td>
-                  </tr>
-                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
+                )}
+                {filtered.map(u => {
+                  const b = tipoBadge(u);
+                  return (
+                    <tr key={u.id}>
+                      <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
+                      <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
+                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr)}</td>
+                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat)}</td>
+                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep)}</td>
+                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet)}</td>
+                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)}</td>
+                      <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.compoe_sesmt)}</td>
+                      <td style={td}>{check(!!u.escopo_iso_45001)}</td>
+                      <td style={td}>{check(!!u.is_nr20)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </section>
+        {renderExpiryModal()}
       </>
     );
   };
