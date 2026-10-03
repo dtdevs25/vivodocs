@@ -164,10 +164,12 @@ button{cursor:pointer}
 .insight span{color:#958b9d;font-size:11px}
 .toolbar{display:flex;justify-content:space-between;align-items:center;margin:27px 0 12px}
 .toolbar h2{margin:0;font-size:16px}
-.table-wrap{overflow:auto}
-.table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.table-wrap{overflow:visible}
+.table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:10px}
 .table th,.table td{text-align:left;padding:13px 16px;border-bottom:1px solid #f0edf3;font-size:11px}
-.table th{color:#9a909e;font-weight:400;background:#fcfbfd}
+.table th{color:#9a909e;font-weight:400;background:#fcfbfd;position:sticky;top:0;z-index:10;}
+.table th:first-child{border-top-left-radius:9px}
+.table th:last-child{border-top-right-radius:9px}
 .table td b{display:block}
 .table td small{color:#9a909e}
 .status{display:inline-block;border-radius:12px;padding:5px 9px;font-size:10px;font-weight:700;color:var(--green);background:#eaf7f0}

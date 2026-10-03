@@ -448,9 +448,6 @@ function App() {
             ))}
             <button className={`tab-link ${unitSubTab === 'desmobilizadas' ? 'active' : ''}`} onClick={() => setUnitSubTab('desmobilizadas')}>Desmobilizadas ({tabCount('desmobilizadas')})</button>
           </div>
-          <div style={{ marginBottom: '10px', color: 'var(--muted)', fontSize: '12px' }}>
-            {filtered.length} unidade{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}
-          </div>
           <div className="table-wrap">
             <table className="table">
               <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
