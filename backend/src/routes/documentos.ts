@@ -26,7 +26,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       originalName = file.originalname;
       mimeType = file.mimetype;
       size = file.size;
-      s3Key = \`\${unidade_id}/\${Date.now()}-\${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}\`;
+      s3Key = `${unidade_id}/${Date.now()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       await uploadToS3(file.buffer, s3Key, mimeType);
     }
 
@@ -48,7 +48,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
           data_vencimento = COALESCE($4, data_vencimento),
           observacoes = COALESCE($5, observacoes),
           updated_at = NOW()
-          \${file ? \`, arquivo_nome = $6, arquivo_url = $7, arquivo_tipo = $8, arquivo_tamanho = $9\` : ''}
+          ${file ? `, arquivo_nome = $6, arquivo_url = $7, arquivo_tipo = $8, arquivo_tamanho = $9` : ''}
         WHERE id = $10 RETURNING id
       `;
       const updateValues = file 
@@ -71,7 +71,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 
     if (user_email) {
-      await logAction(user_email, 'UPLOAD_DOCUMENTO', \`Fez upload de documento \${tipo_documento} para unidade ID \${unidade_id}\`);
+      await logAction(user_email, 'UPLOAD_DOCUMENTO', `Fez upload de documento ${tipo_documento} para unidade ID ${unidade_id}`);
     }
 
     res.status(201).json({ success: true, id: docId });
@@ -119,7 +119,7 @@ router.delete('/:id', async (req, res) => {
     await query('DELETE FROM documentos_sst WHERE id = $1', [req.params.id]);
 
     if (user_email) {
-      await logAction(user_email, 'DELETE_DOCUMENTO', \`Excluiu documento \${doc.tipo_documento} (ID \${req.params.id})\`);
+      await logAction(user_email, 'DELETE_DOCUMENTO', `Excluiu documento ${doc.tipo_documento} (ID ${req.params.id})`);
     }
 
     res.json({ success: true });
