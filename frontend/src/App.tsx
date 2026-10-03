@@ -106,7 +106,7 @@ function App() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw: string; venc?: string } | null>(null);
+  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw?: string; venc?: string; lista?: string; statusTxt?: string } | null>(null);
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
@@ -396,25 +396,49 @@ function App() {
 
   const renderExpiryModal = () => {
     if (!expiryInfo) return null;
-    const v = getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc);
-    if (!v) return null;
-    const color = v.valido ? 'var(--green)' : 'var(--red)';
-    const abs = Math.abs(v.dias);
+    const v = expiryInfo.raw ? getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc) : null;
+    
+    let color = 'var(--muted)';
+    let bg = '#f3f4f6';
+    let statusTitle = 'Sem Data Informada';
+    let daysText = 'Não é possível calcular o vencimento';
+    let dateText = '—';
+    
+    if (v) {
+      color = v.valido ? 'var(--green)' : 'var(--red)';
+      bg = v.valido ? '#ecfdf5' : '#fef2f2';
+      statusTitle = v.valido ? 'Vence em' : 'Venceu em';
+      dateText = v.vencimento.toLocaleDateString('pt-BR');
+      const abs = Math.abs(v.dias);
+      daysText = v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`;
+    } else if (expiryInfo.statusTxt) {
+      const s = expiryInfo.statusTxt.toLowerCase();
+      if (s.includes('venc')) { color = 'var(--red)'; bg = '#fef2f2'; statusTitle = 'Vencido (Manual)'; }
+      else if (s.includes('vigente') || s === 'ok') { color = 'var(--green)'; bg = '#ecfdf5'; statusTitle = 'Vigente (Manual)'; }
+    }
+    
     return (
       <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setExpiryInfo(null)}>
         <div className="modal-box" style={{ width: '360px' }} onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            <div className="modal-title"><h2>Vencimento do {expiryInfo.doc}</h2></div>
+            <div className="modal-title"><h2>Detalhes do {expiryInfo.doc}</h2></div>
             <button className="modal-close" onClick={() => setExpiryInfo(null)}>×</button>
           </div>
           <div className="modal-body" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{v.valido ? 'Vence em' : 'Venceu em'}</div>
-            <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{v.vencimento.toLocaleDateString('pt-BR')}</div>
-            <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: v.valido ? '#ecfdf5' : '#fef2f2', color, border: `1px solid ${color}` }}>
-              {v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`}
+            <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{statusTitle}</div>
+            <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{dateText}</div>
+            <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: bg, color, border: `1px solid ${color}` }}>
+              {daysText}
             </span>
+            {expiryInfo.lista && (
+              <div style={{ marginTop: '14px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--purple)', background: '#f3e8ff', padding: '6px 14px', borderRadius: '20px' }}>
+                  Lista de Entrega: {expiryInfo.lista}
+                </span>
+              </div>
+            )}
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
-              {expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${DOC_VALIDADE_ANOS[expiryInfo.doc]} anos`}
+              {v ? (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${DOC_VALIDADE_ANOS[expiryInfo.doc]} anos`) : 'Verifique o sistema para atualizar a data deste documento.'}
             </div>
           </div>
         </div>
@@ -769,17 +793,17 @@ function App() {
       >{text}</span>
     );
 
-    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string) => {
+    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string, lista?: string) => {
       const v = getDocValidity(doc, raw, venc);
       if (v) {
         return v.valido
-          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc }))
-          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc }));
+          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt }))
+          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt }));
       }
       const s = (statusTxt || '').toLowerCase();
-      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', false, 'Sem data informada');
-      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', false, 'Sem data informada');
-      return pill('#f3f4f6', 'var(--muted)', 'S/D', false, 'Sem data cadastrada');
+      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
+      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
+      return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt }));
     };
 
     const check = (ok: boolean) => ok
@@ -792,7 +816,7 @@ function App() {
     return (
       <>
         <header className="topbar">
-          <div><h1>Matriz de Conformidade (Documentos)</h1></div>
+          <div><h1>Conformidade</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
             <input className="search" placeholder="Buscar CNPJ, nome, cidade, tipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
@@ -842,11 +866,11 @@ function App() {
                     <tr key={u.id}>
                       <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
-                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr)}</td>
-                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat)}</td>
-                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep)}</td>
-                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet)}</td>
-                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)}</td>
+                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista)}</td>
+                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista)}</td>
+                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep, u.aep_lista)}</td>
+                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet, u.aet_lista)}</td>
+                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista)}</td>
                       <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.compoe_sesmt)}</td>
                       <td style={td}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>

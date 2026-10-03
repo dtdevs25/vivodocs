@@ -234,7 +234,12 @@ router.get('/matriz', async (req: Request, res: Response) => {
           MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as ltcat_vencimento,
           MAX(CASE WHEN d.tipo_documento = 'AEP' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as aep_vencimento,
           MAX(CASE WHEN d.tipo_documento = 'AET' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as aet_vencimento,
-          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as nr01_vencimento
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN to_char(d.data_vencimento, 'YYYY-MM-DD') END) as nr01_vencimento,
+          MAX(CASE WHEN d.tipo_documento = 'PGR' THEN d.lista_entrega END) as pgr_lista,
+          MAX(CASE WHEN d.tipo_documento = 'LTCAT' THEN d.lista_entrega END) as ltcat_lista,
+          MAX(CASE WHEN d.tipo_documento = 'AEP' THEN d.lista_entrega END) as aep_lista,
+          MAX(CASE WHEN d.tipo_documento = 'AET' THEN d.lista_entrega END) as aet_lista,
+          MAX(CASE WHEN d.tipo_documento = 'NR01' THEN d.lista_entrega END) as nr01_lista
       FROM unidades u
       LEFT JOIN documentos_sst d ON u.id = d.unidade_id
       GROUP BY u.id, u.cnpj, u.filial, u.uf, u.cidade, u.bairro, u.endereco, u.regional,
