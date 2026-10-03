@@ -59,20 +59,23 @@ try:
                 'valor_unit_aep': 0,
                 'qtd_insalubridade': 0,
                 'valor_unit_insalubridade': 0,
+                'qtd_diversos': 0,
+                'valor_unit_diversos': 0,
                 'desconto': 0,
                 'valor_total': total
             })
             
     with open('import_faturamento.sql', 'w', encoding='utf-8') as f:
-        f.write("DELETE FROM faturamento;\n")
+        f.write("DELETE FROM faturamento_lancamentos;\n")
         for r in records:
-            f.write(f"""INSERT INTO faturamento (
+            f.write(f"""INSERT INTO faturamento_lancamentos (
                 lista_lote, justificativa, 
                 qtd_pgr, valor_unit_pgr, 
                 qtd_ltcat, valor_unit_ltcat, 
                 qtd_aep, valor_unit_aep, 
                 qtd_aet, valor_unit_aet, 
                 qtd_insalubridade, valor_unit_insalubridade, 
+                qtd_diversos, valor_unit_diversos,
                 desconto, valor_total
             ) VALUES (
                 '{r['lista_lote']}', '{r['justificativa']}',
@@ -81,6 +84,7 @@ try:
                 {r['qtd_aep']}, {r['valor_unit_aep']},
                 {r['qtd_aet']}, {r['valor_unit_aet']},
                 {r['qtd_insalubridade']}, {r['valor_unit_insalubridade']},
+                {r['qtd_diversos']}, {r['valor_unit_diversos']},
                 {r['desconto']}, {r['valor_total']}
             );\n""")
             
