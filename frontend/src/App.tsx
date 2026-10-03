@@ -362,12 +362,12 @@ function App() {
     const abs = Math.abs(v.dias);
     return (
       <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setExpiryInfo(null)}>
-        <div className="modal-box" style={{ width: '340px', maxWidth: '92%', padding: 0, borderRadius: '16px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
-          <div style={{ backgroundColor: '#f3f4f6', padding: '10px 16px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--ink)' }}>Vencimento do {expiryInfo.doc}</h2>
-            <button onClick={() => setExpiryInfo(null)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        <div className="modal-box" style={{ width: '360px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <div className="modal-title"><h2>Vencimento do {expiryInfo.doc}</h2></div>
+            <button className="modal-close" onClick={() => setExpiryInfo(null)}>×</button>
           </div>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
+          <div className="modal-body" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>{v.valido ? 'Vence em' : 'Venceu em'}</div>
             <div style={{ fontSize: '26px', fontWeight: '800', color, margin: '4px 0 8px' }}>{v.vencimento.toLocaleDateString('pt-BR')}</div>
             <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: v.valido ? '#ecfdf5' : '#fef2f2', color, border: `1px solid ${color}` }}>
@@ -492,27 +492,24 @@ function App() {
         {/* Unit Detail Modal */}
         {selectedUnit && (
           <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
-            <div className="modal-box" style={{ width: '560px', maxWidth: '95%', maxHeight: '85vh', overflow: 'hidden', padding: 0, borderRadius: '16px', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-box" style={{ width: '560px' }} onClick={(e) => e.stopPropagation()}>
               
               {selectedUnit.status_funcionamento === 'DESMOBILIZADA' && (
-                <div style={{ flexShrink: 0, backgroundColor: 'var(--red)', color: '#fff', padding: '8px 20px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  ⚠️ Unidade Desmobilizada
-                </div>
+                <div className="modal-banner-danger">⚠️ Unidade Desmobilizada</div>
               )}
 
-              {/* Gray Header (compacto) */}
-              <div style={{ flexShrink: 0, backgroundColor: '#f3f4f6', padding: '12px 20px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                <div style={{ minWidth: 0 }}>
-                  <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedUnit.filial || '—'}</h2>
-                  <small style={{ color: 'var(--muted)', fontSize: '11px' }}>CNPJ: {selectedUnit.cnpj}</small>
+              <div className="modal-header">
+                <div className="modal-title">
+                  <h2>{selectedUnit.filial || '—'}</h2>
+                  <small>CNPJ: {selectedUnit.cnpj}</small>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <div className="modal-header-right">
                   {(() => { const b = tipoBadge(selectedUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: '700' }}>{b.label}</span>; })()}
-                  <button onClick={() => setSelectedUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                  <button className="modal-close" onClick={() => setSelectedUnit(null)}>×</button>
                 </div>
               </div>
 
-              <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+              <div className="modal-body">
 
                 {/* Grid de dados */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
@@ -583,7 +580,7 @@ function App() {
 
               {/* Footer fixo com ações (apenas admin/master) */}
               {(user?.role === 'master' || user?.role === 'admin') && (
-                <div style={{ flexShrink: 0, borderTop: '1px solid var(--line)', padding: '12px 20px', display: 'flex', gap: '8px', background: '#fff' }}>
+                <div className="modal-footer start">
                   <button title="Editar" style={{ background: '#f0e7fb', border: '1px solid var(--purple)', color: 'var(--purple)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setEditUnit({ ...selectedUnit }); }}><Pencil size={18} /></button>
                   <button title="Excluir" style={{ background: '#fef2f2', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }} onClick={() => { setSelectedUnit(null); setDeleteTarget(selectedUnit); }}><Trash2 size={18} /></button>
                 </div>
@@ -597,27 +594,28 @@ function App() {
         {/* Edit Unit Modal */}
         {editUnit && (
           <div className="modal-overlay" onClick={() => setEditUnit(null)}>
-            <div className="modal-box" style={{ width: '620px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-box" style={{ width: '620px' }} onClick={(e) => e.stopPropagation()}>
               
               {editUnit.status_funcionamento === 'DESMOBILIZADA' && (
-                <div style={{ backgroundColor: 'var(--red)', color: '#fff', padding: '12px 24px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  ⚠️ Unidade Desmobilizada
-                </div>
+                <div className="modal-banner-danger">⚠️ Unidade Desmobilizada</div>
               )}
 
-              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>✏ {editUnit.id ? 'Editar Unidade' : 'Cadastrar Nova Unidade'}</h2>
-                  <small style={{ color: 'var(--muted)' }}>{editUnit.filial ? `${editUnit.filial} — ${editUnit.cnpj}` : 'Preencha os dados abaixo'}</small>
+              <div className="modal-header">
+                <div className="modal-title">
+                  <h2>{editUnit.id ? 'Editar Unidade' : 'Cadastrar Nova Unidade'}</h2>
+                  <small>{editUnit.filial ? `${editUnit.filial} — ${editUnit.cnpj}` : 'Preencha os dados abaixo'}</small>
                 </div>
-                <button onClick={() => setEditUnit(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                <div className="modal-header-right">
+                  {editUnit.id && (() => { const b = tipoBadge(editUnit); return <span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: '700' }}>{b.label}</span>; })()}
+                  <button className="modal-close" onClick={() => setEditUnit(null)}>×</button>
+                </div>
               </div>
-              <div style={{ padding: '24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+              <div className="modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   {[
                     { key: 'filial', label: 'Nome / Filial', full: false },
                     { key: 'cnpj', label: 'CNPJ', full: false },
-                    { key: 'tipo_predio', label: 'Tipo (Loja/Prédio/DG)', full: false },
+                    { key: 'tipo_predio', label: 'Tipo (Loja/Prédio/TECH)', full: false },
                     { key: 'status_funcionamento', label: 'Status', full: false, isSelect: true },
                     { key: 'cidade', label: 'Cidade', full: false },
                     { key: 'uf', label: 'UF', full: false },
@@ -656,10 +654,10 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                  <button className="btn" onClick={() => setEditUnit(null)}>Cancelar</button>
-                  <button className="btn primary" onClick={handleUpdateUnit}>Salvar Alterações</button>
-                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn" onClick={() => setEditUnit(null)}>Cancelar</button>
+                <button className="btn primary" onClick={handleUpdateUnit}>Salvar Alterações</button>
               </div>
             </div>
           </div>
@@ -668,26 +666,26 @@ function App() {
         {/* Delete Confirmation Modal */}
         {deleteTarget && (
           <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="modal-box" style={{ maxWidth: '420px', padding: 0 }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--red)' }}>⚠️ Excluir Unidade</h2>
-                <button onClick={() => setDeleteTarget(null)} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+            <div className="modal-box" style={{ width: '420px' }} onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <div className="modal-title"><h2 style={{ color: 'var(--red)' }}>⚠️ Excluir Unidade</h2></div>
+                <button className="modal-close" onClick={() => setDeleteTarget(null)}>×</button>
               </div>
-              <div style={{ padding: '24px', textAlign: 'center' }}>
-                <p style={{ color: 'var(--muted)', lineHeight: '1.7', marginBottom: '24px' }}>
-                Você está prestes a excluir permanentemente a unidade<br />
-                <strong style={{ color: 'var(--ink)', fontSize: '14px' }}>"{deleteTarget.filial}"</strong><br />
-                <small>{deleteTarget.cnpj}</small><br /><br />
-                <strong style={{ color: 'var(--red)' }}>⚠ Esta ação não poderá ser desfeita.</strong><br />
-                Todos os documentos SST vinculados também serão removidos.
-              </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button className="btn" style={{ minWidth: '130px' }} onClick={() => setDeleteTarget(null)}>Cancelar</button>
-                <button className="btn" style={{ minWidth: '130px', background: 'var(--red)', border: '1px solid var(--red)', color: '#fff', fontWeight: 'bold' }} onClick={handleDeleteUnit}>Sim, excluir</button>
+              <div className="modal-body" style={{ textAlign: 'center' }}>
+                <p style={{ color: 'var(--muted)', lineHeight: '1.7', margin: 0 }}>
+                  Você está prestes a excluir permanentemente a unidade<br />
+                  <strong style={{ color: 'var(--ink)', fontSize: '14px' }}>"{deleteTarget.filial}"</strong><br />
+                  <small>{deleteTarget.cnpj}</small><br /><br />
+                  <strong style={{ color: 'var(--red)' }}>⚠ Esta ação não poderá ser desfeita.</strong><br />
+                  Todos os documentos SST vinculados também serão removidos.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn" onClick={() => setDeleteTarget(null)}>Cancelar</button>
+                <button className="btn" style={{ background: 'var(--red)', border: '1px solid var(--red)', color: '#fff', fontWeight: 'bold' }} onClick={handleDeleteUnit}>Sim, excluir</button>
               </div>
             </div>
           </div>
-        </div>
         )}
       </>
     );
@@ -1004,32 +1002,35 @@ function App() {
       </div>
 
       {modal.isOpen && (
-        <div className="modal-overlay">
-          <div className="modal-box" style={{ padding: 0 }}>
-            <div style={{ backgroundColor: '#f3f4f6', padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--ink)' }}>{modal.title}</h2>
-              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '22px', color: 'var(--muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-box" style={{ width: modal.type === 'userForm' ? '460px' : '400px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title"><h2>{modal.title}</h2></div>
+              <button className="modal-close" onClick={closeModal}>×</button>
             </div>
-            <div style={{ padding: '24px' }}>
-              {modal.type === 'alert' && <><p style={{ marginTop: 0 }}>{modal.message}</p><div className="modal-actions"><button className="btn primary" onClick={closeModal}>OK</button></div></>}
-              {modal.type === 'confirm' && <><p style={{ marginTop: 0 }}>{modal.message}</p><div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button></div></>}
+            <div className="modal-body">
+              {(modal.type === 'alert' || modal.type === 'confirm') && <p style={{ margin: 0 }}>{modal.message}</p>}
               {modal.type === 'userForm' && (
                 <>
                   <div className="modal-form-group"><label>Nome</label><input value={modal.formData.nome} onChange={e => setModal({...modal, formData: {...modal.formData, nome: e.target.value}})} /></div>
                   <div className="modal-form-group"><label>E-mail</label><input value={modal.formData.email} onChange={e => setModal({...modal, formData: {...modal.formData, email: e.target.value}})} /></div>
-                  <div className="modal-form-group">
+                  <div className="modal-form-group" style={{ marginBottom: 0 }}>
                     <label>Nível</label>
                     <select value={modal.formData.nivel_acesso} onChange={e => setModal({...modal, formData: {...modal.formData, nivel_acesso: e.target.value}})}>
                       <option value="master">Master</option><option value="admin">Admin</option><option value="editor">Editor</option><option value="visualizador">Visualizador</option>
                     </select>
                   </div>
-                  <div className="modal-actions"><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
-                    const u = modal.formData;
-                    if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
-                    else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); closeModal(); });
-                  }}>Salvar</button></div>
                 </>
               )}
+            </div>
+            <div className="modal-footer">
+              {modal.type === 'alert' && <button className="btn primary" onClick={closeModal}>OK</button>}
+              {modal.type === 'confirm' && <><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => { if(modal.onConfirm) modal.onConfirm(); closeModal(); }}>Confirmar</button></>}
+              {modal.type === 'userForm' && <><button className="btn" onClick={closeModal}>Cancelar</button><button className="btn primary" onClick={() => {
+                const u = modal.formData;
+                if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
+                else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); closeModal(); });
+              }}>Salvar</button></>}
             </div>
           </div>
         </div>
