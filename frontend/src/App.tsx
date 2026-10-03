@@ -320,7 +320,7 @@ function App() {
       e.preventDefault();
       try {
         await axios.post('/api/auth/forgot-password', { email: forgotEmail, frontendUrl: window.location.origin });
-        openAlert('Sucesso', 'Se este e-mail estiver cadastrado, um link de redefinição foi enviado.');
+        openAlert('Sucesso', 'Um link de redefinição de senha foi enviado para o seu e-mail.');
         setIsForgotPassword(false);
         setForgotEmail('');
       } catch (err: any) {
