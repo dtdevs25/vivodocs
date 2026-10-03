@@ -372,7 +372,7 @@ function App() {
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>DGs</small>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '20px 24px' }}>
-                    <strong style={{ fontSize: '26px', color: 'var(--amber)', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
+                    <strong style={{ fontSize: '26px', color: '#0d9488', fontWeight: '800', lineHeight: '1', marginBottom: '4px' }}>{dashboardData.total_techs}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>TECHs</small>
                   </div>
 
