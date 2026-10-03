@@ -224,6 +224,13 @@ function App() {
       if (selectedUnit && selectedUnit.id === unidadeId) {
         setSelectedUnit(null); // Close modal so user can reopen to see new file, or update state
       }
+      
+      if (editUnit && editUnit.id === unidadeId) {
+        setEditUnit({
+          ...editUnit,
+          [`${tipoDocumento.toLowerCase()}_arquivo_nome`]: file.name
+        });
+      }
     } catch (e) {
       openAlert('Erro', 'Falha ao anexar arquivo.');
     }
@@ -808,15 +815,11 @@ function App() {
                             {fileName && (
                               <button
                                 onClick={() => handleDownload(docId)}
-                                style={{ background: 'transparent', border: 'none', color: 'var(--blue)', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--blue)', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', padding: '4px', borderRadius: '4px', backgroundColor: 'rgba(59,130,246,0.1)' }}
                               >
-                                ⬇ Baixar Arquivo
+                                ⬇ Abrir Documento
                               </button>
                             )}
-                            <label style={{ fontSize: '10px', color: 'var(--ink)', fontWeight: 'bold', cursor: 'pointer', background: 'rgba(0,0,0,0.05)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>
-                              Anexar
-                              <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpload(selectedUnit.id, doc, e.target.files?.[0])} />
-                            </label>
                           </div>
                         </div>
                       );
@@ -906,6 +909,22 @@ function App() {
                               </select>)
                         : <input type={type || 'text'} value={editUnit[key] || ''} onChange={(e) => setEditUnit({ ...editUnit, [key]: e.target.value })} />
                       }
+                      {(key === 'pgr_data' || key === 'ltcat_data' || key === 'aep_data') && editUnit.id && (
+                        <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <label style={{ fontSize: '11px', cursor: 'pointer', color: 'var(--blue)', background: 'rgba(59,130,246,0.1)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                            📎 Anexar PDF
+                            <input 
+                              type="file" 
+                              accept=".pdf,application/pdf"
+                              style={{ display: 'none' }} 
+                              onChange={(e) => handleUpload(editUnit.id, key === 'pgr_data' ? 'PGR' : key === 'ltcat_data' ? 'LTCAT' : 'AEP', e.target.files?.[0])} 
+                            />
+                          </label>
+                          {editUnit[`${key.split('_')[0]}_arquivo_nome`] && (
+                            <span style={{ fontSize: '10px', color: 'var(--green)' }}>✓ Arquivo salvo</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div style={{ gridColumn: '1 / -1' }}>
@@ -1219,7 +1238,7 @@ function App() {
             </div>
             <div className="modal-body" style={{ height: '400px', paddingTop: '20px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={faturamento.map(f => ({ name: f.lista_lote.split('-')[0].trim(), valor: parseFloat(f.valor_total || '0') })).reverse()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={faturamento.map(f => ({ name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), valor: parseFloat(f.valor_total || '0') })).reverse()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                   <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis tickFormatter={(val) => `R$ ${(val/1000)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
