@@ -111,6 +111,19 @@ function App() {
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
 
+  const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
+  const [novoFat, setNovoFat] = useState({
+    lista_lote: '', justificativa: '',
+    qtd_pgr: 0, valor_unit_pgr: 0,
+    qtd_ltcat: 0, valor_unit_ltcat: 0,
+    qtd_aep: 0, valor_unit_aep: 0,
+    qtd_aet: 0, valor_unit_aet: 0,
+    qtd_insalubridade: 0, valor_unit_insalubridade: 0,
+    qtd_diversos: 0, valor_unit_diversos: 0,
+    desconto: 0,
+    unidades: [] as number[]
+  });
+
   const handleExportExcel = (filteredData: any[], fileName: string) => {
     const ws_data = [
       ['CNPJ', 'Filial', 'Tipo', 'Cidade', 'UF', 'Regional', 'ISO 45001', 'Compõe SESMT', 'PGR Data', 'PGR Validade', 'LTCAT Data', 'AEP Data', 'AET Data']
@@ -222,6 +235,27 @@ function App() {
       fetchDashboard();
     } catch (err) {
       openAlert('Erro', 'Não foi possível excluir a unidade.');
+    }
+  };
+
+  const handleSalvarFaturamento = async () => {
+    try {
+      const calcTotal = (
+        novoFat.qtd_pgr * novoFat.valor_unit_pgr +
+        novoFat.qtd_ltcat * novoFat.valor_unit_ltcat +
+        novoFat.qtd_aep * novoFat.valor_unit_aep +
+        novoFat.qtd_aet * novoFat.valor_unit_aet +
+        novoFat.qtd_insalubridade * novoFat.valor_unit_insalubridade +
+        novoFat.qtd_diversos * novoFat.valor_unit_diversos
+      );
+      const payload = { ...novoFat, valor_total: calcTotal - novoFat.desconto };
+      await axios.post('/api/faturamento', payload);
+      openAlert('Sucesso', 'Lançamento salvo!');
+      setFaturamentoModalOpen(false);
+      setNovoFat({ lista_lote: '', justificativa: '', qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
+      fetchFaturamento();
+    } catch (err) {
+      openAlert('Erro', 'Erro ao salvar lançamento');
     }
   };
 
@@ -888,7 +922,12 @@ function App() {
 
   const renderFinanceiro = () => (
     <>
-      <header className="topbar"><div><h1>Faturamento e Custos</h1></div></header>
+      <header className="topbar">
+        <div><h1>Faturamento e Custos</h1></div>
+        <div className="actions">
+          <button className="btn primary" onClick={() => setFaturamentoModalOpen(true)}>＋ Novo Lançamento</button>
+        </div>
+      </header>
       <section className="content">
         <div className="cards" style={{ marginBottom: '20px' }}>
           <div className="card" style={{ background: '#f8fdf9', border: '1px solid #cce8d6' }}>
@@ -905,17 +944,17 @@ function App() {
             <thead><tr><th>Lote / Período</th><th>PGR / LTCAT / AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th></tr></thead>
             <tbody>
               {faturamento.map(f => {
-                const bruto = parseFloat(f.valor_bruto || '0');
-                const desc = parseFloat(f.descontos || '0');
+                const total = parseFloat(f.valor_total || '0');
+                const desc = parseFloat(f.desconto || '0');
                 return (
                   <tr key={f.id}>
-                    <td><b>{f.lote_entrega}</b><br/><small>{f.observacoes}</small></td>
+                    <td><b>{f.lista_lote}</b><br/><small>{f.justificativa}</small></td>
                     <td>
-                      <small>PGR: {f.quantidade_pgr} | LTCAT: {f.quantidade_ltcat} | AET: {f.quantidade_aet}</small>
+                      <small>PGR: {f.qtd_pgr} | LTCAT: {f.qtd_ltcat} | AET: {f.qtd_aet}</small>
                     </td>
                     <td style={{ color: 'var(--red)' }}>R$ {desc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td><b>R$ {(bruto-desc).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b></td>
-                    <td>{f.data_envio_pagamento ? new Date(f.data_envio_pagamento).toLocaleDateString('pt-BR') : '—'}</td>
+                    <td><b>R$ {total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b></td>
+                    <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                   </tr>
                 );
               })}
@@ -923,6 +962,84 @@ function App() {
           </table>
         </div>
       </section>
+      {faturamentoModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 10001 }}>
+          <div className="modal-box" style={{ width: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <div className="modal-title"><h2>Novo Lançamento (Medição)</h2></div>
+              <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label>Lista / Lote pertencente</label>
+                  <input placeholder="Ex: LISTA 29" value={novoFat.lista_lote} onChange={e => setNovoFat({...novoFat, lista_lote: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label>Mês / Justificativas (Texto Livre)</label>
+                  <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+              </div>
+              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Valores Unitários</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>PGR</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_pgr || ''} onChange={e => setNovoFat({...novoFat, qtd_pgr: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_pgr || ''} onChange={e => setNovoFat({...novoFat, valor_unit_pgr: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>LTCAT</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_ltcat || ''} onChange={e => setNovoFat({...novoFat, qtd_ltcat: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_ltcat || ''} onChange={e => setNovoFat({...novoFat, valor_unit_ltcat: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>AEP</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_aep || ''} onChange={e => setNovoFat({...novoFat, qtd_aep: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_aep || ''} onChange={e => setNovoFat({...novoFat, valor_unit_aep: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>AET</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_aet || ''} onChange={e => setNovoFat({...novoFat, qtd_aet: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_aet || ''} onChange={e => setNovoFat({...novoFat, valor_unit_aet: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>Insalubridade</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_insalubridade || ''} onChange={e => setNovoFat({...novoFat, qtd_insalubridade: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_insalubridade || ''} onChange={e => setNovoFat({...novoFat, valor_unit_insalubridade: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '100px', fontWeight: 'bold' }}>Diversos</span>
+                  <input type="number" placeholder="Qtd" value={novoFat.qtd_diversos || ''} onChange={e => setNovoFat({...novoFat, qtd_diversos: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_diversos || ''} onChange={e => setNovoFat({...novoFat, valor_unit_diversos: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+              </div>
+              
+              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Selecione as Unidades (CNPJs)</h3>
+              <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {matriz.map(u => (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
+                    <input type="checkbox" checked={novoFat.unidades.includes(u.id)} onChange={e => {
+                      if (e.target.checked) setNovoFat({...novoFat, unidades: [...novoFat.unidades, u.id]});
+                      else setNovoFat({...novoFat, unidades: novoFat.unidades.filter(uid => uid !== u.id)});
+                    }} style={{ accentColor: 'var(--purple)' }} />
+                    <b>{u.cnpj}</b> - {u.filial}
+                  </label>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: 'auto' }}>
+                  <b>Desconto (R$):</b>
+                  <input type="number" value={novoFat.desconto || ''} onChange={e => setNovoFat({...novoFat, desconto: Number(e.target.value)})} style={{ width: '100px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                </div>
+                <button className="btn" onClick={() => setFaturamentoModalOpen(false)}>Cancelar</button>
+                <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 
