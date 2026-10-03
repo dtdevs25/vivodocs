@@ -1166,44 +1166,54 @@ function App() {
             <table className="table">
               <thead><tr><th>Nome</th><th>E-mail</th><th>Nível</th><th>Ações</th></tr></thead>
               <tbody>
-                {adminUsers.map(u => (
+                {adminUsers.filter(u => {
+                  if (user?.role === 'master') return true;
+                  if (user?.role === 'admin' && u.nivel_acesso === 'master') return false;
+                  return true;
+                }).map(u => {
+                  const canEdit = user?.role === 'master' || (user?.role === 'admin' && u.nivel_acesso !== 'admin' && u.nivel_acesso !== 'master');
+                  return (
                   <tr key={u.id}>
                     <td><b>{u.nome}</b></td>
                     <td>{u.email}</td>
                     <td><span className="status">{u.nivel_acesso.toUpperCase()}</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                        <button
-                          title="Reenviar Senha"
-                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--amber)', transition: 'all 0.15s' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fffbeb'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--amber)'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
-                          onClick={() => openConfirm('Atenção', `Reenviar e-mail de senha para ${u.nome}?`, () => {
-                            axios.post(`/api/auth/users/${u.id}/reset`, { frontendUrl: window.location.origin }).then(() => {
-                              openAlert('Sucesso', 'E-mail de redefinição enviado com sucesso!');
-                            });
-                          })}
-                        ><Mail size={14} /></button>
-                        <button
-                          title="Editar Usuário"
-                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0e7fb'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--purple)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--purple)'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
-                          onClick={() => openUserForm(u)}
-                        ><Pencil size={14} /></button>
-                        <button
-                          title="Excluir Usuário"
-                          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--red)', transition: 'all 0.15s' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--red)'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
-                          onClick={() => openConfirm('Atenção', `Excluir ${u.nome}?`, () => {
-                            axios.delete(`/api/auth/users/${u.id}`).then(fetchAdminUsers);
-                          })}
-                        ><Trash2 size={14} /></button>
+                        {canEdit && (
+                          <>
+                            <button
+                              title="Reenviar Senha"
+                              style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--amber)', transition: 'all 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fffbeb'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--amber)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                              onClick={() => openConfirm('Atenção', `Reenviar e-mail de senha para ${u.nome}?`, () => {
+                                axios.post(`/api/auth/users/${u.id}/reset`, { frontendUrl: window.location.origin }).then(() => {
+                                  openAlert('Sucesso', 'E-mail de redefinição enviado com sucesso!');
+                                });
+                              })}
+                            ><Mail size={14} /></button>
+                            <button
+                              title="Editar Usuário"
+                              style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--muted)', transition: 'all 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0e7fb'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--purple)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--purple)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                              onClick={() => openUserForm(u)}
+                            ><Pencil size={14} /></button>
+                            <button
+                              title="Excluir Usuário"
+                              style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', display: 'flex', color: 'var(--red)', transition: 'all 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--red)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--line)'; }}
+                              onClick={() => openConfirm('Atenção', `Excluir ${u.nome}?`, () => {
+                                axios.delete(`/api/auth/users/${u.id}`).then(fetchAdminUsers);
+                              })}
+                            ><Trash2 size={14} /></button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
@@ -1282,13 +1292,15 @@ function App() {
               <button className={activeTab === 'matriz' ? 'active' : ''} onClick={() => setActiveTab('matriz')}>
                 <FileCheck size={18} /> <span>Matriz de Conformidade</span>
               </button>
-              <button className={activeTab === 'financeiro' ? 'active' : ''} onClick={() => setActiveTab('financeiro')}>
-                <CircleDollarSign size={18} /> <span>Faturamento (Custos)</span>
-              </button>
               {['master','admin'].includes(user.role) && (
-                <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>
-                  <Users size={18} /> <span>Administrativo</span>
-                </button>
+                <>
+                  <button className={activeTab === 'financeiro' ? 'active' : ''} onClick={() => setActiveTab('financeiro')}>
+                    <CircleDollarSign size={18} /> <span>Faturamento (Custos)</span>
+                  </button>
+                  <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>
+                    <Users size={18} /> <span>Administrativo</span>
+                  </button>
+                </>
               )}
             </div>
             <div className="spacer"></div>
