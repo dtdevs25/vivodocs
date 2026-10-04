@@ -1399,7 +1399,7 @@ function App() {
                 <h3 style={{ margin: 0, color: 'var(--ink)', fontSize: '18px' }}>Alertas de Vencimento</h3>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                 <div className="modal-form-group">
                   <label>1º Alerta (Dias)</label>
                   <input type="number" value={notifConfig.dias_alerta_1} onChange={e => setNotifConfig({...notifConfig, dias_alerta_1: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
@@ -1428,7 +1428,7 @@ function App() {
                 <h3 style={{ margin: 0, color: 'var(--ink)', fontSize: '18px' }}>Validade dos Documentos (Anos)</h3>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                 <div className="modal-form-group">
                   <label>PGR</label>
                   <input type="number" value={notifConfig.validade_pgr} onChange={e => setNotifConfig({...notifConfig, validade_pgr: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
