@@ -692,9 +692,6 @@ function App() {
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto' }}>
-            {['master', 'admin', 'editor'].includes(user?.role) && (
-              <button className="btn primary" onClick={() => setEditUnit({ status_funcionamento: 'ATIVA' })}>＋ Unidade</button>
-            )}
             <input
               className="search"
               placeholder="Buscar por CNPJ, nome, cidade, tipo..."
@@ -712,6 +709,9 @@ function App() {
             <button className="btn" title="Baixar Planilha" style={{ background: '#10b981', color: '#fff', borderColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px', height: '40px' }} onClick={() => handleExportExcel(filtered, 'Consulta_CNPJ')}>
                <FileSpreadsheet size={18} />
             </button>
+            {['master', 'admin', 'editor'].includes(user?.role) && (
+              <button className="btn primary" onClick={() => setEditUnit({ status_funcionamento: 'ATIVA' })}>＋ Unidade</button>
+            )}
           </div>
         </header>
         <section className="content">
