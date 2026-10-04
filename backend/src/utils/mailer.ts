@@ -1,12 +1,12 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'mail.ehspro.com.br',
+  host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER || 'vivodocsafe@ehspro.com.br',
-    pass: process.env.SMTP_PASS || 'nova@2026',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   tls: {
     rejectUnauthorized: false
@@ -49,7 +49,7 @@ export const sendWelcomeEmail = async (to: string, nome: string, token: string, 
 
   try {
     const info = await transporter.sendMail({
-      from: `"Vivo DocSafe" <${process.env.SMTP_USER || 'vivodocsafe@ehspro.com.br'}>`,
+      from: `"Vivo DocSafe" <${process.env.SMTP_USER}>`,
       to,
       subject: "Bem-vindo ao Vivo DocSafe - Seus dados de acesso",
       html: generateEmailTemplate(bodyContent, frontendUrl),
