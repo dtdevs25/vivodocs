@@ -7,6 +7,8 @@ import QRCode from 'qrcode';
 import { logAction } from '../utils/logger';
 import { sendWelcomeEmail } from '../utils/mailer';
 import rateLimit from 'express-rate-limit';
+import multer from 'multer';
+import { uploadToS3 } from '../utils/s3';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -18,6 +20,31 @@ const loginLimiter = rateLimit({
 });
 
 // Login route
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post('/avatar', upload.single('file'), async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const file = req.file;
+  if (!email || !file) return res.status(400).json({ error: 'Faltando dados' });
+  try {
+    const s3Key = `avatars/${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    await uploadToS3(file.buffer, s3Key, file.mimetype);
+    // Build S3 URL assuming bucket is public or minio endpoint is mapped
+    const bucket = process.env.S3_BUCKET_NAME || 'vivodocs';
+    const endpoint = process.env.S3_ENDPOINT || 'http://localhost:9000';
+    const s3Host = endpoint.includes('amazonaws.com') 
+      ? `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com`
+      : `${endpoint}/${bucket}`;
+    const avatarUrl = `${s3Host}/${s3Key}`;
+    
+    await query('UPDATE usuarios SET avatar_url = $1 WHERE email = $2', [avatarUrl, email]);
+    res.json({ avatar_url: avatarUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao fazer upload do avatar' });
+  }
+});
+
 router.post('/login', loginLimiter, async (req: Request, res: Response) => {
   const { email, senha, simularNivel } = req.body;
   

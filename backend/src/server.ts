@@ -72,6 +72,10 @@ const initDb = async () => {
       await query(`ALTER TABLE notificacoes_config ADD COLUMN IF NOT EXISTS ${col} INTEGER DEFAULT 2`);
     }
 
+    try { await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS avatar_url TEXT`); } catch(e) {}
+    try { await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS two_factor_secret TEXT`); } catch(e) {}
+    try { await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT FALSE`); } catch(e) {}
+
     await query(`INSERT INTO notificacoes_config (id) VALUES (1) ON CONFLICT DO NOTHING`);
     console.log('DB migrations complete.');
   } catch (err) {

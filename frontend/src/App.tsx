@@ -11,6 +11,7 @@ interface UserData {
   email: string;
   role: Role;
   two_factor_enabled?: boolean;
+  avatar_url?: string;
 }
 
 function getStatusColor(val: string) {
@@ -129,6 +130,7 @@ function App() {
   const [historyModalOpen, setHistoryModalOpen] = useState<{ unidade_id: number, doc: string } | null>(null);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [quarentenaData, setQuarentenaData] = useState<any[]>([]);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
   const [sesmtFilter, setSesmtFilter] = useState(false);
@@ -241,6 +243,25 @@ function App() {
   };
   const fetchQuarentena = async () => {
     try { const res = await axios.get('/api/documentos/quarentena/pendentes'); setQuarentenaData(res.data); } catch (e) {}
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('email', user.email);
+    try {
+      const res = await axios.post('/api/auth/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const newUrl = res.data.avatar_url;
+      const newUser = { ...user, avatar_url: newUrl };
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      openAlert('Sucesso', 'Foto atualizada com sucesso!');
+      setPhotoModalOpen(false);
+    } catch(err) {
+      openAlert('Erro', 'Não foi possível atualizar a foto.');
+    }
   };
 
   const handleUpload = async (unidadeId: number, tipoDocumento: string, file?: File) => {
@@ -1728,10 +1749,17 @@ function App() {
               )}
             </div>
             <div className="spacer"></div>
-            <div className="user-profile">
-              <div className="user-profile-info">
-                <b style={{ textTransform: 'capitalize', display: 'block', color: '#5b4e64' }}>{user.nome}</b>
-                <small style={{ color: '#a8a0ad' }}>Nível: {user.role}</small>
+            <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', cursor: 'pointer' }} onClick={() => setPhotoModalOpen(true)}>
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt="Avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+                  {user.nome.split(' ').map((n, i, a) => i === 0 || i === a.length - 1 ? n[0] : '').join('').toUpperCase().substring(0, 2)}
+                </div>
+              )}
+              <div className="user-profile-info" style={{ flex: 1, overflow: 'hidden' }}>
+                <b style={{ textTransform: 'capitalize', display: 'block', color: '#5b4e64', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user.nome}</b>
+                <small style={{ color: '#a8a0ad', display: 'block' }}>Nível: {user.role}</small>
               </div>
             </div>
           </div>
@@ -1789,14 +1817,39 @@ function App() {
         </div>
       )}
 
-      {profileModalOpen && (
-        <div className="modal-overlay" onClick={() => setProfileModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+      {photoModalOpen && (
+        <div className="modal-overlay" onClick={() => setPhotoModalOpen(false)}>
+          <div className="modal-box" style={{ width: '400px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-title">
-                <h2>Meu Perfil / Segurança</h2>
+              <div className="modal-title"><h2>Mudar Foto de Perfil</h2></div>
+              <button className="modal-close" onClick={() => setPhotoModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: '16px' }}>
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="Avatar" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'var(--purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '32px', margin: '0 auto' }}>
+                    {user?.nome.split(' ').map((n, i, a) => i === 0 || i === a.length - 1 ? n[0] : '').join('').toUpperCase().substring(0, 2)}
+                  </div>
+                )}
               </div>
-              <button className="close-btn" onClick={() => setProfileModalOpen(false)}>✕</button>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Escolha uma nova foto de perfil para sua conta. (Formato JPG ou PNG)</p>
+              <label className="btn primary" style={{ cursor: 'pointer', display: 'inline-flex', padding: '10px 24px' }}>
+                Selecionar e Enviar Foto
+                <input type="file" accept="image/png, image/jpeg, image/jpg" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {profileModalOpen && (
+        <div className="modal-overlay" onClick={() => { setProfileModalOpen(false); setQrCodeUrl(''); }}>
+          <div className="modal-box" style={{ width: '400px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title"><h2>Meu Perfil / Segurança</h2></div>
+              <button className="modal-close" onClick={() => { setProfileModalOpen(false); setQrCodeUrl(''); }}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid var(--line)' }}>
