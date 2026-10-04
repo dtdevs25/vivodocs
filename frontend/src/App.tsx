@@ -108,6 +108,7 @@ function App() {
   const [profilePassword, setProfilePassword] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [logSearch, setLogSearch] = useState('');
 
   const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
   const [matriz, setMatriz] = useState<any[]>([]);
@@ -1434,22 +1435,59 @@ function App() {
           </div>
         )}
 
-        {adminSubTab === 'logs' && (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>Data</th><th>Usuário</th><th>Ação</th></tr></thead>
-              <tbody>
-                {adminLogs.map((l:any) => (
-                  <tr key={l.id}>
-                    <td>{new Date(l.created_at).toLocaleString()}</td>
-                    <td>{l.usuario_email}</td>
-                    <td><b>{l.acao}</b> - {l.detalhes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {adminSubTab === 'logs' && (() => {
+          const filteredLogs = adminLogs.filter((l:any) => 
+            (l.usuario_email || '').toLowerCase().includes(logSearch.toLowerCase()) || 
+            (l.acao || '').toLowerCase().includes(logSearch.toLowerCase()) ||
+            (l.detalhes || '').toLowerCase().includes(logSearch.toLowerCase())
+          );
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: 'var(--ink)' }}>Auditoria do Sistema</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)' }}>Histórico completo de ações, logins e modificações de dados.</p>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Pesquisar logs..." 
+                  value={logSearch}
+                  onChange={(e) => setLogSearch(e.target.value)}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--line)', outline: 'none', width: '300px' }}
+                />
+              </div>
+              
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Tipo de Ação</th><th>Detalhes</th></tr></thead>
+                  <tbody>
+                    {filteredLogs.map((l:any) => {
+                      let badgeColor = '#e8e2ed';
+                      let badgeText = '#574665';
+                      if(l.acao.includes('DELETE') || l.acao.includes('EXCLUIR') || l.acao.includes('DISABLE')) { badgeColor = '#fef2f2'; badgeText = 'var(--red)'; }
+                      else if(l.acao.includes('CREATE') || l.acao.includes('CRIAR') || l.acao.includes('ENABLE')) { badgeColor = '#f0fdf4'; badgeText = 'var(--green)'; }
+                      else if(l.acao.includes('LOGIN')) { badgeColor = '#e0f2fe'; badgeText = '#0284c7'; }
+                      else if(l.acao.includes('UPDATE') || l.acao.includes('EDITAR')) { badgeColor = '#fef3c7'; badgeText = '#d97706'; }
+
+                      return (
+                        <tr key={l.id}>
+                          <td style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{new Date(l.created_at).toLocaleString()}</td>
+                          <td style={{ fontSize: '13px' }}><b>{l.usuario_email}</b></td>
+                          <td>
+                            <span style={{ background: badgeColor, color: badgeText, padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                              {l.acao}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '13px', color: 'var(--muted)' }}>{l.detalhes}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {adminSubTab === 'notificacoes' && (
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
