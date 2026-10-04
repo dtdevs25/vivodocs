@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar, X } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -120,6 +120,7 @@ function App() {
   const [sesmtFilter, setSesmtFilter] = useState(false);
   const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
   const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: 2, validade_aep: 2, validade_aet: 2, validade_nr01: 2 });
+  const [clearedNotifs, setClearedNotifs] = useState<number[]>([]);
   
   const getValidadeAnos = (doc: string) => {
     const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet, NR01: notifConfig.validade_nr01 };
@@ -690,9 +691,9 @@ function App() {
       <>
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
-          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
+          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto' }}>
             {['master', 'admin', 'editor'].includes(user?.role) && (
-              <button className="btn primary" onClick={() => setEditUnit({ status_funcionamento: 'ATIVA' })}>＋ Nova Unidade</button>
+              <button className="btn primary" onClick={() => setEditUnit({ status_funcionamento: 'ATIVA' })}>＋ Unidade</button>
             )}
             <input
               className="search"
@@ -1156,7 +1157,7 @@ function App() {
           <button className="btn" style={{ background: '#f3e8ff', color: 'var(--purple)', borderColor: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setFaturamentoChartOpen(true)}>
             <BarChart2 size={16} /> Evolução Mensal
           </button>
-          <button className="btn primary" onClick={() => setFaturamentoModalOpen(true)}>＋ Novo Lançamento</button>
+          <button className="btn primary" onClick={() => setFaturamentoModalOpen(true)}>＋ Lançamento</button>
         </div>
       </header>
       <section className="content">
@@ -1307,7 +1308,7 @@ function App() {
     <>
       <header className="topbar">
         <div><h1>Administrativo</h1></div>
-        {adminSubTab === 'users' && <div className="actions"><button className="btn primary" onClick={() => openUserForm()}>＋ Novo Usuário</button></div>}
+        {adminSubTab === 'users' && <div className="actions" style={{ marginLeft: 'auto' }}><button className="btn primary" onClick={() => openUserForm()}>＋ Usuário</button></div>}
       </header>
       <section className="content">
         <div className="tabs-header">
@@ -1467,6 +1468,7 @@ function App() {
   );
 
   const expiringUnits = matriz.filter(u => ['red', 'amber'].includes(getStatusColor(u.pgr)) || ['red', 'amber'].includes(getStatusColor(u.ltcat)) || ['red', 'amber'].includes(getStatusColor(u.aet)) || ['red', 'amber'].includes(getStatusColor(u.aep)));
+  const activeNotifs = expiringUnits.filter(u => !clearedNotifs.includes(u.id));
 
   return (
     <div className="layout">
@@ -1479,22 +1481,30 @@ function App() {
           <div style={{ position: 'relative' }}>
             <button onClick={() => setNotificationsOpen(!notificationsOpen)} className="logout-btn" style={{ position: 'relative' }}>
               <Bell size={20} />
-              {expiringUnits.length > 0 && (
+              {activeNotifs.length > 0 && (
                 <span style={{ position: 'absolute', top: 0, right: 0, background: 'var(--red)', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', transform: 'translate(20%, -20%)' }}>
-                  {expiringUnits.length}
+                  {activeNotifs.length}
                 </span>
               )}
             </button>
             {notificationsOpen && (
               <div style={{ position: 'absolute', top: '100%', right: '0', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px', width: '320px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 999, maxHeight: '400px', overflowY: 'auto' }}>
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontWeight: 'bold', backgroundColor: '#fcfcf0' }}>Alertas de Vencimento</div>
-                {expiringUnits.length === 0 ? (
-                  <div style={{ padding: '16px', color: 'var(--muted)', textAlign: 'center', fontSize: '12px' }}>Nenhuma unidade com documentos vencendo.</div>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontWeight: 'bold', backgroundColor: '#fcfcf0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Alertas de Vencimento</span>
+                  {activeNotifs.length > 0 && <button onClick={() => setClearedNotifs(expiringUnits.map(u => u.id))} style={{ background: 'none', border: 'none', color: 'var(--purple)', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Limpar Todos</button>}
+                </div>
+                {activeNotifs.length === 0 ? (
+                  <div style={{ padding: '16px', color: 'var(--muted)', textAlign: 'center', fontSize: '12px' }}>Nenhuma nova notificação.</div>
                 ) : (
-                  expiringUnits.map((u: any) => (
-                    <div key={u.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', cursor: 'pointer' }} onClick={() => { setNotificationsOpen(false); setSelectedUnit(u); }} className="notification-item">
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--ink)' }}>{u.filial}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>Clique para ver os detalhes da unidade e documentos pendentes.</div>
+                  activeNotifs.map((u: any) => (
+                    <div key={u.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }} onClick={() => { setNotificationsOpen(false); setActiveTab('unidades'); setSelectedUnit(u); }} className="notification-item">
+                      <div style={{ flex: 1, paddingRight: '8px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: 'var(--ink)' }}>{u.filial}</div>
+                        <div style={{ color: 'var(--muted)' }}>Possui documentos próximos ao vencimento ou vencidos.</div>
+                      </div>
+                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '2px' }} onClick={(e) => { e.stopPropagation(); setClearedNotifs([...clearedNotifs, u.id]); }}>
+                        <X size={14} />
+                      </button>
                     </div>
                   ))
                 )}
