@@ -47,7 +47,7 @@ export const sendWelcomeEmail = async (to: string, nome: string, token: string, 
 
   try {
     const info = await transporter.sendMail({
-      from: \`"Vivo DocSafe" <\${process.env.SMTP_USER || 'vivodocsafe@ehspro.com.br'}>\`,
+      from: `"Vivo DocSafe" <${process.env.SMTP_USER || 'vivodocsafe@ehspro.com.br'}>`,
       to,
       subject: "Bem-vindo ao Vivo DocSafe - Seus dados de acesso",
       html: generateEmailTemplate(bodyContent, frontendUrl),
