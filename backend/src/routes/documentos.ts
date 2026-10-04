@@ -35,9 +35,16 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     let docId;
     if (checkRes.rows.length > 0) {
       docId = checkRes.rows[0].id;
-      // Delete old file if exists and we are uploading a new one
+      // Archive old file if exists and we are uploading a new one
       if (file && checkRes.rows[0].arquivo_url) {
-        try { await deleteFromS3(checkRes.rows[0].arquivo_url); } catch(e) {}
+        try {
+          const oldDoc = await query('SELECT * FROM documentos_sst WHERE id = $1', [docId]);
+          const o = oldDoc.rows[0];
+          await query(`INSERT INTO documentos_historico (unidade_id, tipo_documento, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tamanho, data_revisao, data_vencimento, usuario_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, 
+            [o.unidade_id, o.tipo_documento, o.arquivo_nome, o.arquivo_url, o.arquivo_tipo, o.arquivo_tamanho, o.data_revisao, o.data_vencimento, user_email]);
+        } catch(e) {
+          console.error("Failed to archive old document", e);
+        }
       }
 
       const updateQuery = `
@@ -126,6 +133,40 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting document:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET historico
+router.get('/:unidade_id/historico/:tipo_documento', async (req, res) => {
+  try {
+    const { unidade_id, tipo_documento } = req.params;
+    const { rows } = await query(
+      'SELECT * FROM documentos_historico WHERE unidade_id = $1 AND tipo_documento = $2 ORDER BY created_at DESC',
+      [unidade_id, tipo_documento]
+    );
+    res.json(rows);
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar histórico' });
+  }
+});
+
+// GET historico by doc_id
+router.get('/historico-by-doc/:doc_id', async (req, res) => {
+  try {
+    const { doc_id } = req.params;
+    const docRes = await query('SELECT unidade_id, tipo_documento FROM documentos_sst WHERE id = $1', [doc_id]);
+    if (docRes.rows.length === 0) return res.json([]);
+    
+    const { unidade_id, tipo_documento } = docRes.rows[0];
+    const { rows } = await query(
+      'SELECT * FROM documentos_historico WHERE unidade_id = $1 AND tipo_documento = $2 ORDER BY created_at DESC',
+      [unidade_id, tipo_documento]
+    );
+    res.json(rows);
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar histórico' });
   }
 });
 

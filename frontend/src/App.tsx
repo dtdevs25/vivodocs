@@ -123,8 +123,11 @@ function App() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw?: string; venc?: string; lista?: string; statusTxt?: string; docId?: number; fileName?: string } | null>(null);
+  const [expiryInfo, setExpiryInfo] = useState<{ doc: string; raw?: string; venc?: string; lista?: string; statusTxt?: string; docId?: number; fileName?: string; fileUrl?: string; unitId?: number } | null>(null);
   const [matrizTipo, setMatrizTipo] = useState<'todas' | 'lojas' | 'predios' | 'dgs' | 'techs'>('todas');
+  
+  const [historyModalOpen, setHistoryModalOpen] = useState<{ unidade_id: number, doc: string } | null>(null);
+  const [historyData, setHistoryData] = useState<any[]>([]);
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
   const [sesmtFilter, setSesmtFilter] = useState(false);
@@ -305,6 +308,16 @@ function App() {
       if(user) setUser({...user, two_factor_enabled: false});
     } catch(err: any) {
       openAlert('Erro', err.response?.data?.error || 'Senha incorreta.');
+    }
+  };
+
+  const openHistory = async (docId: number, docTitle: string) => {
+    try {
+      const res = await axios.get(`/api/documentos/historico-by-doc/${docId}`);
+      setHistoryData(res.data);
+      setHistoryModalOpen({ unidade_id: 0, doc: docTitle });
+    } catch (err) {
+      openAlert('Erro', 'Não foi possível carregar o histórico.');
     }
   };
 
@@ -720,6 +733,21 @@ function App() {
                 </span>
               </div>
             )}
+            {expiryInfo.docId && (
+              <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                {expiryInfo.fileName && (
+                  <button className="btn" style={{ fontSize: '12px', padding: '6px 12px', width: '100%', maxWidth: '200px' }} onClick={() => {
+                    const u = matriz.find(x => x.id === expiryInfo.unitId);
+                    if(u && u[`${expiryInfo.doc.toLowerCase()}_arquivo_url`]) window.open(u[`${expiryInfo.doc.toLowerCase()}_arquivo_url`]);
+                  }}>
+                    <FileCheck size={14} style={{ marginRight: '4px' }} /> Ver Documento Atual
+                  </button>
+                )}
+                <button className="btn" style={{ fontSize: '12px', padding: '6px 12px', width: '100%', maxWidth: '200px', background: 'var(--purple-light)', color: 'var(--purple)', borderColor: 'var(--purple-light)' }} onClick={() => openHistory(expiryInfo.docId!, expiryInfo.doc)}>
+                  <Calendar size={14} style={{ marginRight: '4px' }} /> Ver Histórico de Versões
+                </button>
+              </div>
+            )}
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
               {v ? (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${DOC_VALIDADE_ANOS[expiryInfo.doc]} anos`) : 'Verifique o sistema para atualizar a data deste documento.'}
             </div>
@@ -1113,17 +1141,17 @@ function App() {
       >{text}</span>
     );
 
-    const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string) => {
+    const docCell = (doc: string, u: any, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string, fileUrl?: string) => {
       const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc));
       if (v) {
         return v.valido
-          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName }))
-          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName }));
+          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))
+          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
       }
       const s = (statusTxt || '').toLowerCase();
-      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
-      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
-      return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName }));
+      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
+      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
+      return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
     };
 
     const check = (ok: boolean) => ok
@@ -1190,11 +1218,11 @@ function App() {
                     <tr key={u.id}>
                       <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
-                      <td style={td}>{docCell('PGR', u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome)}</td>
-                      <td style={td}>{docCell('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome)}</td>
-                      <td style={td}>{docCell('AEP', u.aep_data, u.aep_vencimento, u.aep, u.aep_lista, u.aep_doc_id, u.aep_arquivo_nome)}</td>
-                      <td style={td}>{docCell('AET', u.aet_data, u.aet_vencimento, u.aet, u.aet_lista, u.aet_doc_id, u.aet_arquivo_nome)}</td>
-                      <td style={td}>{docCell('NR01', u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome)}</td>
+                      <td style={td}>{docCell('PGR', u, u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome, u.pgr_arquivo_url)}</td>
+                      <td style={td}>{docCell('LTCAT', u, u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome, u.ltcat_arquivo_url)}</td>
+                      <td style={td}>{docCell('AEP', u, u.aep_data, u.aep_vencimento, u.aep, u.aep_lista, u.aep_doc_id, u.aep_arquivo_nome, u.aep_arquivo_url)}</td>
+                      <td style={td}>{docCell('AET', u, u.aet_data, u.aet_vencimento, u.aet, u.aet_lista, u.aet_doc_id, u.aet_arquivo_nome, u.aet_arquivo_url)}</td>
+                      <td style={td}>{docCell('NR01', u, u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome, u.nr01_arquivo_url)}</td>
                       <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.compoe_sesmt)}</td>
                       <td style={td}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>
@@ -1752,6 +1780,40 @@ function App() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {historyModalOpen && (
+        <div className="modal-overlay" onClick={() => setHistoryModalOpen(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header">
+              <div className="modal-title">
+                <h2>Histórico - {historyModalOpen.doc}</h2>
+              </div>
+              <button className="close-btn" onClick={() => setHistoryModalOpen(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Aqui ficam guardadas as versões antigas deste documento (Dossiê).</p>
+              {historyData.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', background: '#f8f9fa', borderRadius: '8px' }}>
+                  Nenhum histórico arquivado. As versões antigas aparecerão aqui quando um novo arquivo for enviado por cima do atual.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
+                  {historyData.map((h: any) => (
+                    <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--ink)' }}>{h.arquivo_nome || 'Documento sem nome'}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Enviado em {new Date(h.created_at).toLocaleDateString('pt-BR')} por {h.usuario_email}</div>
+                      </div>
+                      <button className="btn" style={{ fontSize: '12px' }} onClick={() => window.open(h.arquivo_url)}>
+                        Baixar Antigo
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
