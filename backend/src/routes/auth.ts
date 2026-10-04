@@ -4,12 +4,19 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logAction } from '../utils/logger';
 import { sendWelcomeEmail } from '../utils/mailer';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Muitas tentativas de login. Bloqueado por 15 minutos.' }
+});
+
 // Login route
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', loginLimiter, async (req: Request, res: Response) => {
   const { email, senha, simularNivel } = req.body;
   
   try {
