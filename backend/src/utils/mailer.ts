@@ -14,13 +14,15 @@ const transporter = nodemailer.createTransport({
 });
 
 export const generateEmailTemplate = (bodyContent: string, frontendUrl: string) => `
-  <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden; background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    <div style="background-color: #fff; padding: 20px; text-align: center; display: flex; align-items: center; justify-content: center;">
-      <img src="${frontendUrl}/icone.png" alt="Ícone" style="height: 45px; margin-right: 15px; vertical-align: middle;" />
-      <img src="${frontendUrl}/principal.png" alt="Logo" style="height: 35px; vertical-align: middle;" />
+  <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background-color: #fff; padding: 30px 20px 20px 20px; text-align: center;">
+      <img src="${frontendUrl}/icone.png" alt="Ícone" style="height: 45px; margin-right: 12px; vertical-align: middle; display: inline-block;" />
+      <img src="${frontendUrl}/principal.png" alt="Logo" style="height: 30px; vertical-align: middle; display: inline-block;" />
     </div>
-    <div style="height: 4px; background-color: #6324c6; width: 100%;"></div>
-    <div style="padding: 30px;">
+    <div style="text-align: center; margin-bottom: 10px;">
+      <div style="height: 2px; background-color: #6324c6; width: 60%; margin: 0 auto; border-radius: 4px;"></div>
+    </div>
+    <div style="padding: 20px 30px 30px 30px;">
       ${bodyContent}
       <br/>
       <p style="line-height: 1.5; color: #555; margin-bottom: 0;">Atenciosamente,<br/><strong>Equipe Vivo DocSafe</strong></p>

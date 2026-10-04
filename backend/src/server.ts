@@ -20,10 +20,22 @@ const initDb = async () => {
           dias_alerta_2 INTEGER DEFAULT 30,
           dias_alerta_3 INTEGER DEFAULT 15,
           email_customizado TEXT,
+          validade_pgr INTEGER DEFAULT 2,
+          validade_ltcat INTEGER DEFAULT 2,
+          validade_aep INTEGER DEFAULT 2,
+          validade_aet INTEGER DEFAULT 2,
+          validade_nr01 INTEGER DEFAULT 2,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Add columns in case the table already exists
+    const cols = ['validade_pgr', 'validade_ltcat', 'validade_aep', 'validade_aet', 'validade_nr01'];
+    for (const col of cols) {
+      await query(`ALTER TABLE notificacoes_config ADD COLUMN IF NOT EXISTS ${col} INTEGER DEFAULT 2`);
+    }
+
     await query(`INSERT INTO notificacoes_config (id) VALUES (1) ON CONFLICT DO NOTHING`);
     console.log('DB migrations complete.');
   } catch (err) {

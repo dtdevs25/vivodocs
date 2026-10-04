@@ -195,13 +195,13 @@ router.get('/notificacoes-config', async (req: Request, res: Response) => {
 
 // Admin: update notification config
 router.put('/notificacoes-config', async (req: Request, res: Response) => {
-  const { dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado } = req.body;
+  const { dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado, validade_pgr, validade_ltcat, validade_aep, validade_aet, validade_nr01 } = req.body;
   try {
     await query(
-      'UPDATE notificacoes_config SET dias_alerta_1 = $1, dias_alerta_2 = $2, dias_alerta_3 = $3, email_customizado = $4, updated_at = NOW() WHERE id = 1',
-      [dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado]
+      'UPDATE notificacoes_config SET dias_alerta_1 = $1, dias_alerta_2 = $2, dias_alerta_3 = $3, email_customizado = $4, validade_pgr = $5, validade_ltcat = $6, validade_aep = $7, validade_aet = $8, validade_nr01 = $9, updated_at = NOW() WHERE id = 1',
+      [dias_alerta_1, dias_alerta_2, dias_alerta_3, email_customizado, validade_pgr, validade_ltcat, validade_aep, validade_aet, validade_nr01]
     );
-    await logAction('sistema@vivo.com', 'EDITAR_CONFIG_NOTIF', 'Configurações de notificação atualizadas.');
+    await logAction('sistema@vivo.com', 'EDITAR_CONFIG_NOTIF', 'Configurações de notificação/validade atualizadas.');
     res.json({ message: 'Configuração atualizada com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar configuração' });

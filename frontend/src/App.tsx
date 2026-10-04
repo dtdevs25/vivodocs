@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2 } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -21,7 +21,7 @@ function getStatusColor(val: string) {
   return 'gray';
 }
 
-// Validade (em anos) de cada documento a partir da data de emissão
+// Validade default fallback
 const DOC_VALIDADE_ANOS: Record<string, number> = { PGR: 2, LTCAT: 2, AEP: 2, AET: 2, NR01: 2 };
 
 function parseLocalDate(raw: string): Date | null {
@@ -35,8 +35,8 @@ function parseLocalDate(raw: string): Date | null {
   return null;
 }
 
-function getDocValidity(doc: string, raw: string, vencimentoRaw?: string) {
-  const anos = DOC_VALIDADE_ANOS[doc] || 2;
+function getDocValidity(doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number) {
+  const anos = configValidadeAnos !== undefined ? configValidadeAnos : (DOC_VALIDADE_ANOS[doc] || 2);
   const vencReal = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
   let emissao: Date;
   let vencimento: Date;
@@ -119,7 +119,12 @@ function App() {
   const [isoFilter, setIsoFilter] = useState(false);
   const [sesmtFilter, setSesmtFilter] = useState(false);
   const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
-  const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '' });
+  const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: 2, validade_aep: 2, validade_aet: 2, validade_nr01: 2 });
+  
+  const getValidadeAnos = (doc: string) => {
+    const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet, NR01: notifConfig.validade_nr01 };
+    return map[doc] || 2;
+  };
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
@@ -612,7 +617,7 @@ function App() {
 
   const renderExpiryModal = () => {
     if (!expiryInfo) return null;
-    const v = expiryInfo.raw ? getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc) : null;
+    const v = expiryInfo.raw ? getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc, getValidadeAnos(expiryInfo.doc)) : null;
     
     let color = 'var(--muted)';
     let bg = '#f3f4f6';
@@ -826,7 +831,7 @@ function App() {
                       { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento, docId: selectedUnit.ltcat_doc_id, fileName: selectedUnit.ltcat_arquivo_nome },
                       { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento, docId: selectedUnit.aep_doc_id, fileName: selectedUnit.aep_arquivo_nome },
                     ].map(({ doc, raw, venc, docId, fileName }) => {
-                      const v = getDocValidity(doc, raw, venc);
+                      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc));
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
                       return (
@@ -1047,7 +1052,7 @@ function App() {
     );
 
     const docCell = (doc: string, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string) => {
-      const v = getDocValidity(doc, raw, venc);
+      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc));
       if (v) {
         return v.valido
           ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName }))
@@ -1386,33 +1391,75 @@ function App() {
         )}
 
         {adminSubTab === 'notificacoes' && (
-          <div className="card" style={{ maxWidth: '600px' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: 'var(--ink)' }}>Parâmetros de Alertas de Vencimento</h3>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            {/* Alertas Card */}
+            <div className="card" style={{ flex: '1', minWidth: '340px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ background: '#f0e7fb', color: 'var(--purple)', padding: '10px', borderRadius: '12px' }}><Bell size={20} /></div>
+                <h3 style={{ margin: 0, color: 'var(--ink)', fontSize: '18px' }}>Alertas de Vencimento</h3>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div className="modal-form-group">
+                  <label>1º Alerta (Dias)</label>
+                  <input type="number" value={notifConfig.dias_alerta_1} onChange={e => setNotifConfig({...notifConfig, dias_alerta_1: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>2º Alerta (Dias)</label>
+                  <input type="number" value={notifConfig.dias_alerta_2} onChange={e => setNotifConfig({...notifConfig, dias_alerta_2: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>3º Alerta (Dias)</label>
+                  <input type="number" value={notifConfig.dias_alerta_3} onChange={e => setNotifConfig({...notifConfig, dias_alerta_3: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+              </div>
+
+              <div className="modal-form-group">
+                <label>E-mails adicionais (separados por vírgula)</label>
+                <input placeholder="Ex: diretor@empresa.com, seguranca@empresa.com" value={notifConfig.email_customizado || ''} onChange={e => setNotifConfig({...notifConfig, email_customizado: e.target.value})} />
+                <small style={{ color: 'var(--muted)', display: 'block', marginTop: '6px' }}>Os usuários Master/Admin já recebem os alertas automaticamente.</small>
+              </div>
+            </div>
+
+            {/* Validade Card */}
+            <div className="card" style={{ flex: '1', minWidth: '340px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ background: '#ecfdf5', color: 'var(--green)', padding: '10px', borderRadius: '12px' }}><Calendar size={20} /></div>
+                <h3 style={{ margin: 0, color: 'var(--ink)', fontSize: '18px' }}>Validade dos Documentos (Anos)</h3>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div className="modal-form-group">
+                  <label>PGR</label>
+                  <input type="number" value={notifConfig.validade_pgr} onChange={e => setNotifConfig({...notifConfig, validade_pgr: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>LTCAT</label>
+                  <input type="number" value={notifConfig.validade_ltcat} onChange={e => setNotifConfig({...notifConfig, validade_ltcat: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>AEP</label>
+                  <input type="number" value={notifConfig.validade_aep} onChange={e => setNotifConfig({...notifConfig, validade_aep: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>AET</label>
+                  <input type="number" value={notifConfig.validade_aet} onChange={e => setNotifConfig({...notifConfig, validade_aet: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+                <div className="modal-form-group">
+                  <label>NR01</label>
+                  <input type="number" value={notifConfig.validade_nr01} onChange={e => setNotifConfig({...notifConfig, validade_nr01: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                </div>
+              </div>
+            </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div className="modal-form-group">
-                <label>Alerta 1 (Dias)</label>
-                <input type="number" value={notifConfig.dias_alerta_1} onChange={e => setNotifConfig({...notifConfig, dias_alerta_1: parseInt(e.target.value) || 0})} />
-              </div>
-              <div className="modal-form-group">
-                <label>Alerta 2 (Dias)</label>
-                <input type="number" value={notifConfig.dias_alerta_2} onChange={e => setNotifConfig({...notifConfig, dias_alerta_2: parseInt(e.target.value) || 0})} />
-              </div>
-              <div className="modal-form-group">
-                <label>Alerta 3 (Dias)</label>
-                <input type="number" value={notifConfig.dias_alerta_3} onChange={e => setNotifConfig({...notifConfig, dias_alerta_3: parseInt(e.target.value) || 0})} />
-              </div>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button className="btn primary" style={{ padding: '12px 30px', fontSize: '16px' }} onClick={() => {
+                axios.put('/api/auth/notificacoes-config', notifConfig).then(() => {
+                  openAlert('Sucesso', 'Configurações de notificação e validade salvas com sucesso!');
+                  fetchMatriz(); // Refresh matriz so that validity states are recalculated
+                });
+              }}>Salvar Todas as Configurações</button>
             </div>
-
-            <div className="modal-form-group">
-              <label>E-mails adicionais (separados por vírgula)</label>
-              <input placeholder="Ex: diretor@empresa.com, seguranca@empresa.com" value={notifConfig.email_customizado || ''} onChange={e => setNotifConfig({...notifConfig, email_customizado: e.target.value})} />
-              <small style={{ color: 'var(--muted)', display: 'block', marginTop: '6px' }}>Os usuários Master/Admin recebem automaticamente se a opção "Receber Notificações" estiver marcada no cadastro deles.</small>
-            </div>
-
-            <button className="btn primary" onClick={() => {
-              axios.put('/api/auth/notificacoes-config', notifConfig).then(() => openAlert('Sucesso', 'Configurações de notificação salvas com sucesso!'));
-            }}>Salvar Configurações</button>
           </div>
         )}
       </section>
