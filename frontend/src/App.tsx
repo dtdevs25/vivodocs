@@ -119,7 +119,7 @@ function App() {
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   
   const [unitSubTab, setUnitSubTab] = useState<'todas' | TipoKey | 'desmobilizadas'>('todas');
-  const [adminSubTab, setAdminSubTab] = useState<'users'|'logs'|'notificacoes'>('users');
+  const [adminSubTab, setAdminSubTab] = useState<'users'|'aprovacoes'|'logs'|'notificacoes'>('users');
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [editUnit, setEditUnit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -128,6 +128,7 @@ function App() {
   
   const [historyModalOpen, setHistoryModalOpen] = useState<{ unidade_id: number, doc: string } | null>(null);
   const [historyData, setHistoryData] = useState<any[]>([]);
+  const [quarentenaData, setQuarentenaData] = useState<any[]>([]);
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
   const [sesmtFilter, setSesmtFilter] = useState(false);
@@ -238,6 +239,9 @@ function App() {
   const fetchAdminLogs = async () => {
     try { const res = await axios.get('/api/auth/logs'); setAdminLogs(res.data); } catch (e) {}
   };
+  const fetchQuarentena = async () => {
+    try { const res = await axios.get('/api/documentos/quarentena/pendentes'); setQuarentenaData(res.data); } catch (e) {}
+  };
 
   const handleUpload = async (unidadeId: number, tipoDocumento: string, file?: File) => {
     if (!file) return;
@@ -246,6 +250,7 @@ function App() {
     formData.append('tipo_documento', tipoDocumento);
     formData.append('file', file);
     if (user?.email) formData.append('user_email', user.email);
+    if (user?.role) formData.append('user_role', user.role);
 
     try {
       await axios.post('/api/documentos/upload', formData, {
@@ -333,6 +338,7 @@ function App() {
       if (activeTab === 'admin') { 
         fetchAdminUsers(); 
         fetchAdminLogs(); 
+        fetchQuarentena();
         axios.get('/api/auth/notificacoes-config').then(res => setNotifConfig(res.data)).catch(() => {});
       }
     }
@@ -1402,6 +1408,7 @@ function App() {
       <section className="content">
         <div className="tabs-header">
           <button className={`tab-link ${adminSubTab === 'users' ? 'active' : ''}`} onClick={() => setAdminSubTab('users')}>Usuários</button>
+          <button className={`tab-link ${adminSubTab === 'aprovacoes' ? 'active' : ''}`} onClick={() => setAdminSubTab('aprovacoes')}>Aprovações {quarentenaData.length > 0 && <span style={{ background: 'var(--red)', color: '#fff', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', marginLeft: '6px' }}>{quarentenaData.length}</span>}</button>
           <button className={`tab-link ${adminSubTab === 'notificacoes' ? 'active' : ''}`} onClick={() => setAdminSubTab('notificacoes')}>Notificações (Alertas)</button>
           <button className={`tab-link ${adminSubTab === 'logs' ? 'active' : ''}`} onClick={() => setAdminSubTab('logs')}>Logs de Acesso</button>
         </div>
@@ -1460,6 +1467,59 @@ function App() {
                 )})}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {adminSubTab === 'aprovacoes' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+              <h3 style={{ margin: 0, color: 'var(--ink)' }}>Fila de Aprovação (Quarentena)</h3>
+              <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)' }}>Documentos enviados por Editores que precisam ser revisados antes de entrarem no sistema.</p>
+            </div>
+            
+            {quarentenaData.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', background: '#f8f9fa', borderRadius: '8px' }}>
+                Nenhum documento pendente de aprovação no momento.
+              </div>
+            ) : (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Data de Envio</th><th>Unidade</th><th>Documento</th><th>Enviado por</th><th>Ações</th></tr></thead>
+                  <tbody>
+                    {quarentenaData.map((q:any) => (
+                      <tr key={q.id}>
+                        <td>{new Date(q.created_at).toLocaleString('pt-BR')}</td>
+                        <td><b>{q.filial}</b> <small>{q.cnpj}</small></td>
+                        <td><span style={{ background: 'var(--purple-light)', color: 'var(--purple)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{q.tipo_documento}</span> <br/><small>{q.arquivo_nome}</small></td>
+                        <td>{q.usuario_email}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button className="btn" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => window.open(q.arquivo_url)}>Ver Arquivo</button>
+                            <button className="btn primary" style={{ fontSize: '12px', padding: '4px 8px', background: 'var(--green)', borderColor: 'var(--green)' }} onClick={() => {
+                              openConfirm('Aprovar Documento', 'Tem certeza que deseja aprovar este documento e substituir o atual?', async () => {
+                                await axios.post(`/api/documentos/quarentena/${q.id}/aprovar`, { user_email: user?.email });
+                                fetchQuarentena();
+                                fetchMatriz();
+                                openAlert('Sucesso', 'Documento aprovado e publicado com sucesso!');
+                              });
+                            }}>Aprovar</button>
+                            <button className="btn" style={{ fontSize: '12px', padding: '4px 8px', color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => {
+                              const motivo = prompt('Qual o motivo da rejeição?');
+                              if (motivo) {
+                                axios.post(`/api/documentos/quarentena/${q.id}/rejeitar`, { motivo, user_email: user?.email }).then(() => {
+                                  fetchQuarentena();
+                                  openAlert('Sucesso', 'Documento rejeitado.');
+                                });
+                              }
+                            }}>Rejeitar</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

@@ -47,6 +47,24 @@ const initDb = async () => {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS documentos_quarentena (
+          id SERIAL PRIMARY KEY,
+          unidade_id INTEGER REFERENCES unidades(id) ON DELETE CASCADE,
+          tipo_documento VARCHAR(50),
+          arquivo_nome TEXT,
+          arquivo_url TEXT,
+          arquivo_tipo TEXT,
+          arquivo_tamanho INTEGER,
+          data_revisao DATE,
+          data_vencimento DATE,
+          usuario_email TEXT,
+          status VARCHAR(20) DEFAULT 'PENDENTE',
+          motivo_rejeicao TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     
     // Add columns in case the table already exists
     const cols = ['validade_pgr', 'validade_ltcat', 'validade_aep', 'validade_aet', 'validade_nr01'];

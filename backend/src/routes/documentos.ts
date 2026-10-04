@@ -9,7 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Upload a document for a specific unit
 router.post('/upload', upload.single('file'), async (req, res) => {
-  const { unidade_id, tipo_documento, ano, lista_entrega, data_revisao, data_vencimento, observacoes, user_email } = req.body;
+  const { unidade_id, tipo_documento, ano, lista_entrega, data_revisao, data_vencimento, observacoes, user_email, user_role } = req.body;
   const file = req.file;
 
   if (!unidade_id || !tipo_documento) {
@@ -28,6 +28,16 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       size = file.size;
       s3Key = `${unidade_id}/${Date.now()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       await uploadToS3(file.buffer, s3Key, mimeType);
+    }
+
+    if (user_role === 'editor') {
+      await query(`
+        INSERT INTO documentos_quarentena (unidade_id, tipo_documento, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tamanho, data_revisao, data_vencimento, usuario_email, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDENTE')
+      `, [unidade_id, tipo_documento, originalName, s3Key, mimeType, size, data_revisao || null, data_vencimento || null, user_email]);
+      
+      await logAction(user_email, 'UPLOAD_QUARENTENA', `Enviou ${tipo_documento} para aprovação (Unidade ID ${unidade_id})`);
+      return res.json({ message: 'Documento enviado para aprovação' });
     }
 
     const checkRes = await query('SELECT id, arquivo_url FROM documentos_sst WHERE unidade_id = $1 AND tipo_documento = $2', [unidade_id, tipo_documento]);
@@ -167,6 +177,75 @@ router.get('/historico-by-doc/:doc_id', async (req, res) => {
   } catch(err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao buscar histórico' });
+  }
+});
+
+// GET Quarantine
+router.get('/quarentena/pendentes', async (req, res) => {
+  try {
+    const { rows } = await query(`
+      SELECT q.*, u.filial, u.cnpj 
+      FROM documentos_quarentena q 
+      JOIN unidades u ON q.unidade_id = u.id 
+      WHERE q.status = 'PENDENTE' 
+      ORDER BY q.created_at ASC
+    `);
+    res.json(rows);
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar quarentena' });
+  }
+});
+
+// POST Approve
+router.post('/quarentena/:id/aprovar', async (req, res) => {
+  try {
+    const qRes = await query('SELECT * FROM documentos_quarentena WHERE id = $1', [req.params.id]);
+    if (qRes.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    const q = qRes.rows[0];
+
+    // Transfer to documentos_sst
+    const checkRes = await query('SELECT id, arquivo_url FROM documentos_sst WHERE unidade_id = $1 AND tipo_documento = $2', [q.unidade_id, q.tipo_documento]);
+    if (checkRes.rows.length > 0) {
+      if (checkRes.rows[0].arquivo_url) {
+        const oldDoc = await query('SELECT * FROM documentos_sst WHERE id = $1', [checkRes.rows[0].id]);
+        const o = oldDoc.rows[0];
+        await query(`INSERT INTO documentos_historico (unidade_id, tipo_documento, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tamanho, data_revisao, data_vencimento, usuario_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, 
+          [o.unidade_id, o.tipo_documento, o.arquivo_nome, o.arquivo_url, o.arquivo_tipo, o.arquivo_tamanho, o.data_revisao, o.data_vencimento, o.usuario_email || q.usuario_email]);
+      }
+      await query(`
+        UPDATE documentos_sst SET
+          data_revisao = COALESCE($1, data_revisao),
+          data_vencimento = COALESCE($2, data_vencimento),
+          arquivo_nome = $3, arquivo_url = $4, arquivo_tipo = $5, arquivo_tamanho = $6, updated_at = NOW()
+        WHERE id = $7
+      `, [q.data_revisao, q.data_vencimento, q.arquivo_nome, q.arquivo_url, q.arquivo_tipo, q.arquivo_tamanho, checkRes.rows[0].id]);
+    } else {
+      await query(`
+        INSERT INTO documentos_sst (unidade_id, tipo_documento, data_revisao, data_vencimento, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tamanho)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `, [q.unidade_id, q.tipo_documento, q.data_revisao, q.data_vencimento, q.arquivo_nome, q.arquivo_url, q.arquivo_tipo, q.arquivo_tamanho]);
+    }
+
+    await query('UPDATE documentos_quarentena SET status = $1 WHERE id = $2', ['APROVADO', q.id]);
+    await logAction(req.body.user_email || 'admin', 'APROVAR_DOCUMENTO', `Aprovou documento ID ${q.id} de ${q.usuario_email}`);
+    res.json({ message: 'Aprovado com sucesso' });
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao aprovar' });
+  }
+});
+
+// POST Reject
+router.post('/quarentena/:id/rejeitar', async (req, res) => {
+  try {
+    const { motivo, user_email } = req.body;
+    await query('UPDATE documentos_quarentena SET status = $1, motivo_rejeicao = $2 WHERE id = $3', ['REJEITADO', motivo, req.params.id]);
+    await logAction(user_email || 'admin', 'REJEITAR_DOCUMENTO', `Rejeitou documento ID ${req.params.id}. Motivo: ${motivo}`);
+    res.json({ message: 'Rejeitado' });
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao rejeitar' });
   }
 });
 
