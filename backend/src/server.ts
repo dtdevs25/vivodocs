@@ -13,6 +13,8 @@ const port = process.env.PORT || 3000;
 const initDb = async () => {
   try {
     await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recebe_notificacao BOOLEAN DEFAULT true`);
+    await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS two_factor_secret TEXT`);
+    await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT false`);
     await query(`
       CREATE TABLE IF NOT EXISTS notificacoes_config (
           id SERIAL PRIMARY KEY,

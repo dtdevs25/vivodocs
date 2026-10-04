@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { query } from '../db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 import { logAction } from '../utils/logger';
 import { sendWelcomeEmail } from '../utils/mailer';
 import rateLimit from 'express-rate-limit';
@@ -47,6 +49,13 @@ router.post('/login', loginLimiter, async (req: Request, res: Response) => {
           return;
         }
       }
+    }
+
+    if (user.two_factor_enabled) {
+      // Create a temporary token that allows the user to complete 2FA
+      const tempToken = jwt.sign({ tempId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '15m' });
+      res.json({ requires_2fa: true, tempToken, email: user.email });
+      return;
     }
 
     const token = jwt.sign(
@@ -212,6 +221,110 @@ router.put('/notificacoes-config', async (req: Request, res: Response) => {
     res.json({ message: 'Configuração atualizada com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar configuração' });
+  }
+});
+
+// 2FA Routes
+router.post('/2fa/verify-login', async (req: Request, res: Response) => {
+  const { tempToken, code } = req.body;
+  try {
+    const decoded = jwt.verify(tempToken, JWT_SECRET) as { tempId: string, email: string };
+    const { rows } = await query('SELECT * FROM usuarios WHERE id = $1', [decoded.tempId]);
+    const user = rows[0];
+    
+    if (!user || !user.two_factor_enabled) {
+      res.status(400).json({ error: '2FA não está ativado ou usuário inválido' });
+      return;
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.two_factor_secret,
+      encoding: 'base32',
+      token: code,
+      window: 1 // allows 30 seconds of drift
+    });
+
+    if (verified) {
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.nivel_acesso },
+        JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+      await logAction(user.email, 'LOGIN_2FA', 'Usuário acessou o sistema com 2FA.');
+      res.json({
+        token,
+        user: { id: user.id, nome: user.nome, email: user.email, role: user.nivel_acesso }
+      });
+    } else {
+      res.status(401).json({ error: 'Código 2FA inválido' });
+    }
+  } catch (err) {
+    res.status(401).json({ error: 'Token temporário expirado ou inválido' });
+  }
+});
+
+router.post('/2fa/generate', async (req: Request, res: Response) => {
+  const { email } = req.body; // In a real system, use an authenticated token here
+  try {
+    const secret = speakeasy.generateSecret({ name: `VivoDocSafe (${email})` });
+    await query('UPDATE usuarios SET two_factor_secret = $1 WHERE email = $2', [secret.base32, email]);
+    
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+    res.json({ secret: secret.base32, qrCodeUrl });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao gerar 2FA' });
+  }
+});
+
+router.post('/2fa/enable', async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  try {
+    const { rows } = await query('SELECT two_factor_secret FROM usuarios WHERE email = $1', [email]);
+    if (rows.length === 0) {
+       res.status(404).json({ error: 'Usuário não encontrado' });
+       return;
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: rows[0].two_factor_secret,
+      encoding: 'base32',
+      token: code,
+      window: 1
+    });
+
+    if (verified) {
+      await query('UPDATE usuarios SET two_factor_enabled = true WHERE email = $1', [email]);
+      await logAction(email, 'ENABLE_2FA', 'Usuário ativou 2FA.');
+      res.json({ message: '2FA ativado com sucesso!' });
+    } else {
+      res.status(400).json({ error: 'Código inválido. Tente novamente.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao ativar 2FA' });
+  }
+});
+
+router.post('/2fa/disable', async (req: Request, res: Response) => {
+  const { email, senha } = req.body;
+  try {
+    const { rows } = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
+    if (rows.length === 0) {
+       res.status(404).json({ error: 'Usuário não encontrado' });
+       return;
+    }
+    
+    const user = rows[0];
+    const valid = await bcrypt.compare(senha, user.senha);
+    if (!valid) {
+      res.status(401).json({ error: 'Senha incorreta' });
+      return;
+    }
+
+    await query('UPDATE usuarios SET two_factor_enabled = false, two_factor_secret = null WHERE email = $1', [email]);
+    await logAction(email, 'DISABLE_2FA', 'Usuário desativou 2FA.');
+    res.json({ message: '2FA desativado com sucesso!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao desativar 2FA' });
   }
 });
 

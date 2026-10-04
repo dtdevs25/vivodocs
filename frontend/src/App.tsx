@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar, X } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar, X, Settings } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -10,6 +10,7 @@ interface UserData {
   nome: string;
   email: string;
   role: Role;
+  two_factor_enabled?: boolean;
 }
 
 function getStatusColor(val: string) {
@@ -87,6 +88,9 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [req2fa, setReq2fa] = useState(false);
+  const [tempToken, setTempToken] = useState('');
+  const [code2fa, setCode2fa] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -97,6 +101,11 @@ function App() {
   
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [setupCode2fa, setSetupCode2fa] = useState('');
+  const [profilePassword, setProfilePassword] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -190,8 +199,18 @@ function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/api/auth/login', { email: loginEmail, senha: loginPassword });
-      setUser(res.data.user);
+      if (req2fa) {
+        const res = await axios.post('/api/auth/2fa/verify-login', { tempToken, code: code2fa });
+        setUser(res.data.user);
+      } else {
+        const res = await axios.post('/api/auth/login', { email: loginEmail, senha: loginPassword });
+        if (res.data.requires_2fa) {
+          setReq2fa(true);
+          setTempToken(res.data.tempToken);
+        } else {
+          setUser(res.data.user);
+        }
+      }
     } catch (err: any) {
       openAlert('Falha no Login', err.response?.data?.error || 'Erro ao fazer login');
     }
@@ -253,6 +272,38 @@ function App() {
       window.open(res.data.downloadUrl, '_blank');
     } catch (e) {
       openAlert('Erro', 'Falha ao gerar link de download.');
+    }
+  };
+
+  const start2FASetup = async () => {
+    try {
+      const res = await axios.post('/api/auth/2fa/generate', { email: user?.email });
+      setQrCodeUrl(res.data.qrCodeUrl);
+    } catch(err) {
+      openAlert('Erro', 'Não foi possível gerar o 2FA.');
+    }
+  };
+
+  const confirm2FASetup = async () => {
+    try {
+      await axios.post('/api/auth/2fa/enable', { email: user?.email, code: setupCode2fa });
+      openAlert('Sucesso', 'Autenticação de 2 Fatores ativada com sucesso!');
+      setQrCodeUrl('');
+      setSetupCode2fa('');
+      if(user) setUser({...user, two_factor_enabled: true});
+    } catch(err: any) {
+      openAlert('Erro', err.response?.data?.error || 'Código inválido.');
+    }
+  };
+
+  const disable2FA = async () => {
+    try {
+      await axios.post('/api/auth/2fa/disable', { email: user?.email, senha: profilePassword });
+      openAlert('Sucesso', 'Autenticação de 2 Fatores desativada.');
+      setProfilePassword('');
+      if(user) setUser({...user, two_factor_enabled: false});
+    } catch(err: any) {
+      openAlert('Erro', err.response?.data?.error || 'Senha incorreta.');
     }
   };
 
@@ -425,23 +476,32 @@ function App() {
             </form>
           ) : (
             <form className="login-form" onSubmit={handleLogin}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label>Email</label>
-                <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label>Senha</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required placeholder="••••••••" style={{ width: '100%', paddingRight: '40px' }} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+              {!req2fa ? (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label>Email</label>
+                    <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required placeholder="seu.email@exemplo.com" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label>Senha</label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required placeholder="••••••••" style={{ width: '100%', paddingRight: '40px' }} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '12px' }}>Esqueci minha senha</button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label>Código do Authenticator (2FA)</label>
+                  <input type="text" value={code2fa} onChange={(e) => setCode2fa(e.target.value)} required placeholder="000000" maxLength={6} style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '4px', fontWeight: 'bold' }} />
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: 'var(--purple)', cursor: 'pointer', fontSize: '12px' }}>Esqueci minha senha</button>
-                </div>
-              </div>
-              <button type="submit" className="login-btn">Entrar</button>
+              )}
+              <button type="submit" className="login-btn">{req2fa ? 'Verificar e Entrar' : 'Entrar'}</button>
             </form>
           )}
         </div>
@@ -1511,6 +1571,7 @@ function App() {
               </div>
             )}
           </div>
+          <button onClick={() => setProfileModalOpen(true)} className="logout-btn" title="Meu Perfil"><Settings size={20} /></button>
           <button onClick={() => setUser(null)} className="logout-btn" title="Sair"><LogOut size={20} /></button>
         </div>
       </header>
@@ -1597,6 +1658,62 @@ function App() {
                 if (u.id) axios.put(`/api/auth/users/${u.id}`, u).then(() => { fetchAdminUsers(); closeModal(); });
                 else axios.post('/api/auth/users', u).then(() => { fetchAdminUsers(); openAlert('Sucesso', 'Usuário criado! Um e-mail foi enviado para ele com a senha temporária.'); });
               }}>Salvar</button></>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {profileModalOpen && (
+        <div className="modal-overlay" onClick={() => setProfileModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <div className="modal-title">
+                <h2>Meu Perfil / Segurança</h2>
+              </div>
+              <button className="close-btn" onClick={() => setProfileModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                <div style={{ fontWeight: 'bold', color: 'var(--ink)' }}>{user?.nome}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '13px' }}>{user?.email}</div>
+                <div style={{ display: 'inline-block', marginTop: '6px', background: 'var(--purple-light)', color: 'var(--purple)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{user?.role.toUpperCase()}</div>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '14px', borderBottom: '1px solid var(--line)', paddingBottom: '8px', marginBottom: '12px' }}>Autenticação de 2 Fatores (2FA)</h3>
+                {!user?.two_factor_enabled ? (
+                  !qrCodeUrl ? (
+                    <div>
+                      <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>Aumente a segurança da sua conta exigindo um código gerado no seu celular (ex: Google Authenticator) a cada login.</p>
+                      <button className="btn primary" style={{ width: '100%', display: 'flex', justifyContent: 'center' }} onClick={start2FASetup}>Configurar 2FA</button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink)', marginBottom: '12px', fontWeight: 'bold' }}>1. Escaneie o QR Code abaixo com seu Authenticator</p>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', background: '#fff', padding: '10px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                        <img src={qrCodeUrl} alt="QR Code" style={{ width: '150px', height: '150px' }} />
+                      </div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink)', marginBottom: '8px', fontWeight: 'bold' }}>2. Digite o código de 6 dígitos gerado</p>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input type="text" value={setupCode2fa} onChange={e => setSetupCode2fa(e.target.value)} placeholder="000000" maxLength={6} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--line)', outline: 'none', textAlign: 'center', letterSpacing: '4px', fontSize: '16px', fontWeight: 'bold' }} />
+                        <button className="btn primary" onClick={confirm2FASetup}>Ativar</button>
+                      </div>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '12px', cursor: 'pointer', marginTop: '12px', width: '100%' }} onClick={() => setQrCodeUrl('')}>Cancelar</button>
+                    </div>
+                  )
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--green)', fontWeight: 'bold', fontSize: '13px', marginBottom: '16px' }}>
+                      <ShieldCheck size={18} /> 2FA Ativado
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>Para desativar o 2FA, digite sua senha de login abaixo:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="password" value={profilePassword} onChange={e => setProfilePassword(e.target.value)} placeholder="Sua senha..." style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--line)', outline: 'none' }} />
+                      <button className="btn" style={{ background: '#fef2f2', color: 'var(--red)', borderColor: 'var(--red)' }} onClick={disable2FA}>Desativar</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
