@@ -23,7 +23,36 @@ function getStatusColor(val: string) {
   return 'gray';
 }
 
+const CurrencyInput = ({ value, onChange, disabled, width = '80px' }: { value: number; onChange: (v: number) => void; disabled?: boolean; width?: string }) => {
+  const [displayValue, setDisplayValue] = useState(value ? (value / 1).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
 
+  useEffect(() => {
+    setDisplayValue(value ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (!val) {
+      setDisplayValue('');
+      onChange(0);
+      return;
+    }
+    const num = Number(val) / 100;
+    setDisplayValue(num.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
+    onChange(num);
+  };
+
+  return (
+    <input
+      type="text"
+      placeholder="R$ 0,00"
+      value={displayValue}
+      disabled={disabled}
+      onChange={handleChange}
+      style={{ width, padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: disabled ? 0.4 : 1, textAlign: 'right', background: disabled ? '#f9fafb' : '#fff' }}
+    />
+  );
+};
 function parseLocalDate(raw: string): Date | null {
   if (!raw) return null;
   const s = String(raw).trim();
@@ -1470,14 +1499,23 @@ function App() {
       </header>
       <section className="content">
         <div className="cards" style={{ marginBottom: '20px' }}>
-          <div className="card" style={{ background: '#f8fdf9', border: '1px solid #cce8d6' }}>
+          <div className="card" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderLeft: '4px solid var(--green)' }}>
             <small>Total Líquido (Faturado)</small>
             <strong className="green">R$ {parseFloat(faturamentoResumo.total_liquido || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
             <small>Bruto: R$ {parseFloat(faturamentoResumo.total_valor_bruto || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</small>
           </div>
-          <div className="card"><small>PGRs Medidos</small><strong>{faturamentoResumo.total_pgr || 0}</strong></div>
-          <div className="card"><small>LTCATs Medidos</small><strong>{faturamentoResumo.total_ltcat || 0}</strong></div>
-          <div className="card"><small>AETs / Outros</small><strong>{faturamentoResumo.total_aet || 0}</strong></div>
+          <div className="card" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderLeft: '4px solid var(--purple)' }}>
+            <small>PGRs Medidos</small>
+            <strong className="purple">{faturamentoResumo.total_pgr || 0}</strong>
+          </div>
+          <div className="card" style={{ background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid var(--amber)' }}>
+            <small>LTCATs Medidos</small>
+            <strong className="amber">{faturamentoResumo.total_ltcat || 0}</strong>
+          </div>
+          <div className="card" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderLeft: '4px solid #3b82f6' }}>
+            <small>AETs / Outros</small>
+            <strong style={{ color: '#3b82f6' }}>{faturamentoResumo.total_aet || 0}</strong>
+          </div>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -1542,19 +1580,19 @@ function App() {
                             <td>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="checkbox" checked={u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                <input type="number" placeholder="R$" value={u.pgr_valor || ''} disabled={!u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.pgr ? 1 : 0.4 }} />
+                                <CurrencyInput value={u.pgr_valor || 0} disabled={!u.pgr} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                               </div>
                             </td>
                             <td>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="checkbox" checked={u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                <input type="number" placeholder="R$" value={u.ltcat_valor || ''} disabled={!u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.ltcat ? 1 : 0.4 }} />
+                                <CurrencyInput value={u.ltcat_valor || 0} disabled={!u.ltcat} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                               </div>
                             </td>
                             <td>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="checkbox" checked={u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                <input type="number" placeholder="R$" value={u.aep_aet_valor || ''} disabled={!u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.aep_aet ? 1 : 0.4 }} />
+                                <CurrencyInput value={u.aep_aet_valor || 0} disabled={!u.aep_aet} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                               </div>
                             </td>
                             <td>
@@ -1571,7 +1609,10 @@ function App() {
               )}
 
               <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Adicionar Unidades (Pesquisa)</h3>
-              <input type="text" placeholder="Buscar por CNPJ, Filial, Regional ou UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input type="text" placeholder="Buscar por CNPJ, Filial, Regional ou UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', paddingRight: '30px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
+                {fatSearchQuery && <button onClick={() => setFatSearchQuery('')} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={16} /></button>}
+              </div>
               <div style={{ maxHeight: '140px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
                   <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', padding: '4px 8px', borderRadius: '4px' }} onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')} onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
@@ -1586,7 +1627,7 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: 'auto' }}>
                   <b>Desconto (R$):</b>
-                  <input type="number" value={novoFat.desconto || ''} onChange={e => setNovoFat({...novoFat, desconto: Number(e.target.value)})} style={{ width: '100px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <CurrencyInput value={novoFat.desconto || 0} onChange={val => setNovoFat({...novoFat, desconto: val})} width="100px" />
                 </div>
                 <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>
               </div>
