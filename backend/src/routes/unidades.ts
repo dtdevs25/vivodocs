@@ -99,13 +99,19 @@ router.post('/upload-seed', upload.single('file'), async (req: Request, res: Res
 });
 
 router.post('/', async (req: Request, res: Response) => {
-  const { cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes } = req.body;
+  const { cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes, pgr_data, ltcat_data, aep_data, compoe_sesmt, is_dg, status_funcionamento } = req.body;
   try {
     const { rows } = await query(
-      `INSERT INTO unidades (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-      [cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes]
+      `INSERT INTO unidades (cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes, compoe_sesmt, is_dg, status_funcionamento)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+      [cnpj, filial, tipo_predio, regional, uf, cidade, bairro, endereco, escopo_iso_45001, nr_20, mes_ano_po, observacoes, compoe_sesmt, is_dg, status_funcionamento]
     );
+    
+    const newId = rows[0].id;
+    if (pgr_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano, status) VALUES ($1, 'PGR', $2, 'Vigente')`, [newId, pgr_data]);
+    if (ltcat_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano, status) VALUES ($1, 'LTCAT', $2, 'Vigente')`, [newId, ltcat_data]);
+    if (aep_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano, status) VALUES ($1, 'AEP', $2, 'Vigente')`, [newId, aep_data]);
+
     await logAction('sistema@vivo.com', 'CRIAR_UNIDADE', `Unidade criada com CNPJ: ${cnpj}`);
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -329,10 +335,17 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     const { rows } = await query(updateQuery, params);
     
-    // Quick update documents (creates new historical record or updates year if possible)
-    if (pgr_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'PGR', $2) ON CONFLICT DO NOTHING`, [id, pgr_data]);
-    if (ltcat_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'LTCAT', $2) ON CONFLICT DO NOTHING`, [id, ltcat_data]);
-    if (aep_data) await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano) VALUES ($1, 'AEP', $2) ON CONFLICT DO NOTHING`, [id, aep_data]);
+    // Update or insert documents
+    const upsertDoc = async (tipo: string, data: string) => {
+      if (!data) return;
+      const resDoc = await query(`UPDATE documentos_sst SET ano = $1, status = 'Vigente' WHERE unidade_id = $2 AND tipo_documento = $3 RETURNING id`, [data, id, tipo]);
+      if (resDoc.rowCount === 0) {
+        await query(`INSERT INTO documentos_sst (unidade_id, tipo_documento, ano, status) VALUES ($1, $2, $3, 'Vigente')`, [id, tipo, data]);
+      }
+    };
+    await upsertDoc('PGR', pgr_data);
+    await upsertDoc('LTCAT', ltcat_data);
+    await upsertDoc('AEP', aep_data);
 
     await logAction(req.body.userEmail || 'sistema', 'EDITAR_UNIDADE', `Unidade ID ${id} (${filial}) editada.`);
     res.json(rows[0]);
