@@ -238,7 +238,7 @@ function App() {
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
   const [novoFat, setNovoFat] = useState({
     id: null as number | null,
-    lista_lote: '', justificativa: '', created_at: null as string | null,
+    lista_lote: '', mes: '', lote: '', justificativa: '', created_at: null as string | null,
     qtd_pgr: 0, valor_unit_pgr: 0,
     qtd_ltcat: 0, valor_unit_ltcat: 0,
     qtd_aep: 0, valor_unit_aep: 0,
@@ -503,6 +503,15 @@ function App() {
 
   const handleSalvarFaturamento = async () => {
     try {
+      if (!novoFat.mes) {
+        openAlert('Atenção', 'Por favor, selecione o Mês de Referência.');
+        return;
+      }
+      if (!novoFat.lote) {
+        openAlert('Atenção', 'Por favor, informe a Lista/Lote.');
+        return;
+      }
+
       let calcTotal = 0;
       let qtdPgr = 0, qtdLtcat = 0, qtdAepAet = 0;
       
@@ -514,6 +523,7 @@ function App() {
 
       const payload = { 
         ...novoFat, 
+        lista_lote: `${novoFat.mes} - ${novoFat.lote}`.trim(),
         unidades: novoFat.unidades.map((u: any) => typeof u === 'object' ? u.id : u),
         unidades_dados: novoFat.unidades,
         qtd_pgr: qtdPgr, valor_unit_pgr: 0,
@@ -532,7 +542,7 @@ function App() {
         openAlert('Sucesso', 'Lançamento salvo!');
       }
       setFaturamentoModalOpen(false);
-      setNovoFat({ id: null, lista_lote: '', justificativa: '', created_at: null, qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
+      setNovoFat({ id: null, lista_lote: '', mes: '', lote: '', justificativa: '', created_at: null, qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
       fetchFaturamento();
     } catch (err) {
       openAlert('Erro', 'Erro ao salvar lançamento');
@@ -1544,8 +1554,8 @@ function App() {
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => { if (typeof x === 'number') return { id: x, pgr: true, pgr_valor: Number(f.valor_unit_pgr||0), ltcat: true, ltcat_valor: Number(f.valor_unit_ltcat||0), aep_aet: true, aep_aet_valor: Number(f.valor_unit_aep || f.valor_unit_aet || 0) }; const isLegacyPgr = !x.pgr && Number(x.pgr_valor) === 0 && Number(f.valor_unit_pgr) > 0; const isLegacyLtcat = !x.ltcat && Number(x.ltcat_valor) === 0 && Number(f.valor_unit_ltcat) > 0; const isLegacyAet = !x.aep_aet && Number(x.aep_aet_valor) === 0 && (Number(f.valor_unit_aep) > 0 || Number(f.valor_unit_aet) > 0); return { ...x, pgr: x.pgr || isLegacyPgr, ltcat: x.ltcat || isLegacyLtcat, aep_aet: x.aep_aet || isLegacyAet, pgr_valor: isLegacyPgr ? Number(f.valor_unit_pgr||0) : Number(x.pgr_valor||0), ltcat_valor: isLegacyLtcat ? Number(f.valor_unit_ltcat||0) : Number(x.ltcat_valor||0), aep_aet_valor: isLegacyAet ? Number(f.valor_unit_aep || f.valor_unit_aet || 0) : Number(x.aep_aet_valor||0) }; }) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
-                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => { if (typeof x === 'number') return { id: x, pgr: true, pgr_valor: Number(f.valor_unit_pgr||0), ltcat: true, ltcat_valor: Number(f.valor_unit_ltcat||0), aep_aet: true, aep_aet_valor: Number(f.valor_unit_aep || f.valor_unit_aet || 0) }; const isLegacyPgr = !x.pgr && Number(x.pgr_valor) === 0 && Number(f.valor_unit_pgr) > 0; const isLegacyLtcat = !x.ltcat && Number(x.ltcat_valor) === 0 && Number(f.valor_unit_ltcat) > 0; const isLegacyAet = !x.aep_aet && Number(x.aep_aet_valor) === 0 && (Number(f.valor_unit_aep) > 0 || Number(f.valor_unit_aet) > 0); return { ...x, pgr: x.pgr || isLegacyPgr, ltcat: x.ltcat || isLegacyLtcat, aep_aet: x.aep_aet || isLegacyAet, pgr_valor: isLegacyPgr ? Number(f.valor_unit_pgr||0) : Number(x.pgr_valor||0), ltcat_valor: isLegacyLtcat ? Number(f.valor_unit_ltcat||0) : Number(x.ltcat_valor||0), aep_aet_valor: isLegacyAet ? Number(f.valor_unit_aep || f.valor_unit_aet || 0) : Number(x.aep_aet_valor||0) }; }) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { const pts = f.lista_lote ? String(f.lista_lote).split('-') : []; setNovoFat({ id: f.id, lista_lote: f.lista_lote, mes: pts[0] ? pts[0].trim().toUpperCase() : '', lote: pts.slice(1).join('-').trim() || '', justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => { if (typeof x === 'number') return { id: x, pgr: true, pgr_valor: Number(f.valor_unit_pgr||0), ltcat: true, ltcat_valor: Number(f.valor_unit_ltcat||0), aep_aet: true, aep_aet_valor: Number(f.valor_unit_aep || f.valor_unit_aet || 0) }; const isLegacyPgr = !x.pgr && Number(x.pgr_valor) === 0 && Number(f.valor_unit_pgr) > 0; const isLegacyLtcat = !x.ltcat && Number(x.ltcat_valor) === 0 && Number(f.valor_unit_ltcat) > 0; const isLegacyAet = !x.aep_aet && Number(x.aep_aet_valor) === 0 && (Number(f.valor_unit_aep) > 0 || Number(f.valor_unit_aet) > 0); return { ...x, pgr: x.pgr || isLegacyPgr, ltcat: x.ltcat || isLegacyLtcat, aep_aet: x.aep_aet || isLegacyAet, pgr_valor: isLegacyPgr ? Number(f.valor_unit_pgr||0) : Number(x.pgr_valor||0), ltcat_valor: isLegacyLtcat ? Number(f.valor_unit_ltcat||0) : Number(x.ltcat_valor||0), aep_aet_valor: isLegacyAet ? Number(f.valor_unit_aep || f.valor_unit_aet || 0) : Number(x.aep_aet_valor||0) }; }) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { const pts = f.lista_lote ? String(f.lista_lote).split('-') : []; setNovoFat({ id: f.id, lista_lote: f.lista_lote, mes: pts[0] ? pts[0].trim().toUpperCase() : '', lote: pts.slice(1).join('-').trim() || '', justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => { if (typeof x === 'number') return { id: x, pgr: true, pgr_valor: Number(f.valor_unit_pgr||0), ltcat: true, ltcat_valor: Number(f.valor_unit_ltcat||0), aep_aet: true, aep_aet_valor: Number(f.valor_unit_aep || f.valor_unit_aet || 0) }; const isLegacyPgr = !x.pgr && Number(x.pgr_valor) === 0 && Number(f.valor_unit_pgr) > 0; const isLegacyLtcat = !x.ltcat && Number(x.ltcat_valor) === 0 && Number(f.valor_unit_ltcat) > 0; const isLegacyAet = !x.aep_aet && Number(x.aep_aet_valor) === 0 && (Number(f.valor_unit_aep) > 0 || Number(f.valor_unit_aet) > 0); return { ...x, pgr: x.pgr || isLegacyPgr, ltcat: x.ltcat || isLegacyLtcat, aep_aet: x.aep_aet || isLegacyAet, pgr_valor: isLegacyPgr ? Number(f.valor_unit_pgr||0) : Number(x.pgr_valor||0), ltcat_valor: isLegacyLtcat ? Number(f.valor_unit_ltcat||0) : Number(x.ltcat_valor||0), aep_aet_valor: isLegacyAet ? Number(f.valor_unit_aep || f.valor_unit_aet || 0) : Number(x.aep_aet_valor||0) }; }) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
                     </td>
@@ -1571,34 +1581,39 @@ function App() {
               <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
             </div>
             <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label>Mês / Lote pertencente</label>
-                  <select disabled={faturamentoModalViewOnly} value={novoFat.lista_lote} onChange={e => setNovoFat({...novoFat, lista_lote: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }}>
-                    <option value="">Selecione o Mês</option>
-                    <option value="JANEIRO">Janeiro</option>
-                    <option value="FEVEREIRO">Fevereiro</option>
-                    <option value="MARÇO">Março</option>
-                    <option value="ABRIL">Abril</option>
-                    <option value="MAIO">Maio</option>
-                    <option value="JUNHO">Junho</option>
-                    <option value="JULHO">Julho</option>
-                    <option value="AGOSTO">Agosto</option>
-                    <option value="SETEMBRO">Setembro</option>
-                    <option value="OUTUBRO">Outubro</option>
-                    <option value="NOVEMBRO">Novembro</option>
-                    <option value="DEZEMBRO">Dezembro</option>
-                    {/* Add existing value if it's not a standard month, e.g. "LISTA 234" */}
-                    {novoFat.lista_lote && !['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'].includes(novoFat.lista_lote) && (
-                      <option value={novoFat.lista_lote}>{novoFat.lista_lote}</option>
-                    )}
-                  </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                      <label>Mês</label>
+                      <select disabled={faturamentoModalViewOnly} value={novoFat.mes || ''} onChange={e => setNovoFat({...novoFat, mes: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }}>
+                        <option value="">Selecione o Mês</option>
+                        <option value="JANEIRO">Janeiro</option>
+                        <option value="FEVEREIRO">Fevereiro</option>
+                        <option value="MARÇO">Março</option>
+                        <option value="ABRIL">Abril</option>
+                        <option value="MAIO">Maio</option>
+                        <option value="JUNHO">Junho</option>
+                        <option value="JULHO">Julho</option>
+                        <option value="AGOSTO">Agosto</option>
+                        <option value="SETEMBRO">Setembro</option>
+                        <option value="OUTUBRO">Outubro</option>
+                        <option value="NOVEMBRO">Novembro</option>
+                        <option value="DEZEMBRO">Dezembro</option>
+                        {novoFat.mes && !['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'].includes(novoFat.mes) && (
+                          <option value={novoFat.mes}>{novoFat.mes}</option>
+                        )}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                      <label>Lista / Lote</label>
+                      <input placeholder="Ex: LISTA 234" value={novoFat.lote || ''} readOnly={faturamentoModalViewOnly} onChange={e => setNovoFat({...novoFat, lote: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label>Comentários (Opcional)</label>
+                    <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} readOnly={faturamentoModalViewOnly} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label>Mês / Justificativas (Texto Livre)</label>
-                  <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} readOnly={faturamentoModalViewOnly} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-              </div>
               
               <div style={{ display: 'flex', gap: '20px', flex: 1, minHeight: 0 }}>
                 {/* Lado Esquerdo - Pesquisa */}
