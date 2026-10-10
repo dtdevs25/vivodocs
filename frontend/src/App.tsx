@@ -1567,17 +1567,17 @@ function App() {
           <div className="card interactive" style={{ position: 'relative', background: '#faf5ff', border: '1px solid #e9d5ff', borderLeft: '4px solid var(--purple)' }}>
             <ShieldCheck size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>PGR</small>
-            <strong className="purple">R$ {parseFloat(resumoFiltrado.total_pgr || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            <strong className="purple" style={{ fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(resumoFiltrado.total_pgr || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid var(--amber)' }}>
             <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>LTCAT</small>
-            <strong className="amber">R$ {parseFloat(resumoFiltrado.total_ltcat || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            <strong className="amber" style={{ fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(resumoFiltrado.total_ltcat || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#eff6ff', border: '1px solid #bfdbfe', borderLeft: '4px solid #3b82f6' }}>
             <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>AEP/AET</small>
-            <strong style={{ color: '#3b82f6' }}>R$ {parseFloat(resumoFiltrado.total_aet || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            <strong style={{ color: '#3b82f6', fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(resumoFiltrado.total_aet || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
         </div>
         <div className="table-wrap">
