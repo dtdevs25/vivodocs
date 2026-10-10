@@ -38,23 +38,30 @@ function parseLocalDate(raw: string): Date | null {
 }
 
 function getDocValidity(doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number) {
+  const eRaw = parseLocalDate(raw);
+  const eVenc = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
+  if (!eRaw && !eVenc) return null;
+
+  const isIndeterminado = doc === 'LTCAT' || doc.includes('AEP') || doc.includes('AET');
+  if (isIndeterminado) {
+    const emissao = eRaw || eVenc!;
+    return { emissao, vencimento: emissao, dias: 9999, valido: true, indeterminado: true };
+  }
+
   const anos = configValidadeAnos !== undefined ? configValidadeAnos : (DOC_VALIDADE_ANOS[doc] || 2);
-  const vencReal = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
   let emissao: Date;
   let vencimento: Date;
-  if (vencReal) {
-    vencimento = vencReal;
-    emissao = new Date(vencReal); emissao.setFullYear(emissao.getFullYear() - anos);
+  if (eVenc) {
+    vencimento = eVenc;
+    emissao = new Date(eVenc); emissao.setFullYear(emissao.getFullYear() - anos);
   } else {
-    const e = parseLocalDate(raw);
-    if (!e) return null;
-    emissao = e;
+    emissao = eRaw!;
     vencimento = new Date(emissao);
     vencimento.setFullYear(vencimento.getFullYear() + anos);
   }
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const dias = Math.round((vencimento.getTime() - hoje.getTime()) / 86400000);
-  return { emissao, vencimento, dias, valido: dias >= 0 };
+  return { emissao, vencimento, dias, valido: dias >= 0, indeterminado: false };
 }
 
 function isTech(u: any) { return !!u?.tipo_predio && String(u.tipo_predio).toLowerCase().includes('tech'); }
@@ -763,12 +770,18 @@ function App() {
     let dateText = '—';
     
     if (v) {
-      color = v.valido ? 'var(--green)' : 'var(--red)';
-      bg = v.valido ? '#ecfdf5' : '#fef2f2';
-      statusTitle = v.valido ? 'Vence em' : 'Venceu em';
-      dateText = v.vencimento.toLocaleDateString('pt-BR');
-      const abs = Math.abs(v.dias);
-      daysText = v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`;
+      if (v.indeterminado) {
+        color = 'var(--green)'; bg = '#ecfdf5'; statusTitle = 'VÁLIDO';
+        dateText = 'TEMPO INDETERMINADO';
+        daysText = 'Válido por tempo indeterminado';
+      } else {
+        color = v.valido ? 'var(--green)' : 'var(--red)';
+        bg = v.valido ? '#ecfdf5' : '#fef2f2';
+        statusTitle = v.valido ? 'Vence em' : 'Venceu em';
+        dateText = v.vencimento.toLocaleDateString('pt-BR');
+        const abs = Math.abs(v.dias);
+        daysText = v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`;
+      }
     } else if (expiryInfo.statusTxt) {
       const s = expiryInfo.statusTxt.toLowerCase();
       if (s.includes('venc')) { color = 'var(--red)'; bg = '#fef2f2'; statusTitle = 'Vencido (Manual)'; }
@@ -819,7 +832,7 @@ function App() {
               </div>
             )}
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
-              {v ? (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${getValidadeAnos(expiryInfo.doc, unit)} anos`) : 'Verifique o sistema para atualizar a data deste documento.'}
+              {v ? (v.indeterminado ? `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · Válido por tempo indeterminado` : (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${getValidadeAnos(expiryInfo.doc, unit)} anos`)) : 'Verifique o sistema para atualizar a data deste documento.'}
             </div>
           </div>
         </div>
@@ -1252,6 +1265,9 @@ function App() {
     const docCell = (doc: string, u: any, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string, fileUrl?: string) => {
       const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
       if (v) {
+        if (v.indeterminado) {
+          return pill('#ecfdf5', 'var(--green)', `● Válido/${v.emissao.getFullYear()}`, true, `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} — Válido por tempo indeterminado`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
+        }
         return v.valido
           ? pill('#ecfdf5', 'var(--green)', `● Válido/${v.vencimento.getFullYear()}`, true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))
           : pill('#fef2f2', 'var(--red)', `● Vencido/${v.vencimento.getFullYear()}`, true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
