@@ -839,10 +839,6 @@ function App() {
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto', alignItems: 'center' }}>
-            <select value={unitSubTab === 'todas' ? '' : unitSubTab} onChange={(e) => setUnitSubTab(e.target.value as any || 'todas')} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
-              <option value="">Todos os Tipos</option>
-              {TIPO_TABS.filter(t => t.key !== 'todas').map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-            </select>
             <input
               className="search"
               placeholder="Buscar por CNPJ, nome, cidade, tipo..."
@@ -866,8 +862,12 @@ function App() {
           </div>
         </header>
         <section className="content">
-          <div className="tabs-header">
+          <div className="tabs-header" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <button className="tab-link active" onClick={() => setUnitSubTab('todas')}>Geral</button>
+            <select value={unitSubTab === 'todas' ? '' : unitSubTab} onChange={(e) => setUnitSubTab(e.target.value as any || 'todas')} style={{ height: '32px', border: '1px solid #e8e2ed', borderRadius: '6px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '12px', outline: 'none', marginLeft: 'auto', marginBottom: '6px' }}>
+              <option value="">Todos os Tipos</option>
+              {TIPO_TABS.filter(t => t.key !== 'todas').map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+            </select>
           </div>
           <div className="table-wrap">
             <table className="table">
