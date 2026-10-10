@@ -664,7 +664,7 @@ function App() {
               
               <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '14px', margin: '15px 0 5px', position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong className="green" style={{ margin: 0, fontSize: '20px' }}>{dashboardData.pgrs_vigentes}</strong>
+                  <strong className="green" style={{ margin: 0, fontSize: '20px', cursor: 'pointer' }} title="Ver Vigentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vigente'); }}>{dashboardData.pgrs_vigentes}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vigência</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
@@ -679,7 +679,7 @@ function App() {
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--muted)', fontSize: '20px' }}>{pgrPendentes}</strong>
+                  <strong style={{ margin: 0, color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }} title="Ver Pendentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pendente'); }}>{pgrPendentes}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Pendentes</span>
                 </div>
               </div>
@@ -885,13 +885,13 @@ function App() {
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase();
       const checkStatus = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        if (!v) return null;
+        if (!v) return 'pendente';
         if (!v.valido) return 'vencido';
         if (!v.indeterminado && v.dias <= 60) return 'vencendo';
-        return null;
+        return 'vigente';
       };
       
-      let isVencido = false, isVencendo = false;
+      let isVencido = false, isVencendo = false, isPendente = false, isVigente = false;
       [
         { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
         { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
@@ -902,10 +902,14 @@ function App() {
         const s = checkStatus(d.doc, d.raw, d.venc);
         if (s === 'vencido') isVencido = true;
         if (s === 'vencendo') isVencendo = true;
+        if (s === 'pendente') isPendente = true;
+        if (s === 'vigente') isVigente = true;
       });
 
       if (isVencido) searchStr += ' vencido vencidos';
       if (isVencendo) searchStr += ' vencendo';
+      if (isPendente) searchStr += ' pendente pendentes';
+      if (isVigente) searchStr += ' vigente vigentes';
       return searchStr.includes(searchQuery.toLowerCase());
     });
 
@@ -1294,13 +1298,13 @@ function App() {
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
       const checkStatus = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        if (!v) return null;
+        if (!v) return 'pendente';
         if (!v.valido) return 'vencido';
         if (!v.indeterminado && v.dias <= 60) return 'vencendo';
-        return null;
+        return 'vigente';
       };
       
-      let isVencido = false, isVencendo = false;
+      let isVencido = false, isVencendo = false, isPendente = false, isVigente = false;
       [
         { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
         { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
@@ -1311,10 +1315,14 @@ function App() {
         const s = checkStatus(d.doc, d.raw, d.venc);
         if (s === 'vencido') isVencido = true;
         if (s === 'vencendo') isVencendo = true;
+        if (s === 'pendente') isPendente = true;
+        if (s === 'vigente') isVigente = true;
       });
 
       if (isVencido) searchStr += ' vencido vencidos';
       if (isVencendo) searchStr += ' vencendo';
+      if (isPendente) searchStr += ' pendente pendentes';
+      if (isVigente) searchStr += ' vigente vigentes';
       return searchStr.includes(searchQuery.toLowerCase());
     });
 
