@@ -152,7 +152,7 @@ function App() {
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [regionalFilter, setRegionalFilter] = useState('');
   const [isoFilter, setIsoFilter] = useState(false);
-  const [sesmtFilter, setSesmtFilter] = useState(false);
+
   const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
   const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: 2, validade_aep: 2, validade_aet: 2, validade_nr01: 2 });
   const [clearedNotifs, setClearedNotifs] = useState<number[]>([]);
