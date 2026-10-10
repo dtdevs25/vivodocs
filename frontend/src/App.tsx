@@ -893,8 +893,7 @@ function App() {
         { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
         { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
         { doc: 'AEP', raw: u.aep_data, venc: u.aep_vencimento },
-        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento },
-        { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
+        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento }
       ].forEach(d => {
         const s = checkStatus(d.doc, d.raw, d.venc);
         if (s === 'vencido') { isVencido = true; searchStr += ` ${d.doc.toLowerCase()}:vencido`; }
@@ -1306,8 +1305,7 @@ function App() {
         { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
         { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
         { doc: 'AEP', raw: u.aep_data, venc: u.aep_vencimento },
-        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento },
-        { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
+        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento }
       ].forEach(d => {
         const s = checkStatus(d.doc, d.raw, d.venc);
         if (s === 'vencido') { isVencido = true; searchStr += ` ${d.doc.toLowerCase()}:vencido`; }
