@@ -1759,15 +1759,15 @@ function App() {
                           aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
                         }
                         return { name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr, ltcat, aet };
-                      }).reverse()} margin={{ top: 10, right: 30, left: 20, bottom: 0 }}>
+                      }).reverse()} margin={{ top: 10, right: 30, left: 20, bottom: 30 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
                       <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} width={80} />
                       <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: any) => `R$ ${Number(val || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                       <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-                      <Bar stackId="a" dataKey="pgr" name="Receita PGR" fill="#10b981" label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
-                      <Bar stackId="a" dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
-                      <Bar stackId="a" dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
+                      <Bar stackId="a" dataKey="pgr" name="Receita PGR" fill="#10b981" />
+                      <Bar stackId="a" dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" />
+                      <Bar stackId="a" dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
