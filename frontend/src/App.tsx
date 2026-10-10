@@ -847,11 +847,11 @@ function App() {
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase();
-      const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
+      const checkVenc = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
         return v ? !v.valido : false;
       };
-      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
+      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento) || checkVenc('AEP', u.aep_data, u.aep_vencimento) || checkVenc('AET', u.aet_data, u.aet_vencimento) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento)) {
         searchStr += ' vencido vencidos';
       }
       return searchStr.includes(searchQuery.toLowerCase());
@@ -1236,11 +1236,11 @@ function App() {
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
-      const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
+      const checkVenc = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
         return v ? !v.valido : false;
       };
-      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
+      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento) || checkVenc('AEP', u.aep_data, u.aep_vencimento) || checkVenc('AET', u.aet_data, u.aet_vencimento) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento)) {
         searchStr += ' vencido vencidos';
       }
       return searchStr.includes(searchQuery.toLowerCase());
