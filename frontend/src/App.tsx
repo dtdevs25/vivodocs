@@ -617,7 +617,7 @@ function App() {
               <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle PGR</small>
               
-              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '24px', margin: '15px 0 5px', position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '14px', margin: '15px 0 5px', position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <strong className="green" style={{ margin: 0, fontSize: '20px' }}>{dashboardData.pgrs_vigentes}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vigência</span>
