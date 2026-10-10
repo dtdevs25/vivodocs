@@ -842,7 +842,7 @@ function App() {
         // Todas shows everything
       } else {
         if (!isSearching && u.status_funcionamento !== 'ATIVA') return false;
-        if (getTipoKey(u) !== unitSubTab) return false;
+        if (!isSearching && getTipoKey(u) !== unitSubTab) return false;
       }
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
@@ -1229,10 +1229,14 @@ function App() {
   const renderMatriz = () => {
     const filtered = matriz.filter(u => {
       const k = getTipoKey(u);
-      if (matrizTipo === 'lojas' && k !== 'loja') return false;
-      if (matrizTipo === 'predios' && k !== 'predio') return false;
-      if (matrizTipo === 'dgs' && k !== 'dg') return false;
-      if (matrizTipo === 'techs' && k !== 'tech') return false;
+      const isSearching = searchQuery.trim() !== '';
+      
+      if (!isSearching) {
+        if (matrizTipo === 'lojas' && k !== 'loja') return false;
+        if (matrizTipo === 'predios' && k !== 'predio') return false;
+        if (matrizTipo === 'dgs' && k !== 'dg') return false;
+        if (matrizTipo === 'techs' && k !== 'tech') return false;
+      }
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
