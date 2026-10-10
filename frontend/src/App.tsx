@@ -819,7 +819,7 @@ function App() {
               </div>
             )}
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '14px' }}>
-              {v ? (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${DOC_VALIDADE_ANOS[expiryInfo.doc]} anos`) : 'Verifique o sistema para atualizar a data deste documento.'}
+              {v ? (expiryInfo.venc ? 'Vencimento informado no documento' : `Emitido em ${v.emissao.toLocaleDateString('pt-BR')} · validade de ${getValidadeAnos(expiryInfo.doc, unit)} anos`) : 'Verifique o sistema para atualizar a data deste documento.'}
             </div>
           </div>
         </div>
