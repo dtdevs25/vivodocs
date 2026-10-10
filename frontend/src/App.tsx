@@ -124,36 +124,35 @@ function App() {
 
   useEffect(() => {
     if (matriz.length > 0) {
-      let pgrs_vigentes = 0, pgrs_vencendo = 0, pgrs_vencidos = 0;
-      let ltcat_vigentes = 0, ltcat_vencendo = 0, ltcat_vencidos = 0;
-      let aet_vigentes = 0, aet_vencendo = 0, aet_vencidos = 0;
+      let pgrs_vigentes = 0, pgrs_vencendo = 0, pgrs_vencidos = 0, pgrs_pendentes = 0;
+      let ltcat_vigentes = 0, ltcat_vencendo = 0, ltcat_vencidos = 0, ltcat_pendentes = 0;
+      let aet_vigentes = 0, aet_vencendo = 0, aet_vencidos = 0, aet_pendentes = 0;
 
       const checkStatus = (doc: string, u: any, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        if (!v) return null;
+        if (!v) return 'pendente';
         if (!v.valido) return 'vencido';
         if (!v.indeterminado && v.dias <= 60) return 'vencendo';
         return 'vigente';
       };
 
       matriz.forEach((u: any) => {
-        if (u.status_funcionamento !== 'ATIVA') return;
-        
+        // Count for ALL units to match the total CNPJs (541)
         const pgr = checkStatus('PGR', u, u.pgr_data, u.pgr_vencimento);
-        if (pgr === 'vigente') pgrs_vigentes++; else if (pgr === 'vencendo') pgrs_vencendo++; else if (pgr === 'vencido') pgrs_vencidos++;
+        if (pgr === 'vigente') pgrs_vigentes++; else if (pgr === 'vencendo') pgrs_vencendo++; else if (pgr === 'vencido') pgrs_vencidos++; else pgrs_pendentes++;
 
         const ltcat = checkStatus('LTCAT', u, u.ltcat_data, u.ltcat_vencimento);
-        if (ltcat === 'vigente') ltcat_vigentes++; else if (ltcat === 'vencendo') ltcat_vencendo++; else if (ltcat === 'vencido') ltcat_vencidos++;
+        if (ltcat === 'vigente') ltcat_vigentes++; else if (ltcat === 'vencendo') ltcat_vencendo++; else if (ltcat === 'vencido') ltcat_vencidos++; else ltcat_pendentes++;
 
         const aep = checkStatus('AEP', u, u.aep_data, u.aep_vencimento) || checkStatus('AET', u, u.aet_data, u.aet_vencimento);
-        if (aep === 'vigente') aet_vigentes++; else if (aep === 'vencendo') aet_vencendo++; else if (aep === 'vencido') aet_vencidos++;
+        if (aep === 'vigente') aet_vigentes++; else if (aep === 'vencendo') aet_vencendo++; else if (aep === 'vencido') aet_vencidos++; else aet_pendentes++;
       });
 
       setDashboardData((prev: any) => ({
         ...prev,
-        pgrs_vigentes, pgrs_vencendo, pgrs_vencidos,
-        ltcat_vigentes, ltcat_vencendo, ltcat_vencidos,
-        aet_vigentes, aet_vencendo, aet_vencidos
+        pgrs_vigentes, pgrs_vencendo, pgrs_vencidos, pgrs_pendentes,
+        ltcat_vigentes, ltcat_vencendo, ltcat_vencidos, ltcat_pendentes,
+        aet_vigentes, aet_vencendo, aet_vencidos, aet_pendentes
       }));
     }
   }, [matriz]);
@@ -629,20 +628,18 @@ function App() {
     );
   }
   const renderDashboard = () => {
-    // Pie chart metrics based ONLY on PGR against total active units
-    const totalAtivas = dashboardData.total_ativas || 1; // prevent division by zero
-    const pgrVigentes = hiddenLegend['vigentes'] ? 0 : dashboardData.pgrs_vigentes;
-    const pgrVencendo = hiddenLegend['vencendo'] ? 0 : dashboardData.pgrs_vencendo;
-    const pgrVencidos = hiddenLegend['vencidos'] ? 0 : dashboardData.pgrs_vencidos;
-    const pgrPendentes = hiddenLegend['pendentes'] ? 0 : Math.max(0, totalAtivas - (dashboardData.pgrs_vigentes + dashboardData.pgrs_vencendo + dashboardData.pgrs_vencidos));
+    const totalUnits = matriz.length || 1;
+    const pgrVigentes = hiddenLegend['vigentes'] ? 0 : (dashboardData.pgrs_vigentes || 0);
+    const pgrVencendo = hiddenLegend['vencendo'] ? 0 : (dashboardData.pgrs_vencendo || 0);
+    const pgrVencidos = hiddenLegend['vencidos'] ? 0 : (dashboardData.pgrs_vencidos || 0);
+    const pgrPendentes = hiddenLegend['pendentes'] ? 0 : (dashboardData.pgrs_pendentes || 0);
     
     const sumPgr = Math.max(1, pgrVigentes + pgrVencendo + pgrVencidos + pgrPendentes);
     const p1 = (pgrVigentes / sumPgr) * 100;
     const p2 = p1 + (pgrVencendo / sumPgr) * 100;
     const p3 = p2 + (pgrVencidos / sumPgr) * 100;
 
-    // Cobertura PGR = (Vigentes + Vencendo) / Total Ativas
-    const coberturaPgr = Math.round(((pgrVigentes + pgrVencendo) / totalAtivas) * 100);
+    const coberturaPgr = Math.round(((pgrVigentes + pgrVencendo) / totalUnits) * 100);
 
     const toggleLegend = (key: string) => setHiddenLegend(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -654,8 +651,8 @@ function App() {
             <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
-              <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{dashboardData.cobertura}%</strong>
-              <small style={{ position: 'relative', zIndex: 1 }}>Unidades Ativas</small>
+              <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{coberturaPgr}%</strong>
+              <small style={{ position: 'relative', zIndex: 1 }}>Cobertura Total</small>
             </div>
 
             <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--green)', borderLeft: '4px solid var(--green)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
@@ -664,22 +661,22 @@ function App() {
               
               <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '14px', margin: '15px 0 5px', position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong className="green" style={{ margin: 0, fontSize: '20px', cursor: 'pointer' }} title="Ver Vigentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vigente'); }}>{dashboardData.pgrs_vigentes}</strong>
+                  <strong className="green" style={{ margin: 0, fontSize: '20px', cursor: 'pointer' }} title="Ver Vigentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pgr:vigente'); }}>{dashboardData.pgrs_vigentes}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vigência</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--red)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencidos" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vencido'); }}>{dashboardData.pgrs_vencidos}</strong>
+                  <strong style={{ margin: 0, color: 'var(--red)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencidos" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pgr:vencido'); }}>{dashboardData.pgrs_vencidos}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencidos</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--amber)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencendo" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vencendo'); }}>{dashboardData.pgrs_vencendo}</strong>
+                  <strong style={{ margin: 0, color: 'var(--amber)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencendo" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pgr:vencendo'); }}>{dashboardData.pgrs_vencendo}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencendo</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }} title="Ver Pendentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pendente'); }}>{pgrPendentes}</strong>
+                  <strong style={{ margin: 0, color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }} title="Ver Pendentes" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('pgr:pendente'); }}>{dashboardData.pgrs_pendentes || 0}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Pendentes</span>
                 </div>
               </div>
@@ -900,10 +897,10 @@ function App() {
         { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
       ].forEach(d => {
         const s = checkStatus(d.doc, d.raw, d.venc);
-        if (s === 'vencido') isVencido = true;
-        if (s === 'vencendo') isVencendo = true;
-        if (s === 'pendente') isPendente = true;
-        if (s === 'vigente') isVigente = true;
+        if (s === 'vencido') { isVencido = true; searchStr += ` ${d.doc.toLowerCase()}:vencido`; }
+        if (s === 'vencendo') { isVencendo = true; searchStr += ` ${d.doc.toLowerCase()}:vencendo`; }
+        if (s === 'pendente') { isPendente = true; searchStr += ` ${d.doc.toLowerCase()}:pendente`; }
+        if (s === 'vigente') { isVigente = true; searchStr += ` ${d.doc.toLowerCase()}:vigente`; }
       });
 
       if (isVencido) searchStr += ' vencido vencidos';
@@ -1313,10 +1310,10 @@ function App() {
         { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
       ].forEach(d => {
         const s = checkStatus(d.doc, d.raw, d.venc);
-        if (s === 'vencido') isVencido = true;
-        if (s === 'vencendo') isVencendo = true;
-        if (s === 'pendente') isPendente = true;
-        if (s === 'vigente') isVigente = true;
+        if (s === 'vencido') { isVencido = true; searchStr += ` ${d.doc.toLowerCase()}:vencido`; }
+        if (s === 'vencendo') { isVencendo = true; searchStr += ` ${d.doc.toLowerCase()}:vencendo`; }
+        if (s === 'pendente') { isPendente = true; searchStr += ` ${d.doc.toLowerCase()}:pendente`; }
+        if (s === 'vigente') { isVigente = true; searchStr += ` ${d.doc.toLowerCase()}:vigente`; }
       });
 
       if (isVencido) searchStr += ' vencido vencidos';
