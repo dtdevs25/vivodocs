@@ -782,13 +782,6 @@ function App() {
         const abs = Math.abs(v.dias);
         daysText = v.valido ? (v.dias === 0 ? 'Vence hoje' : `Faltam ${abs} dia${abs === 1 ? '' : 's'}`) : `Vencido há ${abs} dia${abs === 1 ? '' : 's'}`;
       }
-    } else if (expiryInfo.statusTxt) {
-      const s = expiryInfo.statusTxt.toLowerCase();
-      if (s.includes('venc')) { color = 'var(--red)'; bg = '#fef2f2'; statusTitle = 'Vencido (Manual)'; }
-      else if (s.includes('vigente') || s === 'ok') { 
-        color = 'var(--green)'; bg = '#ecfdf5'; statusTitle = 'Vigente (Manual)';
-        if (expiryInfo.doc === 'LTCAT') daysText = 'Válido por tempo indeterminado';
-      }
     }
     
     return (
@@ -856,7 +849,7 @@ function App() {
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase();
       const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        return v ? !v.valido : (statusTxt || '').toLowerCase().includes('venc');
+        return v ? !v.valido : false;
       };
       if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
         searchStr += ' vencido vencidos';
@@ -1041,6 +1034,7 @@ function App() {
                       { label: 'AEP / AET', doc: 'AEP / AET', raw: selectedUnit.aet_data || selectedUnit.aep_data, venc: selectedUnit.aet_vencimento || selectedUnit.aep_vencimento, docId: selectedUnit.aet_doc_id || selectedUnit.aep_doc_id, fileName: selectedUnit.aet_arquivo_nome || selectedUnit.aep_arquivo_nome },
                     ].map(({ label, doc, raw, venc, docId, fileName }) => {
                       const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, selectedUnit));
+                      const isVencido = v ? !v.valido : false;
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
                       return (
@@ -1048,14 +1042,14 @@ function App() {
                           key={doc}
                           title={v ? 'Clique para ver o vencimento' : undefined}
                           onClick={() => v && setExpiryInfo({ doc, raw, venc })}
-                          style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s', display: 'flex', flexDirection: 'column', gap: '4px' }}
+                          style={{ background: bg, borderRadius: '10px', padding: '12px 14px', cursor: v ? 'pointer' : 'default', border: `1px solid ${v ? color : 'transparent'}`, transition: 'transform 0.15s, box-shadow 0.15s', display: 'flex', flexDirection: 'column', gap: '4px', borderLeft: isVencido ? '4px solid var(--red)' : v ? '4px solid var(--green)' : '4px solid var(--muted)' }}
                           onMouseEnter={e => { if (v) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; } }}
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                           <div>
                             <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {label}</div>
                             <div style={{ fontSize: '13px', color, fontWeight: '700' }}>{v ? v.emissao.toLocaleDateString('pt-BR') : '—'}</div>
-                            {v && <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div>}
+                            {v ? <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div> : <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>S/D</div>}
                           </div>
 
                           <div onClick={e => e.stopPropagation()} style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1244,7 +1238,7 @@ function App() {
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
       const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        return v ? !v.valido : (statusTxt || '').toLowerCase().includes('venc');
+        return v ? !v.valido : false;
       };
       if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
         searchStr += ' vencido vencidos';
@@ -1272,9 +1266,6 @@ function App() {
           ? pill('#ecfdf5', 'var(--green)', `● Válido/${v.vencimento.getFullYear()}`, true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))
           : pill('#fef2f2', 'var(--red)', `● Vencido/${v.vencimento.getFullYear()}`, true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
       }
-      const s = (statusTxt || '').toLowerCase();
-      if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
-      if (s.includes('vigente') || s === 'ok') return pill('#ecfdf5', 'var(--green)', '● Válido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
       return pill('#f3f4f6', 'var(--muted)', 'S/D', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
     };
 
