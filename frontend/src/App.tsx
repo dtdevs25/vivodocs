@@ -1281,7 +1281,30 @@ function App() {
         <header className="topbar">
           <div><h1>Conformidade</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
-            <input className="search" placeholder="Buscar CNPJ, nome, cidade, tipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                className="search"
+                placeholder="Buscar CNPJ, nome, cidade, tipo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingRight: searchQuery ? '30px' : '12px' }}
+              />
+              {searchQuery && (
+                <button
+                  title="Limpar busca"
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute', right: '6px', background: 'none', border: 'none',
+                    color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '4px', borderRadius: '50%', fontSize: '12px', fontWeight: 'bold'
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink)'; (e.currentTarget as HTMLButtonElement).style.background = '#e5e7eb'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
             <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
@@ -1761,6 +1784,14 @@ function App() {
   const expiringUnits = matriz.filter(u => ['red', 'amber'].includes(getStatusColor(u.pgr)) || ['red', 'amber'].includes(getStatusColor(u.ltcat)) || ['red', 'amber'].includes(getStatusColor(u.aet)) || ['red', 'amber'].includes(getStatusColor(u.aep)));
   const activeNotifs = expiringUnits.filter(u => !clearedNotifs.includes(u.id));
 
+  const handleNav = (tab: string) => {
+    setActiveTab(tab);
+    setSearchQuery('');
+    setIsoFilter(false);
+    setSesmtFilter(false);
+    setRegionalFilter('');
+  };
+
   return (
     <div className="layout">
       <header className="global-header">
@@ -1788,7 +1819,7 @@ function App() {
                   <div style={{ padding: '16px', color: 'var(--muted)', textAlign: 'center', fontSize: '12px' }}>Nenhuma nova notificação.</div>
                 ) : (
                   activeNotifs.map((u: any) => (
-                    <div key={u.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }} onClick={() => { setNotificationsOpen(false); setActiveTab('unidades'); setSelectedUnit(u); }} className="notification-item">
+                    <div key={u.id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }} onClick={() => { setNotificationsOpen(false); handleNav('unidades'); setSelectedUnit(u); }} className="notification-item">
                       <div style={{ flex: 1, paddingRight: '8px' }}>
                         <div style={{ fontWeight: 'bold', marginBottom: '4px', color: 'var(--ink)' }}>{u.filial}</div>
                         <div style={{ color: 'var(--muted)' }}>Possui documentos próximos ao vencimento ou vencidos.</div>
@@ -1812,21 +1843,21 @@ function App() {
           <div className="sidebar-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div className="label">MENU PRINCIPAL</div>
             <div className="nav">
-              <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
+              <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => handleNav('dashboard')}>
                 <LayoutDashboard size={18} /> <span>Painel Geral</span>
               </button>
-              <button className={activeTab === 'unidades' ? 'active' : ''} onClick={() => setActiveTab('unidades')}>
+              <button className={activeTab === 'unidades' ? 'active' : ''} onClick={() => handleNav('unidades')}>
                 <Building2 size={18} /> <span>Consulta CNPJ</span>
               </button>
-              <button className={activeTab === 'matriz' ? 'active' : ''} onClick={() => setActiveTab('matriz')}>
+              <button className={activeTab === 'matriz' ? 'active' : ''} onClick={() => handleNav('matriz')}>
                 <FileCheck size={18} /> <span>Matriz de Conformidade</span>
               </button>
               {['master','admin'].includes(user.role) && (
                 <>
-                  <button className={activeTab === 'financeiro' ? 'active' : ''} onClick={() => setActiveTab('financeiro')}>
+                  <button className={activeTab === 'financeiro' ? 'active' : ''} onClick={() => handleNav('financeiro')}>
                     <CircleDollarSign size={18} /> <span>Faturamento (Custos)</span>
                   </button>
-                  <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>
+                  <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => handleNav('admin')}>
                     <Users size={18} /> <span>Administrativo</span>
                   </button>
                 </>
