@@ -887,7 +887,18 @@ function App() {
           </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
+              <thead>
+                <tr>
+                  <th style={{ width: '22%' }}>Unidade</th>
+                  <th style={{ width: '12%' }}>Tipo</th>
+                  <th style={{ width: '22%' }}>Localização</th>
+                  <th style={{ width: '10%' }}>Região</th>
+                  <th style={{ width: '12%' }}>Regional</th>
+                  <th style={{ width: '8%', textAlign: 'center' }}>ISO 45001</th>
+                  <th style={{ width: '8%', textAlign: 'center' }}>SESMT</th>
+                  <th style={{ width: '6%', textAlign: 'center' }}>Ações</th>
+                </tr>
+              </thead>
               <tbody>
                 {filtered.length === 0
                   ? <tr><td colSpan={8} className="empty">Nenhuma unidade encontrada.</td></tr>
