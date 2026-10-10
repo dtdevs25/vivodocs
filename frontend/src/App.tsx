@@ -961,7 +961,7 @@ function App() {
         <section className="content">
           <div className="tabs-header" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <button className="tab-link active" onClick={() => setUnitSubTab('todas')}>
-              {unitSubTab === 'todas' || unitSubTab === 'desmobilizadas' ? 'Geral' : (TIPO_TABS.find(t => t.key === unitSubTab)?.label || 'Geral')}
+              {(unitSubTab === 'todas' || unitSubTab === 'desmobilizadas' ? 'Geral' : (TIPO_TABS.find(t => t.key === unitSubTab)?.label || 'Geral'))} ({filtered.length})
             </button>
             <select value={unitSubTab === 'todas' ? '' : unitSubTab} onChange={(e) => setUnitSubTab(e.target.value as any || 'todas')} style={{ height: '32px', border: '1px solid #e8e2ed', borderRadius: '6px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '12px', outline: 'none', marginLeft: 'auto', marginBottom: '6px' }}>
               <option value="">Todos os Tipos</option>
@@ -1402,7 +1402,7 @@ function App() {
         <section className="content">
           <div className="tabs-header" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <button className="tab-link active" onClick={() => setMatrizTipo('todas')}>
-              {matrizTipo === 'todas' ? 'Geral' : (matrizTipo === 'lojas' ? 'Lojas' : matrizTipo === 'predios' ? 'Prédios' : matrizTipo === 'dgs' ? 'DGs' : 'TECHs')}
+              {(matrizTipo === 'todas' ? 'Geral' : (matrizTipo === 'lojas' ? 'Lojas' : matrizTipo === 'predios' ? 'Prédios' : matrizTipo === 'dgs' ? 'DGs' : 'TECHs'))} ({filtered.length})
             </button>
             <select value={matrizTipo === 'todas' ? '' : matrizTipo} onChange={(e) => setMatrizTipo(e.target.value as any || 'todas')} style={{ height: '32px', border: '1px solid #e8e2ed', borderRadius: '6px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '12px', outline: 'none', marginLeft: 'auto', marginBottom: '6px' }}>
               <option value="">Todos os Tipos</option>
