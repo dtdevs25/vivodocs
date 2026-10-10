@@ -927,8 +927,8 @@ function App() {
                     return (
                       <tr key={u.id} style={{ backgroundColor: u.status_funcionamento === 'ATIVA' ? '#f0fdf4' : '#fef2f2' }}>
                         <td>
-                          <b>{u.filial}</b>
-                          <small style={{ color: 'var(--muted)' }}>{u.cnpj}</small>
+                          <b>{u.cnpj}</b>
+                          <small style={{ color: 'var(--muted)' }}>{u.filial}</small>
                         </td>
                         <td>
                           <span style={{ background: badge.bg, color: badge.color, borderRadius: '12px', padding: '3px 9px', fontSize: '11px', fontWeight: '700' }}>
@@ -1324,7 +1324,7 @@ function App() {
                   const b = tipoBadge(u);
                   return (
                     <tr key={u.id} style={{ backgroundColor: u.status_funcionamento === 'ATIVA' ? '#f0fdf4' : '#fef2f2' }}>
-                      <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
+                      <td><b>{u.cnpj}</b><small style={{ color: 'var(--muted)' }}>{u.filial}</small></td>
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
                       <td style={td}>{docCell('PGR', u, u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome, u.pgr_arquivo_url)}</td>
                       <td style={td}>{docCell('LTCAT', u, u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome, u.ltcat_arquivo_url)}</td>
