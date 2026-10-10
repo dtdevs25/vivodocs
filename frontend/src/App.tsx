@@ -1569,32 +1569,40 @@ function App() {
                 </div>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', flex: 1, minHeight: 0 }}>
+              <div style={{ display: 'flex', gap: '20px', flex: 1, minHeight: 0 }}>
                 {/* Lado Esquerdo - Pesquisa */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0 }}>
                   <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--purple)' }}>Adicionar Unidades</h3>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <input type="text" placeholder="Buscar por CNPJ, Filial, UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', paddingRight: '30px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
                     {fatSearchQuery && <button onClick={() => setFatSearchQuery('')} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={16} /></button>}
                   </div>
-                  <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '200px' }}>
-                    {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
-                      <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', padding: '4px 8px', borderRadius: '4px' }} onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')} onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                        <input type="checkbox" onChange={e => {
-                          if (e.target.checked) setNovoFat({...novoFat, unidades: [...novoFat.unidades, { id: u.id, pgr: false, pgr_valor: 0, ltcat: false, ltcat_valor: 0, aep_aet: false, aep_aet_valor: 0 }]});
-                        }} style={{ accentColor: 'var(--purple)' }} checked={false} />
-                        <b>{u.cnpj}</b> - {u.filial} <small style={{ color: 'var(--muted)' }}>({u.regional} - {u.uf})</small>
-                      </label>
-                    ))}
+                  <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
+                    <table className="table" style={{ margin: 0, fontSize: '11px' }}>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+                        <tr><th style={{ width: '40px' }}></th><th>CNPJ / Filial</th><th>Regional / UF</th></tr>
+                      </thead>
+                      <tbody>
+                        {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
+                          <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => setNovoFat({...novoFat, unidades: [...novoFat.unidades, { id: u.id, pgr: false, pgr_valor: 0, ltcat: false, ltcat_valor: 0, aep_aet: false, aep_aet_valor: 0 }]})}>
+                            <td style={{ textAlign: 'center', padding: '6px' }}>
+                              <input type="checkbox" checked={false} readOnly style={{ accentColor: 'var(--purple)' }} />
+                            </td>
+                            <td style={{ padding: '6px' }}><b>{u.cnpj}</b><br/>{u.filial}</td>
+                            <td style={{ padding: '6px' }}>{u.regional} - {u.uf}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
                 {/* Lado Direito - Selecionadas */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
+                <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0 }}>
                   <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--purple)' }}>Unidades Selecionadas ({novoFat.unidades.length})</h3>
                   {novoFat.unidades.length > 0 ? (
-                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: '200px' }}>
-                      <table className="table" style={{ margin: 0, fontSize: '12px' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
+                      <table className="table" style={{ margin: 0, fontSize: '11px' }}>
                         <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
                           <tr><th>CNPJ / Filial</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th><th></th></tr>
                         </thead>
@@ -1603,26 +1611,26 @@ function App() {
                             const m = matriz.find(x => x.id === u.id);
                             return (
                               <tr key={u.id}>
-                                <td><b>{m?.cnpj}</b><br/>{m?.filial}</td>
-                                <td>
+                                <td style={{ padding: '4px 8px' }}><b>{m?.cnpj}</b><br/>{m?.filial}</td>
+                                <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <input type="checkbox" checked={u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
                                     <CurrencyInput value={u.pgr_valor || 0} disabled={!u.pgr} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
-                                <td>
+                                <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <input type="checkbox" checked={u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
                                     <CurrencyInput value={u.ltcat_valor || 0} disabled={!u.ltcat} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
-                                <td>
+                                <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <input type="checkbox" checked={u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
                                     <CurrencyInput value={u.aep_aet_valor || 0} disabled={!u.aep_aet} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
-                                <td>
+                                <td style={{ padding: '4px 8px' }}>
                                   <button onClick={() => setNovoFat({...novoFat, unidades: novoFat.unidades.filter((_, i) => i !== idx)})} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer' }}><Trash2 size={14} /></button>
                                 </td>
                               </tr>
