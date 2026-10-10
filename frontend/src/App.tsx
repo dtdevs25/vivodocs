@@ -157,7 +157,8 @@ function App() {
   const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: 2, validade_aep: 2, validade_aet: 2, validade_nr01: 2 });
   const [clearedNotifs, setClearedNotifs] = useState<number[]>([]);
   
-  const getValidadeAnos = (doc: string) => {
+  const getValidadeAnos = (doc: string, u?: any) => {
+    if (doc === 'PGR' && u && u.escopo_iso_45001) return 3;
     const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet, NR01: notifConfig.validade_nr01 };
     return map[doc] || 2;
   };
@@ -751,7 +752,8 @@ function App() {
 
   const renderExpiryModal = () => {
     if (!expiryInfo) return null;
-    const v = expiryInfo.raw ? getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc, getValidadeAnos(expiryInfo.doc)) : null;
+    const unit = matriz.find((m: any) => m.id === expiryInfo.unitId);
+    const v = expiryInfo.raw ? getDocValidity(expiryInfo.doc, expiryInfo.raw, expiryInfo.venc, getValidadeAnos(expiryInfo.doc, unit)) : null;
     
     let color = 'var(--muted)';
     let bg = '#f3f4f6';
@@ -1008,7 +1010,7 @@ function App() {
                       { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento, docId: selectedUnit.ltcat_doc_id, fileName: selectedUnit.ltcat_arquivo_nome },
                       { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento, docId: selectedUnit.aep_doc_id, fileName: selectedUnit.aep_arquivo_nome },
                     ].map(({ doc, raw, venc, docId, fileName }) => {
-                      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc));
+                      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, selectedUnit));
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
                       return (
@@ -1223,7 +1225,7 @@ function App() {
     );
 
     const docCell = (doc: string, u: any, raw: string, venc: string | undefined, statusTxt: string, lista?: string, docId?: number, fileName?: string, fileUrl?: string) => {
-      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc));
+      const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
       if (v) {
         return v.valido
           ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))

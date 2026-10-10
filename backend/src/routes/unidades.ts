@@ -150,11 +150,12 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     
     // Fetch ONLY the latest document per unit/type to avoid overcounting historical records
     const { rows: docs } = await query(`
-      SELECT DISTINCT ON (unidade_id, tipo_documento) 
-        tipo_documento, ano, status 
-      FROM documentos_sst 
-      WHERE tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')
-      ORDER BY unidade_id, tipo_documento, created_at DESC, id DESC
+      SELECT DISTINCT ON (d.unidade_id, d.tipo_documento) 
+        d.tipo_documento, d.ano, d.status, u.escopo_iso_45001 
+      FROM documentos_sst d
+      JOIN unidades u ON d.unidade_id = u.id
+      WHERE d.tipo_documento IN ('PGR', 'LTCAT', 'AET', 'AEP')
+      ORDER BY d.unidade_id, d.tipo_documento, d.created_at DESC, d.id DESC
     `);
     
     const counts = {
@@ -169,11 +170,14 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       if (!counts[type]) return;
       
       const year = parseInt(d.ano);
+      const validadeOffset = (d.tipo_documento === 'PGR' && d.escopo_iso_45001) ? 1 : 0;
+      const effectiveYear = year + validadeOffset;
+      
       if (d.status === 'Venceu') counts[type].vencidos++;
       else if (d.status === 'Vigente') counts[type].vigentes++;
-      else if (year >= 2026) counts[type].vigentes++;
-      else if (year === 2025) counts[type].vencendo++;
-      else if (year <= 2024) counts[type].vencidos++;
+      else if (effectiveYear >= 2026) counts[type].vigentes++;
+      else if (effectiveYear === 2025) counts[type].vencendo++;
+      else if (effectiveYear <= 2024) counts[type].vencidos++;
       else counts[type].pendentes++;
     });
     
