@@ -840,7 +840,15 @@ function App() {
       }
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
-      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase().includes(searchQuery.toLowerCase());
+      let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase();
+      const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
+        const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
+        return v ? !v.valido : (statusTxt || '').toLowerCase().includes('venc');
+      };
+      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
+        searchStr += ' vencido vencidos';
+      }
+      return searchStr.includes(searchQuery.toLowerCase());
     });
 
     const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
@@ -1220,7 +1228,15 @@ function App() {
       if (matrizTipo === 'techs' && k !== 'tech') return false;
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
-      return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase().includes(searchQuery.toLowerCase());
+      let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
+      const checkVenc = (doc: string, raw: string, venc: string, statusTxt: string) => {
+        const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
+        return v ? !v.valido : (statusTxt || '').toLowerCase().includes('venc');
+      };
+      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento, u.pgr) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento, u.ltcat) || checkVenc('AEP', u.aep_data, u.aep_vencimento, u.aep) || checkVenc('AET', u.aet_data, u.aet_vencimento, u.aet) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento, u.nr01)) {
+        searchStr += ' vencido vencidos';
+      }
+      return searchStr.includes(searchQuery.toLowerCase());
     });
 
     const allRegionais = [...new Set(matriz.map((u: any) => u.regional).filter(Boolean))].sort();
