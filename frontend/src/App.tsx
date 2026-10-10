@@ -1743,25 +1743,35 @@ function App() {
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#1e293b', fontSize: '15px' }}>Receita por Tipo de Documento (R$)</h3>
-                <div style={{ flex: 1, minHeight: '300px' }}>
+                <div style={{ flex: 1, minHeight: '240px' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={faturamento.map(f => {
-                        let pgr = 0, ltcat = 0, aet = 0;
-                        if (f.unidades_detalhadas && f.unidades_detalhadas.length > 0) {
-                          f.unidades_detalhadas.forEach((u: any) => {
-                            if (u.pgr) pgr += Number(u.pgr_valor) || 0;
-                            if (u.ltcat) ltcat += Number(u.ltcat_valor) || 0;
-                            if (u.aep_aet) aet += Number(u.aep_aet_valor) || 0;
-                          });
-                        } else {
-                          pgr = (f.qtd_pgr || 0) * (f.valor_unit_pgr || 0);
-                          ltcat = (f.qtd_ltcat || 0) * (f.valor_unit_ltcat || 0);
-                          aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
-                        }
-                        return { name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr, ltcat, aet };
-                      }).reverse()} margin={{ top: 10, right: 30, left: 20, bottom: 30 }}>
+                    <BarChart data={(() => {
+                        const grouped = faturamento.reduce((acc: any[], f: any) => {
+                          const name = f.lista_lote ? String(f.lista_lote).split('-')[0].trim().toUpperCase() : 'N/A';
+                          let pgr = 0, ltcat = 0, aet = 0;
+                          if (f.unidades_detalhadas && f.unidades_detalhadas.length > 0) {
+                            f.unidades_detalhadas.forEach((u: any) => {
+                              if (u.pgr) pgr += Number(u.pgr_valor) || 0;
+                              if (u.ltcat) ltcat += Number(u.ltcat_valor) || 0;
+                              if (u.aep_aet) aet += Number(u.aep_aet_valor) || 0;
+                            });
+                          } else {
+                            pgr = (f.qtd_pgr || 0) * (f.valor_unit_pgr || 0);
+                            ltcat = (f.qtd_ltcat || 0) * (f.valor_unit_ltcat || 0);
+                            aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
+                          }
+                          const existing = acc.find(x => x.name === name);
+                          if (existing) {
+                            existing.pgr += pgr; existing.ltcat += ltcat; existing.aet += aet;
+                          } else {
+                            acc.push({ name, pgr, ltcat, aet, date: f.created_at });
+                          }
+                          return acc;
+                        }, []);
+                        return grouped.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                      })()} margin={{ top: 20, right: 30, left: 20, bottom: 40 }} maxBarSize={60}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
+                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} dy={15} height={60} interval={0} />
                       <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} width={80} />
                       <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: any) => `R$ ${Number(val || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                       <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
