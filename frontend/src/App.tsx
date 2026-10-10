@@ -839,12 +839,28 @@ function App() {
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto', alignItems: 'center' }}>
-            <input
-              className="search"
-              placeholder="Buscar por CNPJ, nome, cidade, tipo..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                className="search"
+                placeholder="Buscar por CNPJ, nome, cidade, tipo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingRight: searchQuery ? '30px' : '12px' }}
+              />
+              {searchQuery && (
+                <button
+                  title="Limpar busca"
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute', right: '6px', background: 'none', border: 'none',
+                    color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '4px', borderRadius: '50%', fontSize: '12px', fontWeight: 'bold'
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink)'; (e.currentTarget as HTMLButtonElement).style.background = '#e5e7eb'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+                >✕</button>
+              )}
+            </div>
             <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
