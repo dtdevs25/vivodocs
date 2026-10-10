@@ -1687,40 +1687,63 @@ function App() {
               <button className="modal-close" onClick={() => setFaturamentoChartOpen(false)}>×</button>
             </div>
             <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', overflowY: 'auto', background: '#f8fafc' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ background: '#f3e8ff', padding: '12px', borderRadius: '50%', color: '#6d28d9' }}><LayoutDashboard size={24} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>Total Lançamentos</h4>
-                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamento.length}</p>
-                  </div>
-                </div>
-                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ background: '#ecfdf5', padding: '12px', borderRadius: '50%', color: '#10b981' }}><ShieldCheck size={24} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>PGRs Emitidos</h4>
-                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_pgr || 0}</p>
-                  </div>
-                </div>
-                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ background: '#fdf2f8', padding: '12px', borderRadius: '50%', color: '#ec4899' }}><FileCheck size={24} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>LTCATs Emitidos</h4>
-                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_ltcat || 0}</p>
-                  </div>
-                </div>
-                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ background: '#eff6ff', padding: '12px', borderRadius: '50%', color: '#3b82f6' }}><Users size={24} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>AEP/AETs Emitidos</h4>
-                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_aet || 0}</p>
-                  </div>
-                </div>
-              </div>
+              {(() => {
+                const totalPGR = faturamento.reduce((acc: number, f: any) => {
+                  let p = 0;
+                  if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.pgr) p += Number(u.pgr_valor)||0 });
+                  else p = (f.qtd_pgr||0)*(f.valor_unit_pgr||0);
+                  return acc + p;
+                }, 0);
+                const totalLTCAT = faturamento.reduce((acc: number, f: any) => {
+                  let p = 0;
+                  if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.ltcat) p += Number(u.ltcat_valor)||0 });
+                  else p = (f.qtd_ltcat||0)*(f.valor_unit_ltcat||0);
+                  return acc + p;
+                }, 0);
+                const totalAET = faturamento.reduce((acc: number, f: any) => {
+                  let p = 0;
+                  if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.aep_aet) p += Number(u.aep_aet_valor)||0 });
+                  else p = (f.qtd_aet||0)*(f.valor_unit_aet||0);
+                  return acc + p;
+                }, 0);
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ margin: '0 0 24px 0', color: '#1e293b', fontSize: '16px' }}>Receita por Tipo de Documento (R$)</h3>
-                <div style={{ flex: 1, minHeight: '400px' }}>
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                    <div className="card" style={{ padding: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      <div style={{ background: '#f3e8ff', padding: '12px', borderRadius: '50%', color: '#6d28d9' }}><LayoutDashboard size={24} /></div>
+                      <div>
+                        <h4 style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500' }}>Lançamentos</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>{faturamento.length}</p>
+                      </div>
+                    </div>
+                    <div className="card" style={{ padding: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      <div style={{ background: '#ecfdf5', padding: '12px', borderRadius: '50%', color: '#10b981' }}><ShieldCheck size={24} /></div>
+                      <div>
+                        <h4 style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500' }}>Receita PGR</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>R$ {totalPGR.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+                      </div>
+                    </div>
+                    <div className="card" style={{ padding: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      <div style={{ background: '#fdf2f8', padding: '12px', borderRadius: '50%', color: '#ec4899' }}><FileCheck size={24} /></div>
+                      <div>
+                        <h4 style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500' }}>Receita LTCAT</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>R$ {totalLTCAT.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+                      </div>
+                    </div>
+                    <div className="card" style={{ padding: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      <div style={{ background: '#eff6ff', padding: '12px', borderRadius: '50%', color: '#3b82f6' }}><Users size={24} /></div>
+                      <div>
+                        <h4 style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500' }}>Receita AEP/AET</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>R$ {totalAET.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#1e293b', fontSize: '15px' }}>Receita por Tipo de Documento (R$)</h3>
+                <div style={{ flex: 1, minHeight: '300px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={faturamento.map(f => {
                         let pgr = 0, ltcat = 0, aet = 0;
@@ -1736,15 +1759,15 @@ function App() {
                           aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
                         }
                         return { name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr, ltcat, aet };
-                      }).reverse()} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
+                      }).reverse()} margin={{ top: 10, right: 30, left: 20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} dy={10} />
-                      <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} width={80} />
+                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
+                      <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} width={80} />
                       <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: any) => `R$ ${Number(val || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                      <Legend wrapperStyle={{ paddingTop: '30px' }} iconType="circle" />
-                      <Bar dataKey="pgr" name="Receita PGR" fill="#10b981" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#10b981', fontSize: 12, fontWeight: 'bold' }} />
-                      <Bar dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#ec4899', fontSize: 12, fontWeight: 'bold' }} />
-                      <Bar dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#3b82f6', fontSize: 12, fontWeight: 'bold' }} />
+                      <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
+                      <Bar stackId="a" dataKey="pgr" name="Receita PGR" fill="#10b981" label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
+                      <Bar stackId="a" dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
+                      <Bar stackId="a" dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'inside', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#fff', fontSize: 11, fontWeight: 'bold' }} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
