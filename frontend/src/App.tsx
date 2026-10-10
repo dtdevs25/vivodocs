@@ -1580,7 +1580,7 @@ function App() {
                   <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
                     <table className="table" style={{ margin: 0, fontSize: '11px' }}>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-                        <tr><th style={{ width: '40px' }}></th><th>CNPJ / Filial</th><th>Regional / UF</th></tr>
+                        <tr><th style={{ width: '40px' }}></th><th>Unidade</th><th>Regional</th><th>UF</th></tr>
                       </thead>
                       <tbody>
                         {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
@@ -1588,8 +1588,11 @@ function App() {
                             <td style={{ textAlign: 'center', padding: '6px' }}>
                               <input type="checkbox" checked={false} readOnly style={{ accentColor: 'var(--purple)' }} />
                             </td>
-                            <td style={{ padding: '6px' }}><b>{u.cnpj}</b><br/>{u.filial}</td>
-                            <td style={{ padding: '6px' }}>{u.regional} - {u.uf}</td>
+                            <td style={{ padding: '6px' }} title={`${u.cnpj} - ${u.filial}`}>
+                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px', display: 'inline-block', verticalAlign: 'middle' }}><b>{u.cnpj}</b> - {u.filial}</span>
+                            </td>
+                            <td style={{ padding: '6px' }}>{u.regional}</td>
+                            <td style={{ padding: '6px' }}>{u.uf}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1604,14 +1607,16 @@ function App() {
                     <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
                       <table className="table" style={{ margin: 0, fontSize: '11px' }}>
                         <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-                          <tr><th>CNPJ / Filial</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th><th></th></tr>
+                          <tr><th>Unidade</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th><th></th></tr>
                         </thead>
                         <tbody>
                           {novoFat.unidades.map((u: any, idx) => {
                             const m = matriz.find(x => x.id === u.id);
                             return (
                               <tr key={u.id}>
-                                <td style={{ padding: '4px 8px' }}><b>{m?.cnpj}</b><br/>{m?.filial}</td>
+                                <td style={{ padding: '4px 8px' }} title={`${m?.cnpj} - ${m?.filial}`}>
+                                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px', display: 'inline-block', verticalAlign: 'middle' }}><b>{m?.cnpj}</b> - {m?.filial}</span>
+                                </td>
                                 <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <input type="checkbox" checked={u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
