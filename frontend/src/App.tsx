@@ -112,6 +112,9 @@ function App() {
   const [logSearch, setLogSearch] = useState('');
   const [notFoundMsg, setNotFoundMsg] = useState(false);
 
+  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
+  const [matriz, setMatriz] = useState<any[]>([]);
+
   useEffect(() => {
     if (activeTab === 'unidades' || activeTab === 'matriz') {
       const digits = searchQuery.replace(/\D/g, '');
@@ -129,9 +132,6 @@ function App() {
       }
     }
   }, [searchQuery, activeTab, matriz]);
-
-  const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
-  const [matriz, setMatriz] = useState<any[]>([]);
   const [faturamento, setFaturamento] = useState<any[]>([]);
   const [faturamentoResumo, setFaturamentoResumo] = useState<any>({});
   
@@ -817,11 +817,6 @@ function App() {
 
   const renderUnidades = () => {
     const ativasAll = matriz.filter(u => u.status_funcionamento === 'ATIVA');
-    const tabCount = (k: string) => {
-      if (k === 'desmobilizadas') return matriz.filter(u => u.status_funcionamento === 'DESMOBILIZADA').length;
-      if (k === 'todas') return matriz.length;
-      return ativasAll.filter(u => getTipoKey(u) === k).length;
-    };
     const filtered = matriz.filter(u => {
       const isSearching = searchQuery.trim() !== '';
       if (unitSubTab === 'desmobilizadas') {
