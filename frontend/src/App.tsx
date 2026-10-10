@@ -513,6 +513,8 @@ function App() {
 
       const payload = { 
         ...novoFat, 
+        unidades: novoFat.unidades.map((u: any) => typeof u === 'object' ? u.id : u),
+        unidades_dados: novoFat.unidades,
         qtd_pgr: qtdPgr, valor_unit_pgr: 0,
         qtd_ltcat: qtdLtcat, valor_unit_ltcat: 0,
         qtd_aep: 0, valor_unit_aep: 0,
