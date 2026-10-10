@@ -123,6 +123,42 @@ function App() {
   const [matriz, setMatriz] = useState<any[]>([]);
 
   useEffect(() => {
+    if (matriz.length > 0) {
+      let pgrs_vigentes = 0, pgrs_vencendo = 0, pgrs_vencidos = 0;
+      let ltcat_vigentes = 0, ltcat_vencendo = 0, ltcat_vencidos = 0;
+      let aet_vigentes = 0, aet_vencendo = 0, aet_vencidos = 0;
+
+      const checkStatus = (doc: string, u: any, raw: string, venc: string) => {
+        const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
+        if (!v) return null;
+        if (!v.valido) return 'vencido';
+        if (!v.indeterminado && v.dias <= 60) return 'vencendo';
+        return 'vigente';
+      };
+
+      matriz.forEach((u: any) => {
+        if (u.status_funcionamento !== 'ATIVA') return;
+        
+        const pgr = checkStatus('PGR', u, u.pgr_data, u.pgr_vencimento);
+        if (pgr === 'vigente') pgrs_vigentes++; else if (pgr === 'vencendo') pgrs_vencendo++; else if (pgr === 'vencido') pgrs_vencidos++;
+
+        const ltcat = checkStatus('LTCAT', u, u.ltcat_data, u.ltcat_vencimento);
+        if (ltcat === 'vigente') ltcat_vigentes++; else if (ltcat === 'vencendo') ltcat_vencendo++; else if (ltcat === 'vencido') ltcat_vencidos++;
+
+        const aep = checkStatus('AEP', u, u.aep_data, u.aep_vencimento) || checkStatus('AET', u, u.aet_data, u.aet_vencimento);
+        if (aep === 'vigente') aet_vigentes++; else if (aep === 'vencendo') aet_vencendo++; else if (aep === 'vencido') aet_vencidos++;
+      });
+
+      setDashboardData((prev: any) => ({
+        ...prev,
+        pgrs_vigentes, pgrs_vencendo, pgrs_vencidos,
+        ltcat_vigentes, ltcat_vencendo, ltcat_vencidos,
+        aet_vigentes, aet_vencendo, aet_vencidos
+      }));
+    }
+  }, [matriz]);
+
+  useEffect(() => {
     if (activeTab === 'unidades' || activeTab === 'matriz') {
       const digits = searchQuery.replace(/\D/g, '');
       if (digits.length >= 14 && matriz.length > 0) {
@@ -633,12 +669,12 @@ function App() {
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--red)', fontSize: '20px' }}>{dashboardData.pgrs_vencidos}</strong>
+                  <strong style={{ margin: 0, color: 'var(--red)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencidos" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vencido'); }}>{dashboardData.pgrs_vencidos}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencidos</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <strong style={{ margin: 0, color: 'var(--amber)', fontSize: '20px' }}>{dashboardData.pgrs_vencendo}</strong>
+                  <strong style={{ margin: 0, color: 'var(--amber)', fontSize: '20px', cursor: 'pointer' }} title="Ver Vencendo" onClick={(e) => { e.stopPropagation(); setActiveTab('unidades'); setIsoFilter(false); setRegionalFilter(''); setSearchQuery('vencendo'); }}>{dashboardData.pgrs_vencendo}</strong>
                   <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencendo</span>
                 </div>
                 <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
