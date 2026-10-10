@@ -839,22 +839,10 @@ function App() {
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
           <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '8px' }}>
-              {TIPO_TABS.filter(t => t.key !== 'todas').map(t => (
-                <button
-                  key={t.key}
-                  title={`Filtrar por ${t.label}`}
-                  onClick={() => setUnitSubTab(unitSubTab === t.key ? 'todas' : t.key)}
-                  style={{
-                    width: '20px', height: '20px', borderRadius: '50%', border: 'none', cursor: 'pointer', padding: 0,
-                    backgroundColor: t.key === 'loja' ? 'var(--purple)' : t.key === 'predio' ? '#3b82f6' : t.key === 'dg' ? 'var(--amber)' : t.key === 'tech' ? '#0d9488' : 'var(--muted)',
-                    opacity: (unitSubTab === t.key || unitSubTab === 'todas') ? 1 : 0.3,
-                    boxShadow: unitSubTab === t.key ? '0 0 0 2px #fff, 0 0 0 4px var(--ink)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                />
-              ))}
-            </div>
+            <select value={unitSubTab === 'todas' ? '' : unitSubTab} onChange={(e) => setUnitSubTab(e.target.value as any || 'todas')} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
+              <option value="">Todos os Tipos</option>
+              {TIPO_TABS.filter(t => t.key !== 'todas').map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+            </select>
             <input
               className="search"
               placeholder="Buscar por CNPJ, nome, cidade, tipo..."
@@ -883,17 +871,14 @@ function App() {
           </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th style={{width: '30px'}}></th><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
               <tbody>
                 {filtered.length === 0
-                  ? <tr><td colSpan={9} className="empty">Nenhuma unidade encontrada.</td></tr>
+                  ? <tr><td colSpan={8} className="empty">Nenhuma unidade encontrada.</td></tr>
                   : filtered.map((u: any) => {
                     const badge = tipoBadge(u);
                     return (
                       <tr key={u.id} style={{ backgroundColor: u.status_funcionamento === 'ATIVA' ? '#f0fdf4' : '#fef2f2' }}>
-                        <td>
-                          <div style={{ width: '12px', height: '12px', borderRadius: '50%', margin: '0 auto', backgroundColor: getTipoKey(u) === 'loja' ? 'var(--purple)' : getTipoKey(u) === 'predio' ? '#3b82f6' : getTipoKey(u) === 'dg' ? 'var(--amber)' : getTipoKey(u) === 'tech' ? '#0d9488' : 'var(--muted)' }} title={badge.label}></div>
-                        </td>
                         <td>
                           <b>{u.filial}</b>
                           <small style={{ color: 'var(--muted)' }}>{u.cnpj}</small>
