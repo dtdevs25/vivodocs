@@ -10,7 +10,12 @@ const router = express.Router();
 // GET all faturamento records
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM faturamento_lancamentos ORDER BY created_at DESC');
+    const result = await query(`
+      SELECT f.*, 
+        (SELECT json_agg(unidade_id) FROM faturamento_lancamento_unidades flu WHERE flu.lancamento_id = f.id) as unidades
+      FROM faturamento_lancamentos f
+      ORDER BY created_at DESC
+    `);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching faturamento:', error);

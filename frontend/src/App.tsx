@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, LogOut, LayoutDashboard, Building2, FileCheck, CircleDollarSign, Users, Globe, ShieldCheck, FileSearch, UserCog, Eye, EyeOff, Pencil, Trash2, Bell, FileSpreadsheet, Mail, BarChart2, Calendar, X, Settings } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx-js-style';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ResponsiveContainer } from 'recharts';
 
 type Role = 'master' | 'admin' | 'editor' | 'visualizador';
 
@@ -1495,7 +1495,7 @@ function App() {
         <div><h1>Faturamento e Custos</h1></div>
         <div className="actions" style={{ display: 'flex', gap: '8px' }}>
           <button className="btn" style={{ background: '#f3e8ff', color: 'var(--purple)', borderColor: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setFaturamentoChartOpen(true)}>
-            <BarChart2 size={16} /> Evolução Mensal
+            <BarChart2 size={16} /> Dashboard
           </button>
           <button className="btn primary" onClick={() => { setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}>＋ Lançamento</button>
         </div>
@@ -1674,22 +1674,48 @@ function App() {
 
       {faturamentoChartOpen && (
         <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setFaturamentoChartOpen(false)}>
-          <div className="modal-box" style={{ width: '800px', maxWidth: '90vw' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-box" style={{ width: '1200px', maxWidth: '95vw', height: '85vh', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-title"><h2>Evolução Mensal do Faturamento</h2></div>
+              <div className="modal-title"><h2>Dashboard de Faturamento</h2></div>
               <button className="modal-close" onClick={() => setFaturamentoChartOpen(false)}>×</button>
             </div>
-            <div className="modal-body" style={{ display: 'flex', justifyContent: 'center', paddingTop: '20px' }}>
-                <BarChart width={740} height={360} data={faturamento.map(f => ({ name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), valor: parseFloat(f.valor_total || '0') })).reverse()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={(val) => `R$ ${(val/1000)}k`} tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} width={80} />
-                  <Tooltip formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Total']} cursor={{ fill: '#f3f4f6' }} />
-                  <Bar dataKey="valor" fill="var(--purple)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-            </div>
-            <div className="modal-footer" style={{ justifyContent: 'center' }}>
-               <small style={{ color: 'var(--muted)' }}>Dados baseados nos lançamentos registrados.</small>
+            <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', overflowY: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                <div className="card" style={{ padding: '16px', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '8px' }}>
+                  <h4 style={{ margin: 0, color: '#6d28d9', fontSize: '13px' }}>Total Lançamentos</h4>
+                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#5b21b6' }}>{faturamento.length}</p>
+                </div>
+                <div className="card" style={{ padding: '16px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px' }}>
+                  <h4 style={{ margin: 0, color: '#047857', fontSize: '13px' }}>Total PGR</h4>
+                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#065f46' }}>{faturamentoResumo.total_pgr || 0}</p>
+                </div>
+                <div className="card" style={{ padding: '16px', background: '#fdf2f8', border: '1px solid #fbcfe8', borderRadius: '8px' }}>
+                  <h4 style={{ margin: 0, color: '#be185d', fontSize: '13px' }}>Total LTCAT</h4>
+                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#9d174d' }}>{faturamentoResumo.total_ltcat || 0}</p>
+                </div>
+                <div className="card" style={{ padding: '16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px' }}>
+                  <h4 style={{ margin: 0, color: '#1d4ed8', fontSize: '13px' }}>Total AEP/AET</h4>
+                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e40af' }}>{faturamentoResumo.total_aet || 0}</p>
+                </div>
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px', padding: '16px' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: 'var(--text)' }}>Evolução de Documentos Emitidos (Por Lote)</h3>
+                <div style={{ flex: 1, minHeight: '300px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={faturamento.map(f => ({ name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr: f.qtd_pgr || 0, ltcat: f.qtd_ltcat || 0, aet: f.qtd_aet || 0 })).reverse()} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar dataKey="pgr" name="PGR" fill="#10b981" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
+                      <Bar dataKey="ltcat" name="LTCAT" fill="#ec4899" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
+                      <Bar dataKey="aet" name="AEP/AET" fill="#3b82f6" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </div>
         </div>
