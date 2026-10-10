@@ -847,13 +847,29 @@ function App() {
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${getTipoKey(u)}`.toLowerCase();
-      const checkVenc = (doc: string, raw: string, venc: string) => {
+      const checkStatus = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        return v ? !v.valido : false;
+        if (!v) return null;
+        if (!v.valido) return 'vencido';
+        if (!v.indeterminado && v.dias <= 60) return 'vencendo';
+        return null;
       };
-      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento) || checkVenc('AEP', u.aep_data, u.aep_vencimento) || checkVenc('AET', u.aet_data, u.aet_vencimento) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento)) {
-        searchStr += ' vencido vencidos';
-      }
+      
+      let isVencido = false, isVencendo = false;
+      [
+        { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
+        { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
+        { doc: 'AEP', raw: u.aep_data, venc: u.aep_vencimento },
+        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento },
+        { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
+      ].forEach(d => {
+        const s = checkStatus(d.doc, d.raw, d.venc);
+        if (s === 'vencido') isVencido = true;
+        if (s === 'vencendo') isVencendo = true;
+      });
+
+      if (isVencido) searchStr += ' vencido vencidos';
+      if (isVencendo) searchStr += ' vencendo';
       return searchStr.includes(searchQuery.toLowerCase());
     });
 
@@ -1240,13 +1256,29 @@ function App() {
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
       let searchStr = `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase();
-      const checkVenc = (doc: string, raw: string, venc: string) => {
+      const checkStatus = (doc: string, raw: string, venc: string) => {
         const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
-        return v ? !v.valido : false;
+        if (!v) return null;
+        if (!v.valido) return 'vencido';
+        if (!v.indeterminado && v.dias <= 60) return 'vencendo';
+        return null;
       };
-      if (checkVenc('PGR', u.pgr_data, u.pgr_vencimento) || checkVenc('LTCAT', u.ltcat_data, u.ltcat_vencimento) || checkVenc('AEP', u.aep_data, u.aep_vencimento) || checkVenc('AET', u.aet_data, u.aet_vencimento) || checkVenc('NR01', u.nr01_data, u.nr01_vencimento)) {
-        searchStr += ' vencido vencidos';
-      }
+      
+      let isVencido = false, isVencendo = false;
+      [
+        { doc: 'PGR', raw: u.pgr_data, venc: u.pgr_vencimento },
+        { doc: 'LTCAT', raw: u.ltcat_data, venc: u.ltcat_vencimento },
+        { doc: 'AEP', raw: u.aep_data, venc: u.aep_vencimento },
+        { doc: 'AET', raw: u.aet_data, venc: u.aet_vencimento },
+        { doc: 'NR01', raw: u.nr01_data, venc: u.nr01_vencimento }
+      ].forEach(d => {
+        const s = checkStatus(d.doc, d.raw, d.venc);
+        if (s === 'vencido') isVencido = true;
+        if (s === 'vencendo') isVencendo = true;
+      });
+
+      if (isVencido) searchStr += ' vencido vencidos';
+      if (isVencendo) searchStr += ' vencendo';
       return searchStr.includes(searchQuery.toLowerCase());
     });
 
