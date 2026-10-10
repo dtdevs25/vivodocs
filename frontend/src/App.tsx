@@ -238,7 +238,7 @@ function App() {
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
   const [novoFat, setNovoFat] = useState({
     id: null as number | null,
-    lista_lote: '', justificativa: '',
+    lista_lote: '', justificativa: '', created_at: null as string | null,
     qtd_pgr: 0, valor_unit_pgr: 0,
     qtd_ltcat: 0, valor_unit_ltcat: 0,
     qtd_aep: 0, valor_unit_aep: 0,
@@ -532,7 +532,7 @@ function App() {
         openAlert('Sucesso', 'Lançamento salvo!');
       }
       setFaturamentoModalOpen(false);
-      setNovoFat({ id: null, lista_lote: '', justificativa: '', qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
+      setNovoFat({ id: null, lista_lote: '', justificativa: '', created_at: null, qtd_pgr: 0, valor_unit_pgr: 0, qtd_ltcat: 0, valor_unit_ltcat: 0, qtd_aep: 0, valor_unit_aep: 0, qtd_aet: 0, valor_unit_aet: 0, qtd_insalubridade: 0, valor_unit_insalubridade: 0, qtd_diversos: 0, valor_unit_diversos: 0, desconto: 0, unidades: [] });
       fetchFaturamento();
     } catch (err) {
       openAlert('Erro', 'Erro ao salvar lançamento');
@@ -1544,8 +1544,8 @@ function App() {
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
-                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
                     </td>
@@ -1740,11 +1740,11 @@ function App() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} dy={10} />
                       <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} width={80} />
-                      <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                      <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: any) => `R$ ${Number(val || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                       <Legend wrapperStyle={{ paddingTop: '30px' }} iconType="circle" />
-                      <Bar dataKey="pgr" name="Receita PGR" fill="#10b981" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#10b981', fontSize: 12, fontWeight: 'bold' }} />
-                      <Bar dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#ec4899', fontSize: 12, fontWeight: 'bold' }} />
-                      <Bar dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#3b82f6', fontSize: 12, fontWeight: 'bold' }} />
+                      <Bar dataKey="pgr" name="Receita PGR" fill="#10b981" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#10b981', fontSize: 12, fontWeight: 'bold' }} />
+                      <Bar dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#ec4899', fontSize: 12, fontWeight: 'bold' }} />
+                      <Bar dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: any) => Number(v) > 0 ? `R$ ${(Number(v)/1000).toFixed(1)}k` : '', fill: '#3b82f6', fontSize: 12, fontWeight: 'bold' }} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
