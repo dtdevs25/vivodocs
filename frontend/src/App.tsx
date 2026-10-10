@@ -1788,7 +1788,6 @@ function App() {
     setActiveTab(tab);
     setSearchQuery('');
     setIsoFilter(false);
-    setSesmtFilter(false);
     setRegionalFilter('');
   };
 
