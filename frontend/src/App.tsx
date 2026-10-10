@@ -1525,22 +1525,25 @@ function App() {
         </div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Lote / Período</th><th>PGR / LTCAT / AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th><th>Ações</th></tr></thead>
+            <thead><tr><th style={{ maxWidth: '150px' }}>Lote / Período</th><th style={{ textAlign: 'center' }}>PGR</th><th style={{ textAlign: 'center' }}>LTCAT</th><th style={{ textAlign: 'center' }}>AEP/AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th><th>Ações</th></tr></thead>
             <tbody>
               {faturamento.map(f => {
                 const total = parseFloat(f.valor_total || '0');
                 const desc = parseFloat(f.desconto || '0');
                 return (
                   <tr key={f.id}>
-                    <td><b>{f.lista_lote}</b><br/><small>{f.justificativa}</small></td>
-                    <td>
-                      <small>PGR: {f.qtd_pgr} | LTCAT: {f.qtd_ltcat} | AET: {f.qtd_aet}</small>
+                    <td style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${f.lista_lote} - ${f.justificativa || ''}`}>
+                      <b>{f.lista_lote}</b><br/><small style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.justificativa}</small>
                     </td>
+                    <td style={{ textAlign: 'center' }}>{f.qtd_pgr || 0}</td>
+                    <td style={{ textAlign: 'center' }}>{f.qtd_ltcat || 0}</td>
+                    <td style={{ textAlign: 'center' }}>{f.qtd_aet || 0}</td>
                     <td style={{ color: 'var(--red)' }}>R$ {desc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td><b>R$ {total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b></td>
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
+                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
                         <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
