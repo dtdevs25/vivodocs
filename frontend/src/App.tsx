@@ -216,8 +216,9 @@ function App() {
     qtd_insalubridade: 0, valor_unit_insalubridade: 0,
     qtd_diversos: 0, valor_unit_diversos: 0,
     desconto: 0,
-    unidades: [] as number[]
+    unidades: [] as any[]
   });
+  const [fatSearchQuery, setFatSearchQuery] = useState('');
   const [deleteFatTarget, setDeleteFatTarget] = useState<any>(null);
 
   const handleExportExcel = (filteredData: any[], fileName: string) => {
@@ -472,15 +473,25 @@ function App() {
 
   const handleSalvarFaturamento = async () => {
     try {
-      const calcTotal = (
-        novoFat.qtd_pgr * novoFat.valor_unit_pgr +
-        novoFat.qtd_ltcat * novoFat.valor_unit_ltcat +
-        novoFat.qtd_aep * novoFat.valor_unit_aep +
-        novoFat.qtd_aet * novoFat.valor_unit_aet +
-        novoFat.qtd_insalubridade * novoFat.valor_unit_insalubridade +
-        novoFat.qtd_diversos * novoFat.valor_unit_diversos
-      );
-      const payload = { ...novoFat, valor_total: calcTotal - novoFat.desconto };
+      let calcTotal = 0;
+      let qtdPgr = 0, qtdLtcat = 0, qtdAepAet = 0;
+      
+      novoFat.unidades.forEach((u: any) => {
+        if (u.pgr) { calcTotal += Number(u.pgr_valor) || 0; qtdPgr++; }
+        if (u.ltcat) { calcTotal += Number(u.ltcat_valor) || 0; qtdLtcat++; }
+        if (u.aep_aet) { calcTotal += Number(u.aep_aet_valor) || 0; qtdAepAet++; }
+      });
+
+      const payload = { 
+        ...novoFat, 
+        qtd_pgr: qtdPgr, valor_unit_pgr: 0,
+        qtd_ltcat: qtdLtcat, valor_unit_ltcat: 0,
+        qtd_aep: 0, valor_unit_aep: 0,
+        qtd_aet: qtdAepAet, valor_unit_aet: 0,
+        qtd_insalubridade: 0, valor_unit_insalubridade: 0,
+        qtd_diversos: 0, valor_unit_diversos: 0,
+        valor_total: calcTotal - (Number(novoFat.desconto) || 0) 
+      };
       if (novoFat.id) {
         await axios.put(`/api/faturamento/${novoFat.id}`, payload);
         openAlert('Sucesso', 'Lançamento editado!');
@@ -1486,7 +1497,7 @@ function App() {
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: [] }); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
                     </td>
@@ -1515,50 +1526,59 @@ function App() {
                   <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
                 </div>
               </div>
-              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Valores Unitários</h3>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>PGR</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_pgr || ''} onChange={e => setNovoFat({...novoFat, qtd_pgr: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_pgr || ''} onChange={e => setNovoFat({...novoFat, valor_unit_pgr: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Unidades Selecionadas</h3>
+              {novoFat.unidades.length > 0 ? (
+                <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px' }}>
+                  <table className="table" style={{ margin: 0, fontSize: '12px' }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+                      <tr><th>CNPJ / Filial</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                      {novoFat.unidades.map((u: any, idx) => {
+                        const m = matriz.find(x => x.id === u.id);
+                        return (
+                          <tr key={u.id}>
+                            <td><b>{m?.cnpj}</b><br/>{m?.filial}</td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="checkbox" checked={u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                <input type="number" placeholder="R$" value={u.pgr_valor || ''} disabled={!u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.pgr ? 1 : 0.4 }} />
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="checkbox" checked={u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                <input type="number" placeholder="R$" value={u.ltcat_valor || ''} disabled={!u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.ltcat ? 1 : 0.4 }} />
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="checkbox" checked={u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                <input type="number" placeholder="R$" value={u.aep_aet_valor || ''} disabled={!u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = Number(e.target.value); setNovoFat({...novoFat, unidades: arr}); }} style={{ width: '60px', padding: '4px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: u.aep_aet ? 1 : 0.4 }} />
+                              </div>
+                            </td>
+                            <td>
+                              <button onClick={() => setNovoFat({...novoFat, unidades: novoFat.unidades.filter((_, i) => i !== idx)})} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>LTCAT</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_ltcat || ''} onChange={e => setNovoFat({...novoFat, qtd_ltcat: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_ltcat || ''} onChange={e => setNovoFat({...novoFat, valor_unit_ltcat: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>AEP</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_aep || ''} onChange={e => setNovoFat({...novoFat, qtd_aep: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_aep || ''} onChange={e => setNovoFat({...novoFat, valor_unit_aep: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>AET</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_aet || ''} onChange={e => setNovoFat({...novoFat, qtd_aet: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_aet || ''} onChange={e => setNovoFat({...novoFat, valor_unit_aet: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>Insalubridade</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_insalubridade || ''} onChange={e => setNovoFat({...novoFat, qtd_insalubridade: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_insalubridade || ''} onChange={e => setNovoFat({...novoFat, valor_unit_insalubridade: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ width: '100px', fontWeight: 'bold' }}>Diversos</span>
-                  <input type="number" placeholder="Qtd" value={novoFat.qtd_diversos || ''} onChange={e => setNovoFat({...novoFat, qtd_diversos: Number(e.target.value)})} style={{ width: '70px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                  <input type="number" placeholder="R$ Unit" value={novoFat.valor_unit_diversos || ''} onChange={e => setNovoFat({...novoFat, valor_unit_diversos: Number(e.target.value)})} style={{ width: '90px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
-                </div>
-              </div>
-              
-              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Selecione as Unidades (CNPJs)</h3>
-              <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {matriz.map(u => (
-                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
-                    <input type="checkbox" checked={novoFat.unidades.includes(u.id)} onChange={e => {
-                      if (e.target.checked) setNovoFat({...novoFat, unidades: [...novoFat.unidades, u.id]});
-                      else setNovoFat({...novoFat, unidades: novoFat.unidades.filter(uid => uid !== u.id)});
-                    }} style={{ accentColor: 'var(--purple)' }} />
-                    <b>{u.cnpj}</b> - {u.filial}
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)', background: '#f9fafb', borderRadius: '6px', border: '1px dashed var(--line)' }}>Nenhuma unidade selecionada.</div>
+              )}
+
+              <h3 style={{ margin: '10px 0 0 0', fontSize: '14px', color: 'var(--purple)' }}>Adicionar Unidades (Pesquisa)</h3>
+              <input type="text" placeholder="Buscar por CNPJ, Filial, Regional ou UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
+              <div style={{ maxHeight: '140px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', padding: '4px 8px', borderRadius: '4px' }} onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')} onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                    <input type="checkbox" onChange={e => {
+                      if (e.target.checked) setNovoFat({...novoFat, unidades: [...novoFat.unidades, { id: u.id, pgr: false, pgr_valor: 0, ltcat: false, ltcat_valor: 0, aep_aet: false, aep_aet_valor: 0 }]});
+                    }} style={{ accentColor: 'var(--purple)' }} checked={false} />
+                    <b>{u.cnpj}</b> - {u.filial} <small style={{ color: 'var(--muted)' }}>({u.regional} - {u.uf})</small>
                   </label>
                 ))}
               </div>
@@ -1568,7 +1588,6 @@ function App() {
                   <b>Desconto (R$):</b>
                   <input type="number" value={novoFat.desconto || ''} onChange={e => setNovoFat({...novoFat, desconto: Number(e.target.value)})} style={{ width: '100px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px' }} />
                 </div>
-                <button className="btn" onClick={() => setFaturamentoModalOpen(false)}>Cancelar</button>
                 <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>
               </div>
             </div>
