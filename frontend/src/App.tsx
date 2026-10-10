@@ -957,6 +957,9 @@ function App() {
               {selectedUnit.status_funcionamento === 'DESMOBILIZADA' && (
                 <div className="modal-banner-danger">⚠️ Unidade Desmobilizada</div>
               )}
+              {selectedUnit.status_funcionamento === 'ATIVA' && (
+                <div className="modal-banner-success">✓ Unidade Ativa</div>
+              )}
 
               <div className="modal-header">
                 <div className="modal-title">
@@ -1073,6 +1076,9 @@ function App() {
               
               {editUnit.status_funcionamento === 'DESMOBILIZADA' && (
                 <div className="modal-banner-danger">⚠️ Unidade Desmobilizada</div>
+              )}
+              {editUnit.status_funcionamento === 'ATIVA' && (
+                <div className="modal-banner-success">✓ Unidade Ativa</div>
               )}
 
               <div className="modal-header">

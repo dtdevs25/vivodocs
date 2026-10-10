@@ -445,6 +445,17 @@ button{cursor:pointer}
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+.modal-banner-success {
+  flex-shrink: 0;
+  background: var(--green);
+  color: #fff;
+  padding: 8px 20px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
