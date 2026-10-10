@@ -913,7 +913,7 @@ function App() {
                   <th style={{ width: '22%' }}>Unidade</th>
                   <th style={{ width: '12%' }}>Tipo</th>
                   <th style={{ width: '24%' }}>Localização</th>
-                  <th style={{ width: '10%' }}>Região</th>
+                  <th style={{ width: '10%' }}>UF</th>
                   <th style={{ width: '14%' }}>Regional</th>
                   <th style={{ width: '10%', textAlign: 'center' }}>ISO 45001</th>
                   <th style={{ width: '8%', textAlign: 'center' }}>Ações</th>
