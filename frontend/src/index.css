@@ -482,3 +482,10 @@ button{cursor:pointer}
 .modal-form-group input:focus, .modal-form-group select:focus {
   border-color: var(--purple);
 }
+
+input:disabled, select:disabled, input[readonly], textarea:disabled {
+  color: #000 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #000 !important;
+  font-weight: bold !important;
+}

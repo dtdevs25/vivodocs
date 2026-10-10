@@ -47,9 +47,9 @@ const CurrencyInput = ({ value, onChange, disabled, width = '80px' }: { value: n
       type="text"
       placeholder="R$ 0,00"
       value={displayValue}
-      disabled={disabled}
+      readOnly={disabled}
       onChange={handleChange}
-      style={{ width, padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', opacity: disabled ? 0.4 : 1, textAlign: 'right', background: disabled ? '#f9fafb' : '#fff' }}
+      style={{ width, padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '11px', textAlign: 'right', background: disabled ? '#f9fafb' : '#fff', color: '#000', fontWeight: disabled ? 'bold' : 'normal', outline: 'none' }}
     />
   );
 };
