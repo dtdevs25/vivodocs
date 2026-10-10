@@ -617,25 +617,25 @@ function App() {
               <ShieldCheck size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>Controle PGR</small>
               
-              <div style={{ display: 'flex', gap: '24px', margin: '10px 0 5px', position: 'relative', zIndex: 1 }}>
-                <div>
-                  <strong className="green" style={{ margin: 0 }}>{dashboardData.pgrs_vigentes}</strong>
-                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vigência</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '15px 0 5px', position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <strong className="green" style={{ margin: 0, fontSize: '20px' }}>{dashboardData.pgrs_vigentes}</strong>
+                  <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vigência</span>
                 </div>
-                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
-                <div>
-                  <strong style={{ margin: 0, color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
-                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencidos</span>
+                <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <strong style={{ margin: 0, color: 'var(--red)', fontSize: '20px' }}>{dashboardData.pgrs_vencidos}</strong>
+                  <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencidos</span>
                 </div>
-                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
-                <div>
-                  <strong style={{ margin: 0, color: 'var(--amber)' }}>{dashboardData.pgrs_vencendo}</strong>
-                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencendo</span>
+                <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <strong style={{ margin: 0, color: 'var(--amber)', fontSize: '20px' }}>{dashboardData.pgrs_vencendo}</strong>
+                  <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Vencendo</span>
                 </div>
-                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
-                <div>
-                  <strong style={{ margin: 0, color: 'var(--muted)' }}>{pgrPendentes}</strong>
-                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Pendentes</span>
+                <div style={{ width: '1px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <strong style={{ margin: 0, color: 'var(--muted)', fontSize: '20px' }}>{pgrPendentes}</strong>
+                  <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', textAlign: 'center' }}>Pendentes</span>
                 </div>
               </div>
             </div>
