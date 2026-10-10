@@ -159,8 +159,9 @@ function App() {
   
   const getValidadeAnos = (doc: string, u?: any) => {
     if (doc === 'PGR' && u && u.escopo_iso_45001) return 3;
+    const key = doc === 'AEP / AET' ? 'AET' : doc;
     const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet, NR01: notifConfig.validade_nr01 };
-    return map[doc] || 2;
+    return map[key] || 2;
   };
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
@@ -758,7 +759,7 @@ function App() {
     let color = 'var(--muted)';
     let bg = '#f3f4f6';
     let statusTitle = 'Sem Data Informada';
-    let daysText = 'Não é possível calcular o vencimento';
+    let daysText = 'Data não registrada no sistema';
     let dateText = '—';
     
     if (v) {
@@ -771,7 +772,10 @@ function App() {
     } else if (expiryInfo.statusTxt) {
       const s = expiryInfo.statusTxt.toLowerCase();
       if (s.includes('venc')) { color = 'var(--red)'; bg = '#fef2f2'; statusTitle = 'Vencido (Manual)'; }
-      else if (s.includes('vigente') || s === 'ok') { color = 'var(--green)'; bg = '#ecfdf5'; statusTitle = 'Vigente (Manual)'; }
+      else if (s.includes('vigente') || s === 'ok') { 
+        color = 'var(--green)'; bg = '#ecfdf5'; statusTitle = 'Vigente (Manual)';
+        if (expiryInfo.doc === 'LTCAT') daysText = 'Válido por tempo indeterminado';
+      }
     }
     
     return (
@@ -1006,10 +1010,10 @@ function App() {
                   <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Datas dos Documentos</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                     {[
-                      { doc: 'PGR', raw: selectedUnit.pgr_data, venc: selectedUnit.pgr_vencimento, docId: selectedUnit.pgr_doc_id, fileName: selectedUnit.pgr_arquivo_nome },
-                      { doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento, docId: selectedUnit.ltcat_doc_id, fileName: selectedUnit.ltcat_arquivo_nome },
-                      { doc: 'AEP', raw: selectedUnit.aep_data, venc: selectedUnit.aep_vencimento, docId: selectedUnit.aep_doc_id, fileName: selectedUnit.aep_arquivo_nome },
-                    ].map(({ doc, raw, venc, docId, fileName }) => {
+                      { label: 'PGR', doc: 'PGR', raw: selectedUnit.pgr_data, venc: selectedUnit.pgr_vencimento, docId: selectedUnit.pgr_doc_id, fileName: selectedUnit.pgr_arquivo_nome },
+                      { label: 'LTCAT', doc: 'LTCAT', raw: selectedUnit.ltcat_data, venc: selectedUnit.ltcat_vencimento, docId: selectedUnit.ltcat_doc_id, fileName: selectedUnit.ltcat_arquivo_nome },
+                      { label: 'AEP / AET', doc: 'AEP / AET', raw: selectedUnit.aet_data || selectedUnit.aep_data, venc: selectedUnit.aet_vencimento || selectedUnit.aep_vencimento, docId: selectedUnit.aet_doc_id || selectedUnit.aep_doc_id, fileName: selectedUnit.aet_arquivo_nome || selectedUnit.aep_arquivo_nome },
+                    ].map(({ label, doc, raw, venc, docId, fileName }) => {
                       const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, selectedUnit));
                       const color = !v ? 'var(--muted)' : v.valido ? 'var(--green)' : 'var(--red)';
                       const bg = !v ? '#f9f8fb' : v.valido ? '#ecfdf5' : '#fef2f2';
@@ -1023,7 +1027,7 @@ function App() {
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                           <div>
-                            <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {doc}</div>
+                            <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Último {label}</div>
                             <div style={{ fontSize: '13px', color, fontWeight: '700' }}>{v ? v.emissao.toLocaleDateString('pt-BR') : '—'}</div>
                             {v && <div style={{ fontSize: '10px', color, fontWeight: '600', marginTop: '2px' }}>{v.valido ? '● Válido' : '● Vencido'}</div>}
                           </div>
@@ -1285,8 +1289,7 @@ function App() {
                   <th style={th}>Tipo</th>
                   <th style={th}>PGR</th>
                   <th style={th}>LTCAT</th>
-                  <th style={th}>AEP</th>
-                  <th style={th}>AET</th>
+                  <th style={th}>AEP / AET</th>
                   <th style={th}>NR01</th>
                   <th style={{ ...th, borderLeft: '2px solid var(--line)' }}>ISO 45001</th>
                   <th style={th}>NR 20</th>
@@ -1294,7 +1297,7 @@ function App() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
                 )}
                 {filtered.map(u => {
                   const b = tipoBadge(u);
@@ -1304,8 +1307,7 @@ function App() {
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
                       <td style={td}>{docCell('PGR', u, u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome, u.pgr_arquivo_url)}</td>
                       <td style={td}>{docCell('LTCAT', u, u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome, u.ltcat_arquivo_url)}</td>
-                      <td style={td}>{docCell('AEP', u, u.aep_data, u.aep_vencimento, u.aep, u.aep_lista, u.aep_doc_id, u.aep_arquivo_nome, u.aep_arquivo_url)}</td>
-                      <td style={td}>{docCell('AET', u, u.aet_data, u.aet_vencimento, u.aet, u.aet_lista, u.aet_doc_id, u.aet_arquivo_nome, u.aet_arquivo_url)}</td>
+                      <td style={td}>{docCell('AEP / AET', u, u.aet_data || u.aep_data, u.aet_vencimento || u.aep_vencimento, u.aet || u.aep, u.aet_lista || u.aep_lista, u.aet_doc_id || u.aep_doc_id, u.aet_arquivo_nome || u.aep_arquivo_nome, u.aet_arquivo_url || u.aep_arquivo_url)}</td>
                       <td style={td}>{docCell('NR01', u, u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome, u.nr01_arquivo_url)}</td>
                       <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>
