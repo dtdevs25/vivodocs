@@ -202,7 +202,7 @@ function App() {
     }
   }, [searchQuery, activeTab, matriz]);
   const [faturamento, setFaturamento] = useState<any[]>([]);
-  const [faturamentoResumo, setFaturamentoResumo] = useState<any>({});
+
   
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
@@ -236,6 +236,7 @@ function App() {
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoModalViewOnly, setFaturamentoModalViewOnly] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
+  const [anoFiltroFaturamento, setAnoFiltroFaturamento] = useState(new Date().getFullYear().toString());
   const [novoFat, setNovoFat] = useState({
     id: null as number | null,
     lista_lote: '', mes: '', ano: new Date().getFullYear().toString(), lote: '', justificativa: '', created_at: null as string | null,
@@ -324,7 +325,7 @@ function App() {
   const fetchFaturamento = async () => {
     try { 
       const res = await axios.get('/api/faturamento'); setFaturamento(res.data);
-      const res2 = await axios.get('/api/faturamento/resumo'); setFaturamentoResumo(res2.data);
+
     } catch (e) {}
   };
   const fetchAdminUsers = async () => {
@@ -1503,11 +1504,52 @@ function App() {
     );
   };
 
-  const renderFinanceiro = () => (
+  const renderFinanceiro = () => {
+    const faturamentoFiltrado = faturamento.filter((f: any) => {
+      const parts = f.lista_lote ? String(f.lista_lote).split('-') : [];
+      const mesAno = parts[0] ? parts[0].trim().toUpperCase() : '';
+      const anoStr = mesAno.split('/')[1]?.trim() || new Date().getFullYear().toString();
+      return anoStr === anoFiltroFaturamento;
+    });
+
+    const resumoFiltrado = faturamentoFiltrado.reduce((acc: any, f: any) => {
+      const valLiquido = parseFloat(f.valor_total) || 0;
+      const valBruto = valLiquido + (parseFloat(f.desconto) || 0);
+      let valPgr = 0, valLtcat = 0, valAet = 0;
+      if (f.unidades_detalhadas?.length) {
+        f.unidades_detalhadas.forEach((u: any) => {
+          if (u.pgr) valPgr += Number(u.pgr_valor)||0;
+          if (u.ltcat) valLtcat += Number(u.ltcat_valor)||0;
+          if (u.aep_aet) valAet += Number(u.aep_aet_valor)||0;
+        });
+      } else {
+        valPgr = (f.qtd_pgr||0)*(f.valor_unit_pgr||0);
+        valLtcat = (f.qtd_ltcat||0)*(f.valor_unit_ltcat||0);
+        valAet = (f.qtd_aet||0)*(f.valor_unit_aet||0);
+      }
+      return {
+        total_liquido: acc.total_liquido + valLiquido,
+        total_valor_bruto: acc.total_valor_bruto + valBruto,
+        total_pgr: acc.total_pgr + valPgr,
+        total_ltcat: acc.total_ltcat + valLtcat,
+        total_aet: acc.total_aet + valAet
+      };
+    }, { total_liquido: 0, total_valor_bruto: 0, total_pgr: 0, total_ltcat: 0, total_aet: 0 });
+
+    return (
     <>
       <header className="topbar">
         <div><h1>Faturamento e Custos</h1></div>
         <div className="actions" style={{ display: 'flex', gap: '8px' }}>
+          <select value={anoFiltroFaturamento} onChange={e => setAnoFiltroFaturamento(e.target.value)} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px', fontWeight: 'bold' }}>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
+          </select>
           <button className="btn" style={{ background: '#f3e8ff', color: 'var(--purple)', borderColor: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setFaturamentoChartOpen(true)}>
             <BarChart2 size={16} /> Dashboard
           </button>
@@ -1519,30 +1561,30 @@ function App() {
           <div className="card interactive" style={{ position: 'relative', background: '#f0fdf4', border: '1px solid #bbf7d0', borderLeft: '4px solid var(--green)' }}>
             <CircleDollarSign size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>Total Líquido (Faturado)</small>
-            <strong className="green" style={{ fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(faturamentoResumo.total_liquido || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
-            <small style={{ position: 'relative', zIndex: 1 }}>Bruto: R$ {parseFloat(faturamentoResumo.total_valor_bruto || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</small>
+            <strong className="green" style={{ fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(resumoFiltrado.total_liquido || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            <small style={{ position: 'relative', zIndex: 1 }}>Bruto: R$ {parseFloat(resumoFiltrado.total_valor_bruto || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</small>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#faf5ff', border: '1px solid #e9d5ff', borderLeft: '4px solid var(--purple)' }}>
             <ShieldCheck size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>PGR</small>
-            <strong className="purple">{faturamentoResumo.total_pgr || 0}</strong>
+            <strong className="purple">R$ {parseFloat(resumoFiltrado.total_pgr || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid var(--amber)' }}>
             <FileSearch size={48} color="var(--amber)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>LTCAT</small>
-            <strong className="amber">{faturamentoResumo.total_ltcat || 0}</strong>
+            <strong className="amber">R$ {parseFloat(resumoFiltrado.total_ltcat || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#eff6ff', border: '1px solid #bfdbfe', borderLeft: '4px solid #3b82f6' }}>
             <UserCog size={48} color="#3b82f6" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>AEP/AET</small>
-            <strong style={{ color: '#3b82f6' }}>{faturamentoResumo.total_aet || 0}</strong>
+            <strong style={{ color: '#3b82f6' }}>R$ {parseFloat(resumoFiltrado.total_aet || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
           </div>
         </div>
         <div className="table-wrap">
           <table className="table">
             <thead><tr><th style={{ maxWidth: '150px' }}>Lote / Período</th><th style={{ textAlign: 'center' }}>PGR</th><th style={{ textAlign: 'center' }}>LTCAT</th><th style={{ textAlign: 'center' }}>AEP/AET</th><th>Descontos</th><th>Líquido</th><th>Data Envio</th><th>Ações</th></tr></thead>
             <tbody>
-              {faturamento.map(f => {
+              {faturamentoFiltrado.map((f: any) => {
                 const total = parseFloat(f.valor_total || '0');
                 const desc = parseFloat(f.desconto || '0');
                 return (
@@ -1741,19 +1783,19 @@ function App() {
             </div>
             <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', overflowY: 'auto', background: '#f8fafc' }}>
               {(() => {
-                const totalPGR = faturamento.reduce((acc: number, f: any) => {
+                const totalPGR = faturamentoFiltrado.reduce((acc: number, f: any) => {
                   let p = 0;
                   if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.pgr) p += Number(u.pgr_valor)||0 });
                   else p = (f.qtd_pgr||0)*(f.valor_unit_pgr||0);
                   return acc + p;
                 }, 0);
-                const totalLTCAT = faturamento.reduce((acc: number, f: any) => {
+                const totalLTCAT = faturamentoFiltrado.reduce((acc: number, f: any) => {
                   let p = 0;
                   if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.ltcat) p += Number(u.ltcat_valor)||0 });
                   else p = (f.qtd_ltcat||0)*(f.valor_unit_ltcat||0);
                   return acc + p;
                 }, 0);
-                const totalAET = faturamento.reduce((acc: number, f: any) => {
+                const totalAET = faturamentoFiltrado.reduce((acc: number, f: any) => {
                   let p = 0;
                   if (f.unidades_detalhadas?.length) f.unidades_detalhadas.forEach((u:any) => { if (u.aep_aet) p += Number(u.aep_aet_valor)||0 });
                   else p = (f.qtd_aet||0)*(f.valor_unit_aet||0);
@@ -1766,7 +1808,7 @@ function App() {
                       <div style={{ background: '#f3e8ff', padding: '12px', borderRadius: '50%', color: '#6d28d9' }}><LayoutDashboard size={24} /></div>
                       <div>
                         <h4 style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500' }}>Lançamentos</h4>
-                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>{faturamento.length}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoFiltrado.length}</p>
                       </div>
                     </div>
                     <div className="card" style={{ padding: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
@@ -1799,29 +1841,31 @@ function App() {
                 <div style={{ flex: 1, minHeight: '240px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={(() => {
-                        const grouped = faturamento.reduce((acc: any[], f: any) => {
-                          const name = f.lista_lote ? String(f.lista_lote).split('-')[0].trim().toUpperCase() : 'N/A';
+                        const baseMonths = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+                        return baseMonths.map(mes => {
+                          const monthData = faturamentoFiltrado.filter((f: any) => {
+                            const parts = f.lista_lote ? String(f.lista_lote).split('-') : [];
+                            const mesAno = parts[0] ? parts[0].trim().toUpperCase() : '';
+                            const m = mesAno.split('/')[0]?.trim() || '';
+                            return m === mes;
+                          });
+                          
                           let pgr = 0, ltcat = 0, aet = 0;
-                          if (f.unidades_detalhadas && f.unidades_detalhadas.length > 0) {
-                            f.unidades_detalhadas.forEach((u: any) => {
-                              if (u.pgr) pgr += Number(u.pgr_valor) || 0;
-                              if (u.ltcat) ltcat += Number(u.ltcat_valor) || 0;
-                              if (u.aep_aet) aet += Number(u.aep_aet_valor) || 0;
-                            });
-                          } else {
-                            pgr = (f.qtd_pgr || 0) * (f.valor_unit_pgr || 0);
-                            ltcat = (f.qtd_ltcat || 0) * (f.valor_unit_ltcat || 0);
-                            aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
-                          }
-                          const existing = acc.find(x => x.name === name);
-                          if (existing) {
-                            existing.pgr += pgr; existing.ltcat += ltcat; existing.aet += aet;
-                          } else {
-                            acc.push({ name, pgr, ltcat, aet, date: f.created_at });
-                          }
-                          return acc;
-                        }, []);
-                        return grouped.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                          monthData.forEach((f: any) => {
+                            if (f.unidades_detalhadas && f.unidades_detalhadas.length > 0) {
+                              f.unidades_detalhadas.forEach((u: any) => {
+                                if (u.pgr) pgr += Number(u.pgr_valor) || 0;
+                                if (u.ltcat) ltcat += Number(u.ltcat_valor) || 0;
+                                if (u.aep_aet) aet += Number(u.aep_aet_valor) || 0;
+                              });
+                            } else {
+                              pgr += (f.qtd_pgr || 0) * (f.valor_unit_pgr || 0);
+                              ltcat += (f.qtd_ltcat || 0) * (f.valor_unit_ltcat || 0);
+                              aet += (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
+                            }
+                          });
+                          return { name: `${mes.slice(0,3)}/${anoFiltroFaturamento}`, pgr, ltcat, aet };
+                        });
                       })()} margin={{ top: 20, right: 30, left: 20, bottom: 40 }} maxBarSize={60}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} dy={15} height={60} interval={0} />
@@ -1840,7 +1884,8 @@ function App() {
         </div>
       )}
     </>
-  );
+    );
+  };
 
   const renderAdmin = () => (
     <>
