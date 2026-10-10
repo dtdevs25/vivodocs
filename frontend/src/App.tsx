@@ -735,7 +735,7 @@ function App() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: hiddenLegend['pendentes'] ? 0.5 : 1 }} onClick={() => toggleLegend('pendentes')}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#e5e7eb' }}></div>
-                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['pendentes'] ? 'line-through' : 'none' }}>Pendentes ({Math.max(0, totalAtivas - (dashboardData.pgrs_vigentes + dashboardData.pgrs_vencendo + dashboardData.pgrs_vencidos))})</span>
+                    <span style={{ color: '#4b5563', fontSize: '14px', fontWeight: '500', textDecoration: hiddenLegend['pendentes'] ? 'line-through' : 'none' }}>Pendentes ({dashboardData.pgrs_pendentes || 0})</span>
                   </div>
                 </div>
               </div>
