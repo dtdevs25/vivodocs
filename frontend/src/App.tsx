@@ -816,7 +816,6 @@ function App() {
   };
 
   const renderUnidades = () => {
-    const ativasAll = matriz.filter(u => u.status_funcionamento === 'ATIVA');
     const filtered = matriz.filter(u => {
       const isSearching = searchQuery.trim() !== '';
       if (unitSubTab === 'desmobilizadas') {
