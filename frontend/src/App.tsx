@@ -110,6 +110,25 @@ function App() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [logSearch, setLogSearch] = useState('');
+  const [notFoundMsg, setNotFoundMsg] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'unidades' || activeTab === 'matriz') {
+      const digits = searchQuery.replace(/\D/g, '');
+      if (digits.length >= 14 && matriz.length > 0) {
+        const found = matriz.some(u => `${u.cnpj}`.replace(/\D/g, '').includes(digits));
+        if (!found) {
+          setNotFoundMsg(true);
+          const timer = setTimeout(() => setNotFoundMsg(false), 5000);
+          return () => clearTimeout(timer);
+        } else {
+          setNotFoundMsg(false);
+        }
+      } else {
+        setNotFoundMsg(false);
+      }
+    }
+  }, [searchQuery, activeTab, matriz]);
 
   const [dashboardData, setDashboardData] = useState<any>({ total_ativas: 0, total_desmobilizadas: 0, total_dgs: 0, total_techs: 0, total_sesmt: 0, total_iso: 0, pgrs_vigentes: 0, pgrs_vencendo: 0, pgrs_vencidos: 0, ltcat_vigentes: 0, ltcat_vencendo: 0, ltcat_vencidos: 0, aet_vigentes: 0, aet_vencendo: 0, aet_vencidos: 0, pendentes: 0, cobertura: 0 });
   const [matriz, setMatriz] = useState<any[]>([]);
@@ -586,7 +605,7 @@ function App() {
       <>
         <header className="topbar"><div><h1>Painel Geral</h1></div></header>
         <section className="content">
-          <div className="cards">
+          <div className="cards cards-dashboard">
             <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
@@ -607,6 +626,16 @@ function App() {
                 <div>
                   <strong style={{ margin: 0, color: 'var(--red)' }}>{dashboardData.pgrs_vencidos}</strong>
                   <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencidos</span>
+                </div>
+                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
+                <div>
+                  <strong style={{ margin: 0, color: 'var(--amber)' }}>{dashboardData.pgrs_vencendo}</strong>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Vencendo</span>
+                </div>
+                <div style={{ width: '2px', backgroundColor: 'var(--line)', alignSelf: 'stretch' }}></div>
+                <div>
+                  <strong style={{ margin: 0, color: 'var(--muted)' }}>{pgrPendentes}</strong>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '600', textTransform: 'uppercase' }}>Pendentes</span>
                 </div>
               </div>
             </div>
@@ -634,7 +663,7 @@ function App() {
             <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ backgroundColor: '#f3f4f6', padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
                 <h2 style={{ fontSize: '13px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0, fontWeight: 'bold' }}>
-                  PANORAMA DE CONFORMIDADE
+                  PANORAMA DE CONFORMIDADE PGR
                 </h2>
               </div>
               <div className="chart" style={{ display: 'flex', alignItems: 'center', gap: '50px', padding: '24px 24px', backgroundColor: '#fff' }}>
@@ -704,10 +733,12 @@ function App() {
                     <strong style={{ fontSize: '24px', color: '#f97316', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_iso}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>ISO 45001</small>
                   </div>
+                  {/* Ocultado a pedido: 
                   <div className="interactive" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', padding: '16px 24px', cursor: 'pointer' }} onClick={() => { setSesmtFilter(true); setActiveTab('matriz'); }}>
                     <strong style={{ fontSize: '24px', color: '#000', fontWeight: '800', lineHeight: '1', marginBottom: '2px' }}>{dashboardData.total_sesmt}</strong>
                     <small style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: '500' }}>SESMT</small>
                   </div>
+                  */}
                 </div>
               </div>
             </div>
@@ -786,15 +817,20 @@ function App() {
 
   const renderUnidades = () => {
     const ativasAll = matriz.filter(u => u.status_funcionamento === 'ATIVA');
-    const tabCount = (k: string) => k === 'desmobilizadas'
-      ? matriz.filter(u => u.status_funcionamento === 'DESMOBILIZADA').length
-      : k === 'todas' ? ativasAll.length : ativasAll.filter(u => getTipoKey(u) === k).length;
+    const tabCount = (k: string) => {
+      if (k === 'desmobilizadas') return matriz.filter(u => u.status_funcionamento === 'DESMOBILIZADA').length;
+      if (k === 'todas') return matriz.length;
+      return ativasAll.filter(u => getTipoKey(u) === k).length;
+    };
     const filtered = matriz.filter(u => {
+      const isSearching = searchQuery.trim() !== '';
       if (unitSubTab === 'desmobilizadas') {
-        if (u.status_funcionamento !== 'DESMOBILIZADA') return false;
+        if (!isSearching && u.status_funcionamento !== 'DESMOBILIZADA') return false;
+      } else if (unitSubTab === 'todas') {
+        // Todas shows everything
       } else {
-        if (u.status_funcionamento !== 'ATIVA') return false;
-        if (unitSubTab !== 'todas' && getTipoKey(u) !== unitSubTab) return false;
+        if (!isSearching && u.status_funcionamento !== 'ATIVA') return false;
+        if (getTipoKey(u) !== unitSubTab) return false;
       }
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
@@ -807,7 +843,23 @@ function App() {
       <>
         <header className="topbar">
           <div><h1>Consulta CNPJ</h1></div>
-          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto' }}>
+          <div className="actions" style={{ gap: '8px', flexWrap: 'wrap', marginLeft: 'auto', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '8px' }}>
+              {TIPO_TABS.filter(t => t.key !== 'todas').map(t => (
+                <button
+                  key={t.key}
+                  title={`Filtrar por ${t.label}`}
+                  onClick={() => setUnitSubTab(unitSubTab === t.key ? 'todas' : t.key)}
+                  style={{
+                    width: '20px', height: '20px', borderRadius: '50%', border: 'none', cursor: 'pointer', padding: 0,
+                    backgroundColor: t.key === 'loja' ? 'var(--purple)' : t.key === 'predio' ? '#3b82f6' : t.key === 'dg' ? 'var(--amber)' : t.key === 'tech' ? '#0d9488' : 'var(--muted)',
+                    opacity: (unitSubTab === t.key || unitSubTab === 'todas') ? 1 : 0.3,
+                    boxShadow: unitSubTab === t.key ? '0 0 0 2px #fff, 0 0 0 4px var(--ink)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                />
+              ))}
+            </div>
             <input
               className="search"
               placeholder="Buscar por CNPJ, nome, cidade, tipo..."
@@ -832,21 +884,21 @@ function App() {
         </header>
         <section className="content">
           <div className="tabs-header">
-            {TIPO_TABS.map(t => (
-              <button key={t.key} className={`tab-link ${unitSubTab === t.key ? 'active' : ''}`} onClick={() => setUnitSubTab(t.key)}>{t.label} ({tabCount(t.key)})</button>
-            ))}
-            <button className={`tab-link ${unitSubTab === 'desmobilizadas' ? 'active' : ''}`} onClick={() => setUnitSubTab('desmobilizadas')}>Desmobilizadas ({tabCount('desmobilizadas')})</button>
+            <button className="tab-link active" onClick={() => setUnitSubTab('todas')}>Geral</button>
           </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
+              <thead><tr><th style={{width: '30px'}}></th><th>Unidade</th><th>Tipo</th><th>Localização</th><th>Região</th><th>Regional</th><th style={{textAlign: 'center'}}>ISO 45001</th><th style={{textAlign: 'center'}}>SESMT</th><th>Ações</th></tr></thead>
               <tbody>
                 {filtered.length === 0
-                  ? <tr><td colSpan={8} className="empty">Nenhuma unidade encontrada.</td></tr>
+                  ? <tr><td colSpan={9} className="empty">Nenhuma unidade encontrada.</td></tr>
                   : filtered.map((u: any) => {
                     const badge = tipoBadge(u);
                     return (
-                      <tr key={u.id}>
+                      <tr key={u.id} style={{ backgroundColor: u.status_funcionamento === 'ATIVA' ? '#f0fdf4' : '#fef2f2' }}>
+                        <td>
+                          <div style={{ width: '12px', height: '12px', borderRadius: '50%', margin: '0 auto', backgroundColor: getTipoKey(u) === 'loja' ? 'var(--purple)' : getTipoKey(u) === 'predio' ? '#3b82f6' : getTipoKey(u) === 'dg' ? 'var(--amber)' : getTipoKey(u) === 'tech' ? '#0d9488' : 'var(--muted)' }} title={badge.label}></div>
+                        </td>
                         <td>
                           <b>{u.filial}</b>
                           <small style={{ color: 'var(--muted)' }}>{u.cnpj}</small>
@@ -1929,6 +1981,11 @@ function App() {
               )}
             </div>
           </div>
+        </div>
+      )}
+      {notFoundMsg && (
+        <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '12px 24px', borderRadius: '8px', zIndex: 9999, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', fontWeight: 'bold', animation: 'fadeIn 0.3s' }}>
+          Nenhum resultado! Este CNPJ parece não estar cadastrado.
         </div>
       )}
     </div>
