@@ -1253,8 +1253,8 @@ function App() {
       const v = getDocValidity(doc, raw, venc, getValidadeAnos(doc, u));
       if (v) {
         return v.valido
-          ? pill('#ecfdf5', 'var(--green)', '● Válido', true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))
-          : pill('#fef2f2', 'var(--red)', '● Vencido', true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
+          ? pill('#ecfdf5', 'var(--green)', `● Válido/${v.vencimento.getFullYear()}`, true, `Vence em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }))
+          : pill('#fef2f2', 'var(--red)', `● Vencido/${v.vencimento.getFullYear()}`, true, `Venceu em ${v.vencimento.toLocaleDateString('pt-BR')} — clique para detalhes`, () => setExpiryInfo({ doc, raw, venc, lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
       }
       const s = (statusTxt || '').toLowerCase();
       if (s.includes('venc')) return pill('#fef2f2', 'var(--red)', '● Vencido', true, 'Clique para detalhes', () => setExpiryInfo({ doc, raw: '', venc: '', lista, statusTxt, docId, fileName, fileUrl, unitId: u.id }));
@@ -1311,14 +1311,13 @@ function App() {
                   <th style={th}>PGR</th>
                   <th style={th}>LTCAT</th>
                   <th style={th}>AEP / AET</th>
-                  <th style={th}>NR01</th>
                   <th style={{ ...th, borderLeft: '2px solid var(--line)' }}>ISO 45001</th>
                   <th style={th}>NR 20</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
+                  <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
                 )}
                 {filtered.map(u => {
                   const b = tipoBadge(u);
@@ -1329,7 +1328,6 @@ function App() {
                       <td style={td}>{docCell('PGR', u, u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome, u.pgr_arquivo_url)}</td>
                       <td style={td}>{docCell('LTCAT', u, u.ltcat_data, u.ltcat_vencimento, u.ltcat, u.ltcat_lista, u.ltcat_doc_id, u.ltcat_arquivo_nome, u.ltcat_arquivo_url)}</td>
                       <td style={td}>{docCell('AEP / AET', u, u.aet_data || u.aep_data, u.aet_vencimento || u.aep_vencimento, u.aet || u.aep, u.aet_lista || u.aep_lista, u.aet_doc_id || u.aep_doc_id, u.aet_arquivo_nome || u.aep_arquivo_nome, u.aet_arquivo_url || u.aep_arquivo_url)}</td>
-                      <td style={td}>{docCell('NR01', u, u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome, u.nr01_arquivo_url)}</td>
                       <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>
                     </tr>
