@@ -107,8 +107,7 @@ router.put('/:id', async (req, res) => {
         qtd_aet = $9, valor_unit_aet = $10,
         qtd_insalubridade = $11, valor_unit_insalubridade = $12,
         qtd_diversos = $13, valor_unit_diversos = $14,
-        desconto = $15, valor_total = $16,
-        updated_at = NOW()
+        desconto = $15, valor_total = $16
       WHERE id = $17
     `, [
       data.lista_lote, data.justificativa,

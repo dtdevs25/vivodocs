@@ -570,7 +570,7 @@ function App() {
             </div>
           </div>
           {modal.isOpen && (
-            <div className="modal-overlay" style={{ zIndex: 10001 }}>
+            <div className="modal-overlay" style={{ zIndex: 10010 }}>
               <div className="modal-box" style={{ width: '400px' }}>
                 <div className="modal-header">
                   <div className="modal-title"><h2>{modal.title}</h2></div>
@@ -652,7 +652,7 @@ function App() {
         </div>
         </div>
         {modal.isOpen && (
-          <div className="modal-overlay" style={{ zIndex: 10001 }}>
+          <div className="modal-overlay" style={{ zIndex: 10010 }}>
             <div className="modal-box" style={{ width: '400px' }}>
               <div className="modal-header">
                 <div className="modal-title"><h2>{modal.title}</h2></div>
@@ -2053,7 +2053,7 @@ function App() {
       </div>
 
       {modal.isOpen && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-overlay" onClick={closeModal} style={{ zIndex: 10010 }}>
           <div className="modal-box" style={{ width: modal.type === 'userForm' ? '460px' : '400px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title"><h2>{modal.title}</h2></div>
