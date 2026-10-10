@@ -1205,15 +1205,7 @@ function App() {
 
 
   const renderMatriz = () => {
-    const ativas = matriz.filter(u => u.status_funcionamento === 'ATIVA');
-    const counts = {
-      todas: ativas.length,
-      lojas: ativas.filter(u => getTipoKey(u) === 'loja').length,
-      predios: ativas.filter(u => getTipoKey(u) === 'predio').length,
-      dgs: ativas.filter(u => getTipoKey(u) === 'dg').length,
-      techs: ativas.filter(u => getTipoKey(u) === 'tech').length,
-    };
-    const filtered = ativas.filter(u => {
+    const filtered = matriz.filter(u => {
       const k = getTipoKey(u);
       if (matrizTipo === 'lojas' && k !== 'loja') return false;
       if (matrizTipo === 'predios' && k !== 'predio') return false;
@@ -1221,7 +1213,6 @@ function App() {
       if (matrizTipo === 'techs' && k !== 'tech') return false;
       if (regionalFilter && u.regional !== regionalFilter) return false;
       if (isoFilter && !u.escopo_iso_45001) return false;
-      if (sesmtFilter && !u.compoe_sesmt) return false;
       return `${u.cnpj} ${u.filial} ${u.cidade} ${u.uf} ${u.bairro} ${k}`.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
@@ -1265,10 +1256,7 @@ function App() {
               <input type="checkbox" checked={isoFilter} onChange={e => setIsoFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
               Escopo ISO
             </label>
-            <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', background: '#fff', padding: '0 12px', height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px'}}>
-              <input type="checkbox" checked={sesmtFilter} onChange={e => setSesmtFilter(e.target.checked)} style={{accentColor: 'var(--purple)', width: '16px', height: '16px'}} />
-              SESMT
-            </label>
+
             <select value={regionalFilter} onChange={(e) => setRegionalFilter(e.target.value)} style={{ height: '40px', border: '1px solid #e8e2ed', borderRadius: '8px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '13px', outline: 'none' }}>
               <option value="">Todas Regionais</option>
               {allRegionais.map((r: any) => <option key={r} value={r}>{r}</option>)}
@@ -1279,12 +1267,17 @@ function App() {
           </div>
         </header>
         <section className="content">
-          <div className="tabs-header">
-            <button className={`tab-link ${matrizTipo === 'todas' ? 'active' : ''}`} onClick={() => setMatrizTipo('todas')}>Todas ({counts.todas})</button>
-            <button className={`tab-link ${matrizTipo === 'lojas' ? 'active' : ''}`} onClick={() => setMatrizTipo('lojas')}>Lojas ({counts.lojas})</button>
-            <button className={`tab-link ${matrizTipo === 'predios' ? 'active' : ''}`} onClick={() => setMatrizTipo('predios')}>Prédios ({counts.predios})</button>
-            <button className={`tab-link ${matrizTipo === 'dgs' ? 'active' : ''}`} onClick={() => setMatrizTipo('dgs')}>DGs ({counts.dgs})</button>
-            <button className={`tab-link ${matrizTipo === 'techs' ? 'active' : ''}`} onClick={() => setMatrizTipo('techs')}>TECHs ({counts.techs})</button>
+          <div className="tabs-header" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            <button className="tab-link active" onClick={() => setMatrizTipo('todas')}>
+              {matrizTipo === 'todas' ? 'Geral' : (matrizTipo === 'lojas' ? 'Lojas' : matrizTipo === 'predios' ? 'Prédios' : matrizTipo === 'dgs' ? 'DGs' : 'TECHs')}
+            </button>
+            <select value={matrizTipo === 'todas' ? '' : matrizTipo} onChange={(e) => setMatrizTipo(e.target.value as any || 'todas')} style={{ height: '32px', border: '1px solid #e8e2ed', borderRadius: '6px', padding: '0 10px', background: '#fff', color: 'var(--ink)', fontSize: '12px', outline: 'none', marginLeft: 'auto', marginBottom: '6px' }}>
+              <option value="">Todos os Tipos</option>
+              <option value="lojas">Lojas</option>
+              <option value="predios">Prédios</option>
+              <option value="dgs">DGs</option>
+              <option value="techs">TECHs</option>
+            </select>
           </div>
           <div className="table-wrap">
             <table className="table">
@@ -1309,7 +1302,7 @@ function App() {
                 {filtered.map(u => {
                   const b = tipoBadge(u);
                   return (
-                    <tr key={u.id}>
+                    <tr key={u.id} style={{ backgroundColor: u.status_funcionamento === 'ATIVA' ? '#f0fdf4' : '#fef2f2' }}>
                       <td><b>{u.filial}</b><small>{u.cnpj}</small></td>
                       <td style={td}><span style={{ background: b.bg, color: b.color, borderRadius: '12px', padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}>{b.label}</span></td>
                       <td style={td}>{docCell('PGR', u, u.pgr_data, u.pgr_vencimento, u.pgr, u.pgr_lista, u.pgr_doc_id, u.pgr_arquivo_nome, u.pgr_arquivo_url)}</td>
