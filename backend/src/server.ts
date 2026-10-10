@@ -77,6 +77,15 @@ const initDb = async () => {
     try { await query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT FALSE`); } catch(e) {}
 
     await query(`INSERT INTO notificacoes_config (id) VALUES (1) ON CONFLICT DO NOTHING`);
+    
+    // Novas colunas para faturamento_lancamento_unidades
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS pgr BOOLEAN DEFAULT false`); } catch(e) {}
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS pgr_valor DECIMAL DEFAULT 0`); } catch(e) {}
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS ltcat BOOLEAN DEFAULT false`); } catch(e) {}
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS ltcat_valor DECIMAL DEFAULT 0`); } catch(e) {}
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS aep_aet BOOLEAN DEFAULT false`); } catch(e) {}
+    try { await query(`ALTER TABLE faturamento_lancamento_unidades ADD COLUMN IF NOT EXISTS aep_aet_valor DECIMAL DEFAULT 0`); } catch(e) {}
+
     console.log('DB migrations complete.');
   } catch (err) {
     console.error('Migration error:', err);

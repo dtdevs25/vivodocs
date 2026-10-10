@@ -12,7 +12,21 @@ router.get('/', async (req, res) => {
   try {
     const result = await query(`
       SELECT f.*, 
-        (SELECT json_agg(unidade_id) FROM faturamento_lancamento_unidades flu WHERE flu.lancamento_id = f.id) as unidades
+        (
+          SELECT json_agg(
+            json_build_object(
+              'id', flu.unidade_id,
+              'pgr', flu.pgr,
+              'pgr_valor', flu.pgr_valor,
+              'ltcat', flu.ltcat,
+              'ltcat_valor', flu.ltcat_valor,
+              'aep_aet', flu.aep_aet,
+              'aep_aet_valor', flu.aep_aet_valor
+            )
+          ) 
+          FROM faturamento_lancamento_unidades flu 
+          WHERE flu.lancamento_id = f.id
+        ) as unidades_detalhadas
       FROM faturamento_lancamentos f
       ORDER BY created_at DESC
     `);
@@ -74,12 +88,12 @@ router.post('/', async (req, res) => {
     
     const lancamentoId = lancamentoRes.rows[0].id;
     
-    if (data.unidades && Array.isArray(data.unidades) && data.unidades.length > 0) {
-      for (const unidadeId of data.unidades) {
+    if (data.unidades_dados && Array.isArray(data.unidades_dados) && data.unidades_dados.length > 0) {
+      for (const u of data.unidades_dados) {
         await client.query(`
-          INSERT INTO faturamento_lancamento_unidades (lancamento_id, unidade_id)
-          VALUES ($1, $2)
-        `, [lancamentoId, unidadeId]);
+          INSERT INTO faturamento_lancamento_unidades (lancamento_id, unidade_id, pgr, pgr_valor, ltcat, ltcat_valor, aep_aet, aep_aet_valor)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `, [lancamentoId, u.id, u.pgr || false, u.pgr_valor || 0, u.ltcat || false, u.ltcat_valor || 0, u.aep_aet || false, u.aep_aet_valor || 0]);
       }
     }
     
@@ -127,6 +141,17 @@ router.put('/:id', async (req, res) => {
     ]);
     
     // Simplification: Not updating related units in many-to-many here because the frontend doesn't edit them yet.
+    // Wait, since we are doing detailed units, we MUST update them! Delete old and insert new.
+    await client.query(`DELETE FROM faturamento_lancamento_unidades WHERE lancamento_id = $1`, [req.params.id]);
+    
+    if (data.unidades_dados && Array.isArray(data.unidades_dados) && data.unidades_dados.length > 0) {
+      for (const u of data.unidades_dados) {
+        await client.query(`
+          INSERT INTO faturamento_lancamento_unidades (lancamento_id, unidade_id, pgr, pgr_valor, ltcat, ltcat_valor, aep_aet, aep_aet_valor)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `, [req.params.id, u.id, u.pgr || false, u.pgr_valor || 0, u.ltcat || false, u.ltcat_valor || 0, u.aep_aet || false, u.aep_aet_valor || 0]);
+      }
+    }
     
     await logAction('sistema@vivo.com', 'EDIT_LANCAMENTO', `Lançamento ${data.lista_lote} (ID: ${req.params.id}) editado.`);
     await client.query('COMMIT');

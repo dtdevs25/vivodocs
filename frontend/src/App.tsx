@@ -1544,8 +1544,8 @@ function App() {
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
-                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', created_at: f.created_at, desconto: f.desconto || 0, unidades: (f.unidades_detalhadas || f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
                     </td>
@@ -1560,7 +1560,14 @@ function App() {
         <div className="modal-overlay" style={{ zIndex: 10001 }}>
           <div className="modal-box" style={{ width: '1200px', maxWidth: '95vw', height: '85vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header">
-              <div className="modal-title"><h2>{faturamentoModalViewOnly ? 'Visualizar Lançamento' : novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2></div>
+              <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h2 style={{ margin: 0 }}>{faturamentoModalViewOnly ? 'Visualizar Lançamento' : novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2>
+                {faturamentoModalViewOnly && (novoFat as any).created_at && (
+                  <span style={{ fontSize: '12px', color: 'var(--muted)', background: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
+                    Cadastrado em: {new Date((novoFat as any).created_at).toLocaleDateString('pt-BR')}
+                  </span>
+                )}
+              </div>
               <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
             </div>
             <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden' }}>
@@ -1679,39 +1686,65 @@ function App() {
               <div className="modal-title"><h2>Dashboard de Faturamento</h2></div>
               <button className="modal-close" onClick={() => setFaturamentoChartOpen(false)}>×</button>
             </div>
-            <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', overflowY: 'auto' }}>
+            <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', overflowY: 'auto', background: '#f8fafc' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                <div className="card" style={{ padding: '16px', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '8px' }}>
-                  <h4 style={{ margin: 0, color: '#6d28d9', fontSize: '13px' }}>Total Lançamentos</h4>
-                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#5b21b6' }}>{faturamento.length}</p>
+                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ background: '#f3e8ff', padding: '12px', borderRadius: '50%', color: '#6d28d9' }}><LayoutDashboard size={24} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>Total Lançamentos</h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamento.length}</p>
+                  </div>
                 </div>
-                <div className="card" style={{ padding: '16px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px' }}>
-                  <h4 style={{ margin: 0, color: '#047857', fontSize: '13px' }}>Total PGR</h4>
-                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#065f46' }}>{faturamentoResumo.total_pgr || 0}</p>
+                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ background: '#ecfdf5', padding: '12px', borderRadius: '50%', color: '#10b981' }}><ShieldCheck size={24} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>PGRs Emitidos</h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_pgr || 0}</p>
+                  </div>
                 </div>
-                <div className="card" style={{ padding: '16px', background: '#fdf2f8', border: '1px solid #fbcfe8', borderRadius: '8px' }}>
-                  <h4 style={{ margin: 0, color: '#be185d', fontSize: '13px' }}>Total LTCAT</h4>
-                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#9d174d' }}>{faturamentoResumo.total_ltcat || 0}</p>
+                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ background: '#fdf2f8', padding: '12px', borderRadius: '50%', color: '#ec4899' }}><FileCheck size={24} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>LTCATs Emitidos</h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_ltcat || 0}</p>
+                  </div>
                 </div>
-                <div className="card" style={{ padding: '16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px' }}>
-                  <h4 style={{ margin: 0, color: '#1d4ed8', fontSize: '13px' }}>Total AEP/AET</h4>
-                  <p style={{ margin: '8px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e40af' }}>{faturamentoResumo.total_aet || 0}</p>
+                <div className="card" style={{ padding: '20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ background: '#eff6ff', padding: '12px', borderRadius: '50%', color: '#3b82f6' }}><Users size={24} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, color: '#64748b', fontSize: '13px', fontWeight: '500' }}>AEP/AETs Emitidos</h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{faturamentoResumo.total_aet || 0}</p>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px', padding: '16px' }}>
-                <h3 style={{ margin: '0 0 16px 0', color: 'var(--text)' }}>Evolução de Documentos Emitidos (Por Lote)</h3>
-                <div style={{ flex: 1, minHeight: '300px' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ margin: '0 0 24px 0', color: '#1e293b', fontSize: '16px' }}>Receita por Tipo de Documento (R$)</h3>
+                <div style={{ flex: 1, minHeight: '400px' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={faturamento.map(f => ({ name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr: f.qtd_pgr || 0, ltcat: f.qtd_ltcat || 0, aet: f.qtd_aet || 0 })).reverse()} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                      <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                      <Bar dataKey="pgr" name="PGR" fill="#10b981" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
-                      <Bar dataKey="ltcat" name="LTCAT" fill="#ec4899" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
-                      <Bar dataKey="aet" name="AEP/AET" fill="#3b82f6" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#6b7280', fontSize: 11 }} />
+                    <BarChart data={faturamento.map(f => {
+                        let pgr = 0, ltcat = 0, aet = 0;
+                        if (f.unidades_detalhadas && f.unidades_detalhadas.length > 0) {
+                          f.unidades_detalhadas.forEach((u: any) => {
+                            if (u.pgr) pgr += Number(u.pgr_valor) || 0;
+                            if (u.ltcat) ltcat += Number(u.ltcat_valor) || 0;
+                            if (u.aep_aet) aet += Number(u.aep_aet_valor) || 0;
+                          });
+                        } else {
+                          pgr = (f.qtd_pgr || 0) * (f.valor_unit_pgr || 0);
+                          ltcat = (f.qtd_ltcat || 0) * (f.valor_unit_ltcat || 0);
+                          aet = (f.qtd_aet || 0) * (f.valor_unit_aet || 0);
+                        }
+                        return { name: (f.lista_lote ? String(f.lista_lote).split('-')[0].trim() : 'N/A'), pgr, ltcat, aet };
+                      }).reverse()} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} dy={10} />
+                      <YAxis tickFormatter={val => `R$ ${(val/1000)}k`} tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} width={80} />
+                      <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                      <Legend wrapperStyle={{ paddingTop: '30px' }} iconType="circle" />
+                      <Bar dataKey="pgr" name="Receita PGR" fill="#10b981" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#10b981', fontSize: 12, fontWeight: 'bold' }} />
+                      <Bar dataKey="ltcat" name="Receita LTCAT" fill="#ec4899" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#ec4899', fontSize: 12, fontWeight: 'bold' }} />
+                      <Bar dataKey="aet" name="Receita AEP/AET" fill="#3b82f6" radius={[6, 6, 0, 0]} label={{ position: 'top', formatter: (v: number) => v > 0 ? `R$ ${(v/1000).toFixed(1)}k` : '', fill: '#3b82f6', fontSize: 12, fontWeight: 'bold' }} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
