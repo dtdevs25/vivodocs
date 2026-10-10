@@ -23,8 +23,6 @@ function getStatusColor(val: string) {
   return 'gray';
 }
 
-// Validade default fallback
-const DOC_VALIDADE_ANOS: Record<string, number> = { PGR: 2, LTCAT: 2, AEP: 2, AET: 2, NR01: 2 };
 
 function parseLocalDate(raw: string): Date | null {
   if (!raw) return null;
@@ -37,7 +35,7 @@ function parseLocalDate(raw: string): Date | null {
   return null;
 }
 
-function getDocValidity(doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number | null) {
+function getDocValidity(_doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number | null) {
   const eRaw = parseLocalDate(raw);
   const eVenc = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
   if (!eRaw && !eVenc) return null;
