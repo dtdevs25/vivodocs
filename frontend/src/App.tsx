@@ -935,7 +935,7 @@ function App() {
                             {badge.label}
                           </span>
                         </td>
-                        <td>{u.cidade || '—'} {u.bairro ? `· ${u.bairro}` : ''}</td>
+                        <td>{u.cidade || '—'}</td>
                         <td><b>{u.uf || '—'}</b></td>
                         <td>{u.regional || '—'}</td>
                         <td style={{ fontSize: '14px', textAlign: 'center' }}>
