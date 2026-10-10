@@ -632,12 +632,13 @@ function App() {
     const pgrVencidos = hiddenLegend['vencidos'] ? 0 : (dashboardData.pgrs_vencidos || 0);
     const pgrPendentes = hiddenLegend['pendentes'] ? 0 : (dashboardData.pgrs_pendentes || 0);
     
-    const sumPgr = Math.max(1, pgrVigentes + pgrVencendo + pgrVencidos + pgrPendentes);
+    const sumPgrReal = pgrVigentes + pgrVencendo + pgrVencidos + pgrPendentes;
+    const sumPgr = Math.max(1, sumPgrReal);
     const p1 = (pgrVigentes / sumPgr) * 100;
     const p2 = p1 + (pgrVencendo / sumPgr) * 100;
     const p3 = p2 + (pgrVencidos / sumPgr) * 100;
 
-    const coberturaPgr = Math.round(((pgrVigentes + pgrVencendo) / totalUnits) * 100);
+    const coberturaPgrGlobal = Math.round((((dashboardData.pgrs_vigentes || 0) + (dashboardData.pgrs_vencendo || 0)) / totalUnits) * 100);
 
     const toggleLegend = (key: string) => setHiddenLegend(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -649,7 +650,7 @@ function App() {
             <div className="card interactive" style={{ position: 'relative', border: '1px solid var(--purple)', borderLeft: '4px solid var(--purple)', borderRadius: '8px' }} onClick={() => { setActiveTab('matriz'); }}>
               <Globe size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '40%', transform: 'translateY(-50%)', opacity: 0.15 }} />
               <small style={{ color: 'var(--ink)', fontWeight: 'bold' }}>CNPJs Monitorados</small>
-              <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{coberturaPgr}%</strong>
+              <strong className="purple" style={{ position: 'relative', zIndex: 1 }}>{coberturaPgrGlobal}%</strong>
               <small style={{ position: 'relative', zIndex: 1 }}>Cobertura Total</small>
             </div>
 
@@ -713,8 +714,8 @@ function App() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   <div style={{ width: '130px', height: '130px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-                    <span style={{color: '#1e1b4b', fontSize: '32px', fontWeight: '900', lineHeight: 1, position: 'relative', top: 0, left: 0, transform: 'none'}}>{coberturaPgr}%</span>
-                    <span style={{color: 'var(--muted)', fontSize: '12px', marginTop: '4px', position: 'relative', top: 0, left: 0, transform: 'none'}}>cobertura</span>
+                    <span style={{color: '#1e1b4b', fontSize: '32px', fontWeight: '900', lineHeight: 1, position: 'relative', top: 0, left: 0, transform: 'none'}}>{sumPgrReal}</span>
+                    <span style={{color: 'var(--muted)', fontSize: '12px', marginTop: '4px', position: 'relative', top: 0, left: 0, transform: 'none'}}>unidades</span>
                   </div>
                 </div>
                 
