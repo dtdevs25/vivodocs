@@ -791,6 +791,11 @@ function App() {
             <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: bg, color, border: `1px solid ${color}` }}>
               {daysText}
             </span>
+            {v && (
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '16px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Data de Emissão: {v.emissao.toLocaleDateString('pt-BR')}
+              </div>
+            )}
             {expiryInfo.lista && (
               <div style={{ marginTop: '14px' }}>
                 <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--purple)', background: '#f3e8ff', padding: '6px 14px', borderRadius: '20px' }}>
@@ -1956,13 +1961,13 @@ function App() {
         </div>
       )}
       {historyModalOpen && (
-        <div className="modal-overlay" onClick={() => setHistoryModalOpen(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+        <div className="modal-overlay" style={{ zIndex: 10002 }} onClick={() => setHistoryModalOpen(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: '500px' }}>
             <div className="modal-header">
               <div className="modal-title">
                 <h2>Histórico - {historyModalOpen.doc}</h2>
               </div>
-              <button className="close-btn" onClick={() => setHistoryModalOpen(null)}>✕</button>
+              <button className="modal-close" onClick={() => setHistoryModalOpen(null)}>×</button>
             </div>
             <div className="modal-body">
               <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>Aqui ficam guardadas as versões antigas deste documento (Dossiê).</p>
