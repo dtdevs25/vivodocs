@@ -893,17 +893,16 @@ function App() {
                 <tr>
                   <th style={{ width: '22%' }}>Unidade</th>
                   <th style={{ width: '12%' }}>Tipo</th>
-                  <th style={{ width: '22%' }}>Localização</th>
+                  <th style={{ width: '24%' }}>Localização</th>
                   <th style={{ width: '10%' }}>Região</th>
-                  <th style={{ width: '12%' }}>Regional</th>
-                  <th style={{ width: '8%', textAlign: 'center' }}>ISO 45001</th>
-                  <th style={{ width: '8%', textAlign: 'center' }}>SESMT</th>
-                  <th style={{ width: '6%', textAlign: 'center' }}>Ações</th>
+                  <th style={{ width: '14%' }}>Regional</th>
+                  <th style={{ width: '10%', textAlign: 'center' }}>ISO 45001</th>
+                  <th style={{ width: '8%', textAlign: 'center' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0
-                  ? <tr><td colSpan={8} className="empty">Nenhuma unidade encontrada.</td></tr>
+                  ? <tr><td colSpan={7} className="empty">Nenhuma unidade encontrada.</td></tr>
                   : filtered.map((u: any) => {
                     const badge = tipoBadge(u);
                     return (
@@ -922,9 +921,6 @@ function App() {
                         <td>{u.regional || '—'}</td>
                         <td style={{ fontSize: '14px', textAlign: 'center' }}>
                           {u.escopo_iso_45001 ? <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>✓</span> : <span style={{ color: 'var(--red)', fontWeight: 'bold' }}>✗</span>}
-                        </td>
-                        <td style={{ fontSize: '14px', textAlign: 'center' }}>
-                          {u.compoe_sesmt ? <span style={{ color: 'var(--green)', fontWeight: 'bold' }}>✓</span> : <span style={{ color: 'var(--red)', fontWeight: 'bold' }}>✗</span>}
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -1290,14 +1286,13 @@ function App() {
                   <th style={th}>AEP</th>
                   <th style={th}>AET</th>
                   <th style={th}>NR01</th>
-                  <th style={{ ...th, borderLeft: '2px solid var(--line)' }}>SESMT</th>
-                  <th style={th}>ISO 45001</th>
+                  <th style={{ ...th, borderLeft: '2px solid var(--line)' }}>ISO 45001</th>
                   <th style={th}>NR 20</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>Nenhuma unidade encontrada.</td></tr>
                 )}
                 {filtered.map(u => {
                   const b = tipoBadge(u);
@@ -1310,8 +1305,7 @@ function App() {
                       <td style={td}>{docCell('AEP', u, u.aep_data, u.aep_vencimento, u.aep, u.aep_lista, u.aep_doc_id, u.aep_arquivo_nome, u.aep_arquivo_url)}</td>
                       <td style={td}>{docCell('AET', u, u.aet_data, u.aet_vencimento, u.aet, u.aet_lista, u.aet_doc_id, u.aet_arquivo_nome, u.aet_arquivo_url)}</td>
                       <td style={td}>{docCell('NR01', u, u.nr01_data, u.nr01_vencimento, u.nr01, u.nr01_lista, u.nr01_doc_id, u.nr01_arquivo_nome, u.nr01_arquivo_url)}</td>
-                      <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.compoe_sesmt)}</td>
-                      <td style={td}>{check(!!u.escopo_iso_45001)}</td>
+                      <td style={{ ...td, borderLeft: '2px solid var(--line)' }}>{check(!!u.escopo_iso_45001)}</td>
                       <td style={td}>{check(!!u.is_nr20)}</td>
                     </tr>
                   );
