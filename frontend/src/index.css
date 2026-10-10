@@ -137,7 +137,7 @@ button{cursor:pointer}
 .btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
 .content{padding:20px 40px 30px}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.cards-dashboard{grid-template-columns:0.8fr 1.8fr 0.7fr 0.7fr;}
+.cards-dashboard{grid-template-columns:0.85fr 1.65fr 0.75fr 0.75fr;}
 .card,.panel{background:#fff;border:1px solid var(--line);border-radius:10px}
 .card{padding:14px 18px;transition:all 0.2s ease;}
 .card.interactive{cursor:pointer;}
