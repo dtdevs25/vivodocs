@@ -234,6 +234,7 @@ function App() {
   };
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
+  const [faturamentoModalViewOnly, setFaturamentoModalViewOnly] = useState(false);
   const [faturamentoChartOpen, setFaturamentoChartOpen] = useState(false);
   const [novoFat, setNovoFat] = useState({
     id: null as number | null,
@@ -1496,7 +1497,7 @@ function App() {
           <button className="btn" style={{ background: '#f3e8ff', color: 'var(--purple)', borderColor: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setFaturamentoChartOpen(true)}>
             <BarChart2 size={16} /> Evolução Mensal
           </button>
-          <button className="btn primary" onClick={() => setFaturamentoModalOpen(true)}>＋ Lançamento</button>
+          <button className="btn primary" onClick={() => { setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}>＋ Lançamento</button>
         </div>
       </header>
       <section className="content">
@@ -1543,8 +1544,8 @@ function App() {
                     <td>{f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
-                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
+                        <button title="Visualizar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--purple)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(true); setFaturamentoModalOpen(true); }}><Eye size={14} /></button>
+                        <button title="Editar Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setNovoFat({ id: f.id, lista_lote: f.lista_lote, justificativa: f.justificativa || '', qtd_pgr: f.qtd_pgr || 0, valor_unit_pgr: f.valor_unit_pgr || 0, qtd_ltcat: f.qtd_ltcat || 0, valor_unit_ltcat: f.valor_unit_ltcat || 0, qtd_aep: f.qtd_aep || 0, valor_unit_aep: f.valor_unit_aep || 0, qtd_aet: f.qtd_aet || 0, valor_unit_aet: f.valor_unit_aet || 0, qtd_insalubridade: f.qtd_insalubridade || 0, valor_unit_insalubridade: f.valor_unit_insalubridade || 0, qtd_diversos: f.qtd_diversos || 0, valor_unit_diversos: f.valor_unit_diversos || 0, desconto: f.desconto || 0, unidades: (f.unidades || []).map((x: any) => typeof x === 'number' ? { id: x, pgr: true, pgr_valor: f.valor_unit_pgr, ltcat: true, ltcat_valor: f.valor_unit_ltcat, aep_aet: true, aep_aet_valor: f.valor_unit_aep || f.valor_unit_aet } : x) }); setFaturamentoModalViewOnly(false); setFaturamentoModalOpen(true); }}><Pencil size={14} /></button>
                         <button title="Excluir Lançamento" style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '6px', padding: '5px', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => { setDeleteFatTarget(f); openConfirm('Excluir', 'Deseja excluir este lançamento?', () => { setDeleteFatTarget(f); handleDeleteFaturamento(); }); }}><Trash2 size={14} /></button>
                       </div>
                     </td>
@@ -1559,51 +1560,53 @@ function App() {
         <div className="modal-overlay" style={{ zIndex: 10001 }}>
           <div className="modal-box" style={{ width: '1200px', maxWidth: '95vw', height: '85vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header">
-              <div className="modal-title"><h2>{novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2></div>
+              <div className="modal-title"><h2>{faturamentoModalViewOnly ? 'Visualizar Lançamento' : novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2></div>
               <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
             </div>
             <div className="modal-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label>Lista / Lote pertencente</label>
-                  <input placeholder="Ex: LISTA 29" value={novoFat.lista_lote} onChange={e => setNovoFat({...novoFat, lista_lote: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input placeholder="Ex: LISTA 29" value={novoFat.lista_lote} readOnly={faturamentoModalViewOnly} onChange={e => setNovoFat({...novoFat, lista_lote: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label>Mês / Justificativas (Texto Livre)</label>
-                  <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+                  <input placeholder="Ex: Faturamento referente a Maio/2026..." value={novoFat.justificativa} readOnly={faturamentoModalViewOnly} onChange={e => setNovoFat({...novoFat, justificativa: e.target.value})} style={{ padding: '8px', border: '1px solid var(--line)', borderRadius: '6px' }} />
                 </div>
               </div>
               
               <div style={{ display: 'flex', gap: '20px', flex: 1, minHeight: 0 }}>
                 {/* Lado Esquerdo - Pesquisa */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0 }}>
-                  <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--purple)' }}>Adicionar Unidades</h3>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input type="text" placeholder="Buscar por CNPJ, Filial, UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', paddingRight: '30px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
-                    {fatSearchQuery && <button onClick={() => setFatSearchQuery('')} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={16} /></button>}
+                {!faturamentoModalViewOnly && (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0 }}>
+                    <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--purple)' }}>Adicionar Unidades</h3>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input type="text" placeholder="Buscar por CNPJ, Filial, UF..." value={fatSearchQuery} onChange={e => setFatSearchQuery(e.target.value)} style={{ padding: '8px', paddingRight: '30px', border: '1px solid var(--line)', borderRadius: '6px', width: '100%' }} />
+                      {fatSearchQuery && <button onClick={() => setFatSearchQuery('')} style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={16} /></button>}
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
+                      <table className="table" style={{ margin: 0, fontSize: '11px' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+                          <tr><th style={{ width: '40px' }}></th><th>Unidade</th><th>Regional</th><th>UF</th></tr>
+                        </thead>
+                        <tbody>
+                          {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
+                            <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => setNovoFat({...novoFat, unidades: [...novoFat.unidades, { id: u.id, pgr: false, pgr_valor: 0, ltcat: false, ltcat_valor: 0, aep_aet: false, aep_aet_valor: 0 }]})}>
+                              <td style={{ textAlign: 'center', padding: '6px' }}>
+                                <input type="checkbox" checked={false} readOnly style={{ accentColor: 'var(--purple)' }} />
+                              </td>
+                              <td style={{ padding: '6px' }} title={`${u.cnpj} - ${u.filial}`}>
+                                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px', display: 'inline-block', verticalAlign: 'middle' }}><b>{u.cnpj}</b> - {u.filial}</span>
+                              </td>
+                              <td style={{ padding: '6px' }}>{u.regional}</td>
+                              <td style={{ padding: '6px' }}>{u.uf}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
-                    <table className="table" style={{ margin: 0, fontSize: '11px' }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-                        <tr><th style={{ width: '40px' }}></th><th>Unidade</th><th>Regional</th><th>UF</th></tr>
-                      </thead>
-                      <tbody>
-                        {matriz.filter(u => !novoFat.unidades.find((nu: any) => nu.id === u.id) && (u.cnpj?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.filial?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.regional?.toLowerCase().includes(fatSearchQuery.toLowerCase()) || u.uf?.toLowerCase().includes(fatSearchQuery.toLowerCase()))).map(u => (
-                          <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => setNovoFat({...novoFat, unidades: [...novoFat.unidades, { id: u.id, pgr: false, pgr_valor: 0, ltcat: false, ltcat_valor: 0, aep_aet: false, aep_aet_valor: 0 }]})}>
-                            <td style={{ textAlign: 'center', padding: '6px' }}>
-                              <input type="checkbox" checked={false} readOnly style={{ accentColor: 'var(--purple)' }} />
-                            </td>
-                            <td style={{ padding: '6px' }} title={`${u.cnpj} - ${u.filial}`}>
-                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px', display: 'inline-block', verticalAlign: 'middle' }}><b>{u.cnpj}</b> - {u.filial}</span>
-                            </td>
-                            <td style={{ padding: '6px' }}>{u.regional}</td>
-                            <td style={{ padding: '6px' }}>{u.uf}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                )}
 
                 {/* Lado Direito - Selecionadas */}
                 <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0 }}>
@@ -1612,7 +1615,7 @@ function App() {
                     <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '6px', minHeight: 0 }}>
                       <table className="table" style={{ margin: 0, fontSize: '11px' }}>
                         <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-                          <tr><th>Unidade</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th><th></th></tr>
+                          <tr><th>Unidade</th><th>PGR (R$)</th><th>LTCAT (R$)</th><th>AEP/AET (R$)</th>{!faturamentoModalViewOnly && <th></th>}</tr>
                         </thead>
                         <tbody>
                           {novoFat.unidades.map((u: any, idx) => {
@@ -1624,25 +1627,27 @@ function App() {
                                 </td>
                                 <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <input type="checkbox" checked={u.pgr} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                    <CurrencyInput value={u.pgr_valor || 0} disabled={!u.pgr} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
+                                    <input type="checkbox" checked={u.pgr} disabled={faturamentoModalViewOnly} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].pgr = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                    <CurrencyInput value={u.pgr_valor || 0} disabled={faturamentoModalViewOnly || !u.pgr} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].pgr_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
                                 <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <input type="checkbox" checked={u.ltcat} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                    <CurrencyInput value={u.ltcat_valor || 0} disabled={!u.ltcat} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
+                                    <input type="checkbox" checked={u.ltcat} disabled={faturamentoModalViewOnly} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].ltcat = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                    <CurrencyInput value={u.ltcat_valor || 0} disabled={faturamentoModalViewOnly || !u.ltcat} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].ltcat_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
                                 <td style={{ padding: '4px 8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <input type="checkbox" checked={u.aep_aet} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
-                                    <CurrencyInput value={u.aep_aet_valor || 0} disabled={!u.aep_aet} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
+                                    <input type="checkbox" checked={u.aep_aet} disabled={faturamentoModalViewOnly} onChange={e => { const arr = [...novoFat.unidades]; arr[idx].aep_aet = e.target.checked; setNovoFat({...novoFat, unidades: arr}); }} style={{ accentColor: 'var(--purple)' }} />
+                                    <CurrencyInput value={u.aep_aet_valor || 0} disabled={faturamentoModalViewOnly || !u.aep_aet} onChange={val => { const arr = [...novoFat.unidades]; arr[idx].aep_aet_valor = val; setNovoFat({...novoFat, unidades: arr}); }} width="80px" />
                                   </div>
                                 </td>
-                                <td style={{ padding: '4px 8px' }}>
-                                  <button onClick={() => setNovoFat({...novoFat, unidades: novoFat.unidades.filter((_, i) => i !== idx)})} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer' }}><Trash2 size={14} /></button>
-                                </td>
+                                {!faturamentoModalViewOnly && (
+                                  <td style={{ padding: '4px 8px' }}>
+                                    <button onClick={() => setNovoFat({...novoFat, unidades: novoFat.unidades.filter((_, i) => i !== idx)})} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                                  </td>
+                                )}
                               </tr>
                             );
                           })}
@@ -1658,9 +1663,9 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: 'auto' }}>
                   <b>Desconto (R$):</b>
-                  <CurrencyInput value={novoFat.desconto || 0} onChange={val => setNovoFat({...novoFat, desconto: val})} width="100px" />
+                  <CurrencyInput value={novoFat.desconto || 0} disabled={faturamentoModalViewOnly} onChange={val => setNovoFat({...novoFat, desconto: val})} width="100px" />
                 </div>
-                <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>
+                {!faturamentoModalViewOnly && <button className="btn primary" onClick={handleSalvarFaturamento}>Salvar Lançamento</button>}
               </div>
             </div>
           </div>
