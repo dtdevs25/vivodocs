@@ -37,18 +37,18 @@ function parseLocalDate(raw: string): Date | null {
   return null;
 }
 
-function getDocValidity(doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number) {
+function getDocValidity(doc: string, raw: string, vencimentoRaw?: string, configValidadeAnos?: number | null) {
   const eRaw = parseLocalDate(raw);
   const eVenc = vencimentoRaw ? parseLocalDate(vencimentoRaw) : null;
   if (!eRaw && !eVenc) return null;
 
-  const isIndeterminado = doc === 'LTCAT' || doc.includes('AEP') || doc.includes('AET');
-  if (isIndeterminado) {
+  const anos = configValidadeAnos !== undefined ? configValidadeAnos : 2;
+  
+  if (anos === null || anos === 0) {
     const emissao = eRaw || eVenc!;
     return { emissao, vencimento: emissao, dias: 9999, valido: true, indeterminado: true };
   }
 
-  const anos = configValidadeAnos !== undefined ? configValidadeAnos : (DOC_VALIDADE_ANOS[doc] || 2);
   let emissao: Date;
   let vencimento: Date;
   if (eVenc) {
@@ -196,14 +196,14 @@ function App() {
   const [isoFilter, setIsoFilter] = useState(false);
 
   const [hiddenLegend, setHiddenLegend] = useState<Record<string, boolean>>({});
-  const [notifConfig, setNotifConfig] = useState({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: 2, validade_aep: 2, validade_aet: 2, validade_nr01: 2 });
+  const [notifConfig, setNotifConfig] = useState<any>({ dias_alerta_1: 60, dias_alerta_2: 30, dias_alerta_3: 15, email_customizado: '', validade_pgr: 2, validade_ltcat: null, validade_aep: null, validade_aet: null, validade_nr01: null });
   const [clearedNotifs, setClearedNotifs] = useState<number[]>([]);
   
   const getValidadeAnos = (doc: string, u?: any) => {
     if (doc === 'PGR' && u && u.escopo_iso_45001) return 3;
     const key = doc === 'AEP / AET' ? 'AET' : doc;
-    const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet, NR01: notifConfig.validade_nr01 };
-    return map[key] || 2;
+    const map: any = { PGR: notifConfig.validade_pgr, LTCAT: notifConfig.validade_ltcat, AEP: notifConfig.validade_aep, AET: notifConfig.validade_aet };
+    return map[key];
   };
 
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
@@ -1817,27 +1817,21 @@ function App() {
                 <div style={{ background: '#ecfdf5', color: 'var(--green)', padding: '10px', borderRadius: '12px' }}><Calendar size={20} /></div>
                 <h3 style={{ margin: 0, color: 'var(--ink)', fontSize: '18px' }}>Validade dos Documentos (Anos)</h3>
               </div>
-              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                 <div className="modal-form-group">
-                  <label>PGR</label>
-                  <input type="number" value={notifConfig.validade_pgr} onChange={e => setNotifConfig({...notifConfig, validade_pgr: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                  <label>PGR (anos)</label>
+                  <input type="number" value={notifConfig.validade_pgr ?? ''} onChange={e => setNotifConfig({...notifConfig, validade_pgr: e.target.value === '' ? null : parseInt(e.target.value)})} style={{ textAlign: 'center', fontWeight: 'bold' }} placeholder="Sem venc." />
                 </div>
                 <div className="modal-form-group">
-                  <label>LTCAT</label>
-                  <input type="number" value={notifConfig.validade_ltcat} onChange={e => setNotifConfig({...notifConfig, validade_ltcat: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                  <label>LTCAT (anos)</label>
+                  <input type="number" value={notifConfig.validade_ltcat ?? ''} onChange={e => setNotifConfig({...notifConfig, validade_ltcat: e.target.value === '' ? null : parseInt(e.target.value)})} style={{ textAlign: 'center', fontWeight: 'bold' }} placeholder="Sem venc." />
                 </div>
                 <div className="modal-form-group">
-                  <label>AEP</label>
-                  <input type="number" value={notifConfig.validade_aep} onChange={e => setNotifConfig({...notifConfig, validade_aep: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
-                </div>
-                <div className="modal-form-group">
-                  <label>AET</label>
-                  <input type="number" value={notifConfig.validade_aet} onChange={e => setNotifConfig({...notifConfig, validade_aet: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
-                </div>
-                <div className="modal-form-group">
-                  <label>NR01</label>
-                  <input type="number" value={notifConfig.validade_nr01} onChange={e => setNotifConfig({...notifConfig, validade_nr01: parseInt(e.target.value) || 0})} style={{ textAlign: 'center', fontWeight: 'bold' }} />
+                  <label>AEP / AET (anos)</label>
+                  <input type="number" value={notifConfig.validade_aep ?? ''} onChange={e => {
+                    const val = e.target.value === '' ? null : parseInt(e.target.value);
+                    setNotifConfig({...notifConfig, validade_aep: val, validade_aet: val});
+                  }} style={{ textAlign: 'center', fontWeight: 'bold' }} placeholder="Sem venc." />
                 </div>
               </div>
             </div>
