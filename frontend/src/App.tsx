@@ -1500,9 +1500,10 @@ function App() {
       <section className="content">
         <div className="cards" style={{ marginBottom: '20px' }}>
           <div className="card interactive" style={{ position: 'relative', background: '#f0fdf4', border: '1px solid #bbf7d0', borderLeft: '4px solid var(--green)' }}>
+            <CircleDollarSign size={48} color="var(--green)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
             <small>Total Líquido (Faturado)</small>
-            <strong className="green">R$ {parseFloat(faturamentoResumo.total_liquido || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
-            <small>Bruto: R$ {parseFloat(faturamentoResumo.total_valor_bruto || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</small>
+            <strong className="green" style={{ fontSize: '1.4rem', position: 'relative', zIndex: 1 }}>R$ {parseFloat(faturamentoResumo.total_liquido || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            <small style={{ position: 'relative', zIndex: 1 }}>Bruto: R$ {parseFloat(faturamentoResumo.total_valor_bruto || '0').toLocaleString('pt-BR', {minimumFractionDigits: 2})}</small>
           </div>
           <div className="card interactive" style={{ position: 'relative', background: '#faf5ff', border: '1px solid #e9d5ff', borderLeft: '4px solid var(--purple)' }}>
             <ShieldCheck size={48} color="var(--purple)" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
@@ -1551,7 +1552,7 @@ function App() {
       </section>
       {faturamentoModalOpen && (
         <div className="modal-overlay" style={{ zIndex: 10001 }}>
-          <div className="modal-box" style={{ width: '1000px', maxWidth: '95vw', maxHeight: '95vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="modal-box" style={{ width: '1200px', maxWidth: '95vw', height: '85vh', display: 'flex', flexDirection: 'column' }}>
             <div className="modal-header">
               <div className="modal-title"><h2>{novoFat.id ? 'Editar Lançamento' : 'Novo Lançamento (Medição)'}</h2></div>
               <button className="modal-close" onClick={() => setFaturamentoModalOpen(false)}>×</button>
